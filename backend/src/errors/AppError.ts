@@ -9,6 +9,7 @@ export type ErrorCode =
   | 'NOT_FOUND'
   | 'HISTORY_UNAVAILABLE'
   | 'STORAGE_UNAVAILABLE'
+  | 'WEATHER_UNAVAILABLE'
   | 'INTERNAL';
 
 const HTTP_STATUS: Record<ErrorCode, number> = {
@@ -21,6 +22,7 @@ const HTTP_STATUS: Record<ErrorCode, number> = {
   NOT_FOUND: 404,
   HISTORY_UNAVAILABLE: 503,
   STORAGE_UNAVAILABLE: 503,
+  WEATHER_UNAVAILABLE: 503,
   INTERNAL: 500,
 };
 

@@ -50,6 +50,12 @@
   --color-surface-cream: #fdf3da;
   --color-line: #d5e0d9;
 
+  /* Weather (rain, cold): blue reads as "water" at a glance. */
+  --color-sky-50: #eef6fc;
+  --color-sky-100: #dcebf7;
+  --color-sky-600: #2368a2;
+  --color-sky-700: #1b5585;
+
   /* Meaning colors (always shown together with an icon). */
   --color-success-50: #e8f5ec;
   --color-success-100: #cdebd6;

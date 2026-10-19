@@ -5,7 +5,8 @@ export type Route =
   | { name: 'history' }
   | { name: 'historyItem'; id: string }
   | { name: 'farm' }
-  | { name: 'farmSetup' };
+  | { name: 'farmSetup' }
+  | { name: 'weather' };
 
 export const routes = {
   diagnose: '#/',
@@ -13,6 +14,7 @@ export const routes = {
   historyItem: (id: string) => `#/history/${encodeURIComponent(id)}`,
   farm: '#/farm',
   farmSetup: '#/farm/setup',
+  weather: '#/weather',
 };
 
 /**
@@ -30,6 +32,7 @@ export function parseRoute(hash: string): Route {
   if (section === 'history') return { name: 'history' };
   if (section === 'farm' && id === 'setup') return { name: 'farmSetup' };
   if (section === 'farm') return { name: 'farm' };
+  if (section === 'weather') return { name: 'weather' };
   return { name: 'diagnose' };
 }
 

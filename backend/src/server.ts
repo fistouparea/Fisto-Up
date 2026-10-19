@@ -4,6 +4,7 @@ import { connectMongo } from './db/mongo.js';
 import { createAiProvider } from './services/ai/createAiProvider.js';
 import { MongoFarmProfileRepository } from './services/farm/mongoFarmProfileRepository.js';
 import { MongoHistoryRepository } from './services/history/mongoHistoryRepository.js';
+import { OpenMeteoProvider } from './services/weather/openMeteoProvider.js';
 
 const env = loadEnv();
 
@@ -17,6 +18,7 @@ const app = createApp({
   aiProvider: createAiProvider(env),
   historyRepository: env.MONGO_URI ? new MongoHistoryRepository() : null,
   farmProfiles: env.MONGO_URI ? new MongoFarmProfileRepository() : null,
+  weather: new OpenMeteoProvider(),
   corsOrigins: env.CORS_ORIGIN,
   trustProxyHops: env.TRUST_PROXY,
 });

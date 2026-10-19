@@ -74,6 +74,42 @@ export interface FarmProfile {
   irrigation?: IrrigationSource;
 }
 
+export interface DayWeather {
+  date: string;
+  weatherCode: number;
+  tempMax: number;
+  tempMin: number;
+  rainMm: number;
+  rainChance: number;
+  windMax: number;
+  gustMax: number;
+  et0: number | null;
+}
+
+export interface Forecast {
+  fetchedAt: string;
+  current: { temperature: number; weatherCode: number; windSpeed: number } | null;
+  /** Today first. */
+  days: DayWeather[];
+  past: { date: string; rainMm: number }[];
+}
+
+export type AlertType = 'heatwave' | 'frost' | 'heavyRain' | 'strongWind' | 'drySpell';
+
+export interface WeatherAlert {
+  type: AlertType;
+  severity: 'warning' | 'danger';
+  date: string;
+  title: string;
+  detail: string;
+  advice: string[];
+}
+
+export interface WeatherResponse {
+  forecast: Forecast | null;
+  alerts: WeatherAlert[];
+}
+
 /** Error codes sent by the backend, plus the ones the app itself can produce. */
 export const ERROR_CODES = [
   'INVALID_INPUT',
@@ -85,6 +121,7 @@ export const ERROR_CODES = [
   'NOT_FOUND',
   'HISTORY_UNAVAILABLE',
   'STORAGE_UNAVAILABLE',
+  'WEATHER_UNAVAILABLE',
   'INTERNAL',
   'NETWORK',
   'PHOTO_READ_FAILED',
