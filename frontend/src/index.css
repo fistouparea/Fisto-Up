@@ -1,12 +1,128 @@
 @import 'tailwindcss';
 
-/* System fonts only: Android ships Noto Sans Devanagari, so no font download on slow networks. */
-html {
-  font-family: 'Noto Sans Devanagari', 'Noto Sans', system-ui, sans-serif;
-  -webkit-tap-highlight-color: transparent;
+/* Mukta (Google Fonts), self-hosted so it works offline in the PWA. Only Devanagari + Latin, two weights. */
+@import '@fontsource/mukta/devanagari-400.css';
+@import '@fontsource/mukta/devanagari-700.css';
+@import '@fontsource/mukta/latin-400.css';
+@import '@fontsource/mukta/latin-700.css';
+
+/*
+ * Design tokens (Tailwind v4 keeps its theme config in CSS).
+ * Components use only these names, never raw hex values.
+ * Brand: primary #03542C (700), accent #FBBA16 (400), soft green #E8F2EC, cream #FDF3DA, ink #1A2B22.
+ */
+@theme {
+  --font-sans: 'Mukta', 'Noto Sans Devanagari', 'Noto Sans', system-ui, sans-serif;
+
+  /* Deep green: main actions, navigation, healthy/safe. */
+  --color-primary-50: #e8f2ec;
+  --color-primary-100: #cfe5d8;
+  --color-primary-200: #a3ccb3;
+  --color-primary-300: #6fae89;
+  --color-primary-400: #3d8e61;
+  --color-primary-500: #1b7445;
+  --color-primary-600: #0b6337;
+  --color-primary-700: #03542c;
+  --color-primary-800: #024424;
+  --color-primary-900: #01331b;
+
+  /* Warm yellow: the one hero action and highlights. Always with ink text. */
+  --color-accent-50: #fffaeb;
+  --color-accent-100: #fdf3da;
+  --color-accent-200: #fde3a0;
+  --color-accent-300: #fcd164;
+  --color-accent-400: #fbba16;
+  --color-accent-500: #e2a10a;
+  --color-accent-600: #b97f06;
+  --color-accent-700: #8e5f08;
+  --color-accent-800: #6b470c;
+
+  /* Text. */
+  --color-ink-900: #1a2b22;
+  --color-ink-700: #33453b;
+  --color-ink-500: #55655c;
+  --color-ink-300: #a7b3ac;
+
+  /* Backgrounds. */
+  --color-surface: #ffffff;
+  --color-surface-page: #f5f8f6;
+  --color-surface-green: #e8f2ec;
+  --color-surface-cream: #fdf3da;
+  --color-line: #d5e0d9;
+
+  /* Meaning colors (always shown together with an icon). */
+  --color-success-50: #e8f5ec;
+  --color-success-100: #cdebd6;
+  --color-success-600: #1e7a3c;
+  --color-success-700: #17642f;
+  --color-success-800: #124f25;
+
+  --color-warning-50: #fff8e1;
+  --color-warning-100: #fdf3da;
+  --color-warning-400: #fbba16;
+  --color-warning-700: #845300;
+  --color-warning-800: #653f00;
+
+  --color-danger-50: #fdeeed;
+  --color-danger-100: #fad5d2;
+  --color-danger-400: #e5655b;
+  --color-danger-600: #c62828;
+  --color-danger-700: #a51f1f;
+  --color-danger-800: #7f1818;
+
+  --shadow-card: 0 1px 2px rgb(26 43 34 / 0.06), 0 2px 8px rgb(26 43 34 / 0.06);
+  --shadow-raised: 0 4px 16px rgb(26 43 34 / 0.12);
+
+  --animate-scan: scan 1.6s ease-in-out infinite alternate;
+  --animate-sway: sway 2.4s ease-in-out infinite;
+
+  @keyframes scan {
+    from {
+      transform: translate(-14px, -10px);
+    }
+    to {
+      transform: translate(14px, 10px);
+    }
+  }
+  @keyframes sway {
+    0%,
+    100% {
+      transform: rotate(-3deg);
+    }
+    50% {
+      transform: rotate(3deg);
+    }
+  }
 }
 
-body {
-  margin: 0;
-  background: #ffffff;
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    /* Base text 18px for readability outdoors. */
+    font-size: 18px;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-surface-page);
+    color: var(--color-ink-900);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+  }
+
+  /* Clearly visible keyboard focus everywhere. */
+  :focus-visible {
+    outline: 3px solid var(--color-accent-400);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 }

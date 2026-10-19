@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { cn } from '../utils/cn';
 
 interface PhotoPreviewProps {
   photo: Blob;
@@ -23,7 +24,11 @@ export function PhotoPreview({ photo, dimmed = false, small = false }: PhotoPrev
     <img
       ref={imageRef}
       alt=""
-      className={`mb-4 w-full rounded-2xl bg-gray-100 object-contain ${small ? 'max-h-[22vh]' : 'max-h-[45vh]'} ${dimmed ? 'opacity-50' : ''}`}
+      className={cn(
+        'w-full rounded-3xl border border-line bg-surface-green object-contain shadow-card',
+        small ? 'max-h-[24vh]' : 'max-h-[46vh]',
+        dimmed && 'opacity-60',
+      )}
     />
   );
 }

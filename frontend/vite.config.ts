@@ -29,6 +29,14 @@ export default defineConfig({
       workbox: {
         // Cache the app shell only; diagnosis results must always come from the server.
         navigateFallbackDenylist: [/^\/api\//],
+        // Fonts are cached on first use (not precached, which would download them twice on slow networks).
+        runtimeCaching: [
+          {
+            urlPattern: ({ request }) => request.destination === 'font',
+            handler: 'CacheFirst',
+            options: { cacheName: 'fonts', expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 } },
+          },
+        ],
       },
     }),
   ],

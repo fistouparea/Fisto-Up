@@ -6,9 +6,33 @@ export const hi = {
   appTagline: 'फसल की फोटो से बीमारी और इलाज जानें',
 
   nav: {
+    label: 'मुख्य मेन्यू',
     newCheck: 'नई जाँच',
     history: 'मेरी जाँच',
   },
+  steps: {
+    label: 'जाँच के कदम',
+    crop: 'फसल चुनें',
+    photo: 'फोटो लें',
+    answer: 'जवाब',
+  },
+  home: {
+    pickCropFirst: 'पहले फसल चुनें',
+    selected: 'चुनी गई',
+  },
+  severity: {
+    title: 'हालत',
+    healthy: 'स्वस्थ',
+    mild: 'ध्यान दें',
+    serious: 'गंभीर',
+    healthyHint: 'फसल ठीक है',
+    mildHint: 'जल्दी देखभाल करें',
+    seriousHint: 'आज ही इलाज करें',
+  },
+  toast: {
+    resultReady: 'जाँच पूरी हुई',
+  },
+  back: 'वापस',
   history: {
     title: 'मेरी जाँच',
     empty: 'अभी तक कोई जाँच नहीं हुई। फसल की फोटो लेकर पहली जाँच करें।',
@@ -25,6 +49,7 @@ export const hi = {
   takePhotoHint: 'बीमार पत्ते या पौधे की पास से साफ फोटो लें',
   takePhoto: 'फोटो लें',
   chooseFromGallery: 'गैलरी से चुनें',
+  gallery: 'गैलरी',
   preparingPhoto: 'फोटो तैयार हो रही है...',
 
   checkPhoto: 'जाँच करें',
@@ -46,7 +71,10 @@ export const hi = {
 
   chat: {
     title: 'और पूछें',
-    placeholder: 'अपना सवाल लिखें...',
+    placeholder: 'या यहाँ लिखें...',
+    you: 'आप',
+    assistant: 'AgriAI',
+    micHint: 'बटन दबाकर बोलें',
     send: 'पूछें',
     waiting: 'जवाब आ रहा है...',
     suggestions: ['ये दवाई कब डालूँ?', 'कितने दिन में ठीक होगा?', 'आगे से कैसे बचाएँ?'],

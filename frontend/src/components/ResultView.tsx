@@ -1,94 +1,89 @@
-import type { ReactNode } from 'react';
+import { LuCircleHelp, LuLandmark, LuLeaf, LuPill, LuSearch, LuShieldAlert, LuTriangleAlert } from 'react-icons/lu';
 import type { Diagnosis } from '../api/types';
 import { hi } from '../strings/hi';
 import { diagnosisToSpeech } from '../utils/speechText';
-import { SpeakButton } from './SpeakButton';
+import { SeverityCard } from './SeverityCard';
+import { Card } from './ui/Card';
+import { SpeakButton } from './ui/SpeakButton';
 
 interface ResultViewProps {
   diagnosis: Diagnosis;
 }
 
 export function ResultView({ diagnosis }: ResultViewProps) {
+  const { problem_name, explanation, desi_upay, dawai, savdhani, severity } = diagnosis;
+
   return (
     <div className="flex flex-col gap-4">
-      <SpeakButton text={diagnosisToSpeech(diagnosis)} />
+      {severity && <SeverityCard severity={severity} />}
 
-      <Section icon="🔍" title={hi.sections.problem} highlight>
-        <p className="text-2xl font-bold">{diagnosis.problem_name}</p>
-      </Section>
+      <SpeakButton text={diagnosisToSpeech(diagnosis)} variant="pill" className="self-start" />
 
-      <Section icon="❓" title={hi.sections.cause}>
-        <p>{diagnosis.explanation}</p>
-      </Section>
+      <Card reveal icon={LuSearch} title={hi.sections.problem} speakText={`${hi.sections.problem}: ${problem_name}`}>
+        <p className="text-2xl font-bold leading-snug">{problem_name}</p>
+      </Card>
 
-      {diagnosis.desi_upay.length > 0 && (
-        <Section icon="🌿" title={hi.sections.desiUpay}>
-          <BulletList items={diagnosis.desi_upay} />
-        </Section>
+      <Card reveal icon={LuCircleHelp} title={hi.sections.cause} speakText={`${hi.sections.cause}: ${explanation}`}>
+        <p>{explanation}</p>
+      </Card>
+
+      {desi_upay.length > 0 && (
+        <Card reveal tone="neutral" icon={LuLeaf} title={hi.sections.desiUpay} speakText={listSpeech(hi.sections.desiUpay, desi_upay)}>
+          <BulletList items={desi_upay} />
+        </Card>
       )}
 
-      {diagnosis.dawai.length > 0 && (
-        <p role="note" className="rounded-xl border-2 border-amber-400 bg-amber-50 px-4 py-3 text-lg font-bold text-amber-900">
-          <span aria-hidden="true">🧤 </span>
-          {hi.dawaiWarning}
-        </p>
+      {dawai.length > 0 && (
+        <Card reveal tone="warning" icon={LuShieldAlert} className="border-2" speakText={hi.dawaiWarning} title={hi.dawaiWarning} />
       )}
 
-      <Section icon="💊" title={hi.sections.dawai}>
-        {diagnosis.dawai.length > 0 ? (
+      <Card
+        reveal
+        icon={LuPill}
+        title={hi.sections.dawai}
+        speakText={
+          dawai.length > 0
+            ? listSpeech(hi.sections.dawai, dawai.map((item) => `${item.name}। ${item.kaise_use_karein}`))
+            : `${hi.sections.dawai}: ${hi.noDawaiNeeded}`
+        }
+      >
+        {dawai.length > 0 ? (
           <ul className="flex flex-col gap-3">
-            {diagnosis.dawai.map((dawai, index) => (
-              <li key={index} className="rounded-xl bg-white p-3">
-                <p className="font-bold">{dawai.name}</p>
-                <p className="mt-1">{dawai.kaise_use_karein}</p>
+            {dawai.map((item, index) => (
+              <li key={index} className="rounded-2xl border border-line bg-surface-page p-3">
+                <p className="text-xl font-bold">{item.name}</p>
+                <p className="mt-1">{item.kaise_use_karein}</p>
               </li>
             ))}
           </ul>
         ) : (
           <p>{hi.noDawaiNeeded}</p>
         )}
-      </Section>
+      </Card>
 
-      {diagnosis.savdhani.length > 0 && (
-        <Section icon="⚠️" title={hi.sections.savdhani}>
-          <BulletList items={diagnosis.savdhani} />
-        </Section>
+      {savdhani.length > 0 && (
+        <Card reveal icon={LuTriangleAlert} title={hi.sections.savdhani} speakText={listSpeech(hi.sections.savdhani, savdhani)}>
+          <BulletList items={savdhani} />
+        </Card>
       )}
 
-      <p className="rounded-2xl border-2 border-blue-300 bg-blue-50 p-4 text-xl font-bold leading-relaxed text-blue-900">
-        <span aria-hidden="true">🏫 </span>
-        {hi.kvkAdvice}
-      </p>
+      <Card reveal tone="cream" icon={LuLandmark} title={hi.kvkAdvice} speakText={hi.kvkAdvice} className="border-2" />
     </div>
   );
 }
 
-interface SectionProps {
-  icon: string;
-  title: string;
-  highlight?: boolean;
-  children: ReactNode;
-}
-
-function Section({ icon, title, highlight = false, children }: SectionProps) {
-  return (
-    <section className={`rounded-2xl p-4 ${highlight ? 'bg-red-50 border-2 border-red-200' : 'bg-green-50'}`}>
-      <h3 className="mb-2 flex items-center gap-2 text-xl font-bold text-gray-700">
-        <span className="text-2xl" aria-hidden="true">
-          {icon}
-        </span>
-        {title}
-      </h3>
-      <div className="text-xl leading-relaxed text-gray-900">{children}</div>
-    </section>
-  );
+function listSpeech(title: string, items: string[]): string {
+  return `${title}: ${items.join(' ')}`;
 }
 
 function BulletList({ items }: { items: string[] }) {
   return (
-    <ul className="flex list-disc flex-col gap-2 pl-6">
+    <ul className="flex flex-col gap-2">
       {items.map((item, index) => (
-        <li key={index}>{item}</li>
+        <li key={index} className="flex gap-3">
+          <span aria-hidden="true" className="mt-2.5 size-2.5 shrink-0 rounded-full bg-primary-500" />
+          <span>{item}</span>
+        </li>
       ))}
     </ul>
   );

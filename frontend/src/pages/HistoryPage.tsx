@@ -1,62 +1,77 @@
-import { cropLabels, errorMessages, hi } from '../strings/hi';
-import { BigButton } from '../components/BigButton';
-import { NoticeView } from '../components/NoticeView';
+import { useEffect } from 'react';
+import { LuCamera, LuChevronDown, LuHistory, LuInbox, LuRefreshCw, LuServerCrash } from 'react-icons/lu';
+import { HistoryRow } from '../components/HistoryRow';
+import { Button } from '../components/ui/Button';
+import { EmptyState } from '../components/ui/EmptyState';
+import { PageHeader } from '../components/ui/PageHeader';
+import { Skeleton } from '../components/ui/Skeleton';
+import { notifyError } from '../components/ui/notify';
 import { routes } from '../hooks/useHashRoute';
 import { useHistoryList } from '../hooks/useHistory';
-import { formatDate } from '../utils/formatDate';
+import { errorMessages, hi } from '../strings/hi';
 
 export function HistoryPage() {
   const { items, hasMore, loading, errorCode, loadMore } = useHistoryList();
+  const firstLoad = items.length === 0;
+
+  // A failed "load more" keeps the list and shows a toast; a failed first load gets a full error state.
+  useEffect(() => {
+    if (errorCode && !firstLoad) notifyError(errorCode);
+  }, [errorCode, firstLoad]);
 
   return (
-    <section className="flex flex-col gap-3">
-      <h2 className="text-2xl font-bold text-gray-900">{hi.history.title}</h2>
+    <section className="flex flex-col gap-4">
+      <PageHeader title={hi.history.title} icon={LuHistory} />
 
-      {items.length === 0 && !loading && !errorCode && (
-        <NoticeView icon="📋" message={hi.history.empty}>
-          <a href={routes.diagnose} className="text-center text-xl font-bold text-green-800 underline">
+      {firstLoad && loading && <HistorySkeleton />}
+
+      {firstLoad && !loading && errorCode && (
+        <EmptyState icon={LuServerCrash} tone="danger" message={errorMessages[errorCode]}>
+          <Button variant="accent" icon={LuRefreshCw} onClick={loadMore}>
+            {hi.tryAgain}
+          </Button>
+        </EmptyState>
+      )}
+
+      {firstLoad && !loading && !errorCode && (
+        <EmptyState icon={LuInbox} message={hi.history.empty}>
+          <Button variant="accent" icon={LuCamera} onClick={() => (window.location.hash = routes.diagnose)}>
             {hi.nav.newCheck}
-          </a>
-        </NoticeView>
+          </Button>
+        </EmptyState>
       )}
 
-      <ul className="flex flex-col gap-3">
-        {items.map((item) => {
-          const crop = cropLabels[item.crop];
-          return (
-            <li key={item.id}>
-              <a
-                href={routes.historyItem(item.id)}
-                className="flex items-center gap-3 rounded-2xl border-2 border-green-200 bg-white p-4 shadow-sm active:bg-green-50"
-              >
-                <span className="text-4xl" aria-hidden="true">
-                  {crop.emoji}
-                </span>
-                <span className="flex min-w-0 flex-col">
-                  <span className="text-xl font-bold text-gray-900">{item.problemName}</span>
-                  <span className="text-base text-gray-600">
-                    {crop.hindi} · {formatDate(item.createdAt)}
-                  </span>
-                </span>
-              </a>
-            </li>
-          );
-        })}
-      </ul>
-
-      {loading && <p className="py-4 text-center text-xl text-gray-600">{hi.history.loading}</p>}
-
-      {errorCode && (
-        <NoticeView icon="😟" message={errorMessages[errorCode]}>
-          <BigButton onClick={loadMore}>{hi.tryAgain}</BigButton>
-        </NoticeView>
+      {items.length > 0 && (
+        <ul className="flex flex-col gap-3">
+          {items.map((item) => (
+            <HistoryRow key={item.id} item={item} />
+          ))}
+        </ul>
       )}
 
-      {hasMore && !loading && !errorCode && (
-        <BigButton variant="secondary" onClick={loadMore}>
+      {!firstLoad && loading && <Skeleton className="h-24" />}
+
+      {!firstLoad && hasMore && !loading && (
+        <Button variant="secondary" icon={LuChevronDown} onClick={loadMore}>
           {hi.history.loadMore}
-        </BigButton>
+        </Button>
       )}
     </section>
+  );
+}
+
+function HistorySkeleton() {
+  return (
+    <div className="flex flex-col gap-3" aria-label={hi.history.loading} role="status">
+      {[0, 1, 2].map((row) => (
+        <div key={row} className="flex items-center gap-3 rounded-3xl border border-line bg-surface p-3">
+          <Skeleton className="size-16 shrink-0" />
+          <div className="flex flex-1 flex-col gap-2">
+            <Skeleton className="h-5 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
