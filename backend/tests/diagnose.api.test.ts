@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { describe, expect, it, vi } from 'vitest';
 import { AppError } from '../src/errors/AppError.js';
+import { withPacketDoseNote } from '../src/services/dawaiSafety.js';
 import { MAX_IMAGE_BYTES } from '../src/types/diagnosis.js';
 import { createFakeProvider, createTestApp, healthyDiagnosis, JPEG_BYTES } from './helpers.js';
 
@@ -17,7 +18,7 @@ describe('POST /api/diagnose', () => {
 
     expect(res.status).toBe(200);
     const { is_plant_image: _p, confidence: _c, ...expected } = healthyDiagnosis;
-    expect(res.body).toEqual({ status: 'ok', diagnosis: expected });
+    expect(res.body).toEqual({ status: 'ok', diagnosis: withPacketDoseNote(expected) });
   });
 
   it('sends only the image, its type and the crop name to the AI', async () => {

@@ -1,5 +1,6 @@
 import type { AiDiagnosis, DiagnoseResponse } from '../types/diagnosis.js';
 import type { AiProvider, DiagnoseInput } from './ai/aiProvider.js';
+import { withPacketDoseNote } from './dawaiSafety.js';
 
 /** Runs the AI diagnosis and hides any result that is not confident enough to show a farmer. */
 export async function diagnosePhoto(provider: AiProvider, input: DiagnoseInput): Promise<DiagnoseResponse> {
@@ -12,7 +13,7 @@ export function toDiagnoseResponse(result: AiDiagnosis): DiagnoseResponse {
     return { status: 'unclear' };
   }
   const { is_plant_image: _isPlant, confidence: _confidence, ...diagnosis } = result;
-  return { status: 'ok', diagnosis };
+  return { status: 'ok', diagnosis: withPacketDoseNote(diagnosis) };
 }
 
 function isShowable(result: AiDiagnosis): boolean {

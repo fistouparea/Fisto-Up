@@ -23,6 +23,13 @@ export function ResultView({ diagnosis }: ResultViewProps) {
         </Section>
       )}
 
+      {diagnosis.dawai.length > 0 && (
+        <p role="note" className="rounded-xl border-2 border-amber-400 bg-amber-50 px-4 py-3 text-lg font-bold text-amber-900">
+          <span aria-hidden="true">🧤 </span>
+          {hi.dawaiWarning}
+        </p>
+      )}
+
       <Section icon="💊" title={hi.sections.dawai}>
         {diagnosis.dawai.length > 0 ? (
           <ul className="flex flex-col gap-3">
