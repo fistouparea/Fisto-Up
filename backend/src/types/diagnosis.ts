@@ -46,7 +46,8 @@ export const aiDiagnosisSchema = z.object({
 export type AiDiagnosis = z.infer<typeof aiDiagnosisSchema>;
 
 /** The farmer-facing part of a diagnosis (no internal confidence flags). */
-export type Diagnosis = Omit<AiDiagnosis, 'is_plant_image' | 'confidence'>;
+export const diagnosisSchema = aiDiagnosisSchema.omit({ is_plant_image: true, confidence: true });
+export type Diagnosis = z.infer<typeof diagnosisSchema>;
 
 /** Response body of POST /api/diagnose. */
 export type DiagnoseResponse = { status: 'ok'; diagnosis: Diagnosis } | { status: 'unclear' };

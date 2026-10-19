@@ -16,12 +16,21 @@ export const healthyDiagnosis: AiDiagnosis = {
   savdhani: ['छिड़काव करते समय दस्ताने पहनें।'],
 };
 
-export function createFakeProvider(result: AiDiagnosis | Error = healthyDiagnosis) {
+export const FAKE_CHAT_ANSWER = 'शाम के समय छिड़काव करें।';
+
+export function createFakeProvider(
+  diagnoseResult: AiDiagnosis | Error = healthyDiagnosis,
+  chatResult: string | Error = FAKE_CHAT_ANSWER,
+) {
   const diagnose = vi.fn<AiProvider['diagnose']>(async () => {
-    if (result instanceof Error) throw result;
-    return result;
+    if (diagnoseResult instanceof Error) throw diagnoseResult;
+    return diagnoseResult;
   });
-  return { diagnose } satisfies AiProvider;
+  const chat = vi.fn<AiProvider['chat']>(async () => {
+    if (chatResult instanceof Error) throw chatResult;
+    return chatResult;
+  });
+  return { diagnose, chat } satisfies AiProvider;
 }
 
 export function createTestApp(provider: AiProvider = createFakeProvider()) {

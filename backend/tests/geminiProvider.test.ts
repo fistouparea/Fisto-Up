@@ -94,3 +94,58 @@ describe('GeminiProvider', () => {
     await expect(provider.diagnose(input)).rejects.toMatchObject({ code: 'AI_ERROR' });
   });
 });
+
+describe('GeminiProvider.chat', () => {
+  const { is_plant_image: _p, confidence: _c, ...diagnosis } = healthyDiagnosis;
+  const chatInput = {
+    cropName: 'बाजरा (Bajra)',
+    diagnosis,
+    messages: [
+      { role: 'assistant' as const, text: 'पुराना जवाब' },
+      { role: 'user' as const, text: 'ये दवाई कब डालूँ?' },
+      { role: 'assistant' as const, text: 'शाम को।' },
+      { role: 'user' as const, text: 'कितनी बार?' },
+    ],
+  };
+
+  it('returns the validated answer', async () => {
+    const generate = vi.fn<GenerateContent>(async () => textResponse(JSON.stringify({ answer: 'हफ्ते में एक बार।' })));
+    const { provider } = createProvider(generate);
+
+    await expect(provider.chat(chatInput)).resolves.toBe('हफ्ते में एक बार।');
+  });
+
+  it('puts the diagnosis in the system prompt and the history as turns starting with the farmer', async () => {
+    const generate = vi.fn<GenerateContent>(async () => textResponse(JSON.stringify({ answer: 'ठीक है।' })));
+    const { provider } = createProvider(generate);
+    await provider.chat(chatInput);
+
+    const params = generate.mock.calls[0]?.[0];
+    expect(params?.config?.systemInstruction).toContain(diagnosis.problem_name);
+    expect(params?.config?.systemInstruction).toContain('not about farming');
+    expect(params?.contents).toEqual([
+      { role: 'user', parts: [{ text: 'ये दवाई कब डालूँ?' }] },
+      { role: 'model', parts: [{ text: 'शाम को।' }] },
+      { role: 'user', parts: [{ text: 'कितनी बार?' }] },
+    ]);
+    expect(JSON.stringify(params?.contents)).not.toContain('inlineData');
+  });
+
+  it('retries busy errors like diagnose does', async () => {
+    const generate = vi
+      .fn<GenerateContent>()
+      .mockRejectedValueOnce(new ApiError({ message: 'busy', status: 429 }))
+      .mockResolvedValueOnce(textResponse(JSON.stringify({ answer: 'ठीक है।' })));
+    const { provider } = createProvider(generate);
+
+    await expect(provider.chat(chatInput)).resolves.toBe('ठीक है।');
+    expect(generate).toHaveBeenCalledTimes(2);
+  });
+
+  it('rejects an empty answer as AI_ERROR', async () => {
+    const generate = vi.fn<GenerateContent>(async () => textResponse(JSON.stringify({ answer: '' })));
+    const { provider } = createProvider(generate);
+
+    await expect(provider.chat(chatInput)).rejects.toMatchObject({ code: 'AI_ERROR' });
+  });
+});

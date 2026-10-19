@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SYSTEM_PROMPT } from '../src/services/ai/prompt.js';
+import { buildChatSystemPrompt, DIAGNOSIS_SYSTEM_PROMPT } from '../src/services/ai/prompt.js';
 import { PACKET_DOSE_NOTE, withPacketDoseNote } from '../src/services/dawaiSafety.js';
 import type { Diagnosis } from '../src/types/diagnosis.js';
 
@@ -21,11 +21,14 @@ describe('withPacketDoseNote', () => {
 });
 
 describe('system prompt medicine rules', () => {
-  it('asks for generic names, the packet note, no banned pesticides and KVK when unsure', () => {
-    expect(SYSTEM_PROMPT).toContain('generic name');
-    expect(SYSTEM_PROMPT).toContain('Never name or promote a brand');
-    expect(SYSTEM_PROMPT).toContain(PACKET_DOSE_NOTE);
-    expect(SYSTEM_PROMPT).toContain('banned');
-    expect(SYSTEM_PROMPT).toContain('KVK');
+  it.each([
+    ['diagnosis', DIAGNOSIS_SYSTEM_PROMPT],
+    ['chat', buildChatSystemPrompt('बाजरा', base)],
+  ])('%s prompt asks for generic names, the packet note, no banned pesticides and KVK when unsure', (_name, prompt) => {
+    expect(prompt).toContain('generic name');
+    expect(prompt).toContain('Never name or promote a brand');
+    expect(prompt).toContain(PACKET_DOSE_NOTE);
+    expect(prompt).toContain('banned');
+    expect(prompt).toContain('KVK');
   });
 });

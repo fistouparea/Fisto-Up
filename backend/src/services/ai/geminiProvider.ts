@@ -1,15 +1,17 @@
-import { ApiError, GoogleGenAI, Type, type Schema } from '@google/genai';
+import { ApiError, GoogleGenAI, Type, type Content, type GenerateContentParameters, type Schema } from '@google/genai';
+import type { z } from 'zod';
 import { AppError } from '../../errors/AppError.js';
+import { aiChatAnswerSchema } from '../../types/chat.js';
 import { aiDiagnosisSchema, type AiDiagnosis } from '../../types/diagnosis.js';
-import type { AiProvider, DiagnoseInput } from './aiProvider.js';
-import { buildUserPrompt, SYSTEM_PROMPT } from './prompt.js';
+import type { AiProvider, ChatInput, DiagnoseInput } from './aiProvider.js';
+import { buildChatSystemPrompt, buildDiagnosisUserPrompt, DIAGNOSIS_SYSTEM_PROMPT } from './prompt.js';
 import { withRetry } from './retry.js';
 
 /** HTTP statuses that mean "busy, try again later": rate limited or model overloaded. */
 const BUSY_STATUSES = new Set([429, 503]);
 
 /** Gemini-side schema for JSON mode. Mirrors aiDiagnosisSchema, which re-validates the result. */
-const RESPONSE_SCHEMA: Schema = {
+const DIAGNOSIS_RESPONSE_SCHEMA: Schema = {
   type: Type.OBJECT,
   properties: {
     is_plant_image: { type: Type.BOOLEAN },
@@ -32,6 +34,18 @@ const RESPONSE_SCHEMA: Schema = {
   },
   required: ['is_plant_image', 'confidence', 'problem_name', 'explanation', 'desi_upay', 'dawai', 'savdhani'],
   propertyOrdering: ['is_plant_image', 'confidence', 'problem_name', 'explanation', 'desi_upay', 'dawai', 'savdhani'],
+};
+
+/** Mirrors aiChatAnswerSchema. */
+const CHAT_RESPONSE_SCHEMA: Schema = {
+  type: Type.OBJECT,
+  properties: { answer: { type: Type.STRING } },
+  required: ['answer'],
+};
+
+type GenerateRequest = Pick<GenerateContentParameters, 'contents'> & {
+  systemInstruction: string;
+  responseSchema: Schema;
 };
 
 export interface GeminiProviderOptions {
@@ -62,10 +76,33 @@ export class GeminiProvider implements AiProvider {
     this.sleep = options.sleep;
   }
 
-  async diagnose(input: DiagnoseInput): Promise<AiDiagnosis> {
-    let rawText: string;
+  async diagnose({ image, mimeType, cropName }: DiagnoseInput): Promise<AiDiagnosis> {
+    const rawText = await this.generateJson({
+      systemInstruction: DIAGNOSIS_SYSTEM_PROMPT,
+      responseSchema: DIAGNOSIS_RESPONSE_SCHEMA,
+      contents: [
+        {
+          role: 'user',
+          parts: [{ inlineData: { mimeType, data: image.toString('base64') } }, { text: buildDiagnosisUserPrompt(cropName) }],
+        },
+      ],
+    });
+    return parseJson(rawText, aiDiagnosisSchema);
+  }
+
+  async chat({ cropName, diagnosis, messages }: ChatInput): Promise<string> {
+    const rawText = await this.generateJson({
+      systemInstruction: buildChatSystemPrompt(cropName, diagnosis),
+      responseSchema: CHAT_RESPONSE_SCHEMA,
+      contents: toGeminiContents(messages),
+    });
+    return parseJson(rawText, aiChatAnswerSchema).answer;
+  }
+
+  /** Calls Gemini in JSON mode with retries on "busy" errors. Returns the raw JSON text. */
+  private async generateJson(request: GenerateRequest): Promise<string> {
     try {
-      rawText = await withRetry(() => this.requestDiagnosis(input), {
+      return await withRetry(() => this.generateOnce(request), {
         maxAttempts: this.maxAttempts,
         baseDelayMs: this.baseDelayMs,
         isRetryable: isBusyError,
@@ -74,22 +111,16 @@ export class GeminiProvider implements AiProvider {
     } catch (error) {
       throw toAppError(error);
     }
-    return parseDiagnosis(rawText);
   }
 
-  private async requestDiagnosis({ image, mimeType, cropName }: DiagnoseInput): Promise<string> {
+  private async generateOnce({ contents, systemInstruction, responseSchema }: GenerateRequest): Promise<string> {
     const response = await this.client.models.generateContent({
       model: this.model,
-      contents: [
-        {
-          role: 'user',
-          parts: [{ inlineData: { mimeType, data: image.toString('base64') } }, { text: buildUserPrompt(cropName) }],
-        },
-      ],
+      contents,
       config: {
-        systemInstruction: SYSTEM_PROMPT,
+        systemInstruction,
         responseMimeType: 'application/json',
-        responseSchema: RESPONSE_SCHEMA,
+        responseSchema,
         temperature: 0.2,
         abortSignal: AbortSignal.timeout(this.attemptTimeoutMs),
       },
@@ -101,6 +132,15 @@ export class GeminiProvider implements AiProvider {
     }
     return text;
   }
+}
+
+/** Gemini expects the conversation to start with a user turn, so leading answers are dropped. */
+function toGeminiContents(messages: ChatInput['messages']): Content[] {
+  const firstUserIndex = messages.findIndex((message) => message.role === 'user');
+  return messages.slice(Math.max(firstUserIndex, 0)).map((message) => ({
+    role: message.role === 'user' ? 'user' : 'model',
+    parts: [{ text: message.text }],
+  }));
 }
 
 function isBusyError(error: unknown): boolean {
@@ -118,7 +158,7 @@ function toAppError(error: unknown): AppError {
   return new AppError('AI_ERROR', 'Gemini request failed', { cause: error });
 }
 
-function parseDiagnosis(rawText: string): AiDiagnosis {
+function parseJson<T>(rawText: string, schema: z.ZodType<T>): T {
   let json: unknown;
   try {
     json = JSON.parse(rawText);
@@ -126,7 +166,7 @@ function parseDiagnosis(rawText: string): AiDiagnosis {
     throw new AppError('AI_ERROR', 'Gemini returned invalid JSON', { cause: error });
   }
 
-  const result = aiDiagnosisSchema.safeParse(json);
+  const result = schema.safeParse(json);
   if (!result.success) {
     throw new AppError('AI_ERROR', `Gemini JSON failed validation: ${result.error.message}`);
   }

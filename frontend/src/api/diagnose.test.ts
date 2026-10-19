@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ApiError, diagnoseCrop } from './diagnose';
+import { ApiError } from './client';
+import { diagnoseCrop } from './diagnose';
 
 const photo = new Blob([new Uint8Array([0xff, 0xd8, 0xff])], { type: 'image/jpeg' });
 

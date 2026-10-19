@@ -2,6 +2,8 @@ import cors from 'cors';
 import express, { type Express } from 'express';
 import helmet from 'helmet';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
+import { createAiRateLimit } from './middleware/rateLimit.js';
+import { createChatRouter } from './routes/chat.routes.js';
 import { createDiagnoseRouter } from './routes/diagnose.routes.js';
 import type { AiProvider } from './services/ai/aiProvider.js';
 
@@ -20,7 +22,9 @@ export function createApp({ aiProvider, corsOrigins }: AppDependencies): Express
   app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok' });
   });
-  app.use('/api', createDiagnoseRouter(aiProvider));
+  const aiRateLimit = createAiRateLimit();
+  app.use('/api', createDiagnoseRouter(aiProvider, aiRateLimit));
+  app.use('/api', createChatRouter(aiProvider, aiRateLimit));
 
   app.use(notFoundHandler);
   app.use(errorHandler);

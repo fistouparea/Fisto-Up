@@ -15,6 +15,11 @@ export interface Diagnosis {
   savdhani: string[];
 }
 
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  text: string;
+}
+
 export type DiagnoseResponse = { status: 'ok'; diagnosis: Diagnosis } | { status: 'unclear' };
 
 /** Error codes sent by the backend, plus the ones the app itself can produce. */

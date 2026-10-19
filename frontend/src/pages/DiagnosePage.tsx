@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { ApiError, diagnoseCrop } from '../api/diagnose';
+import { ApiError } from '../api/client';
+import { diagnoseCrop } from '../api/diagnose';
 import type { CropId, Diagnosis, ErrorCode } from '../api/types';
 import { BigButton } from '../components/BigButton';
+import { ChatPanel } from '../components/ChatPanel';
 import { CropPicker } from '../components/CropPicker';
 import { LoadingView } from '../components/LoadingView';
 import { NoticeView } from '../components/NoticeView';
@@ -107,6 +109,7 @@ export function DiagnosePage() {
         <div className="flex flex-col gap-4">
           <PhotoPreview photo={state.photo} small />
           <ResultView diagnosis={state.diagnosis} />
+          <ChatPanel crop={crop} diagnosis={state.diagnosis} />
           <BigButton onClick={startOver}>{hi.newCheck}</BigButton>
         </div>
       )}
