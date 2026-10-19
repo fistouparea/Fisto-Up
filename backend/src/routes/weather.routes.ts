@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { createWaterController } from '../controllers/water.controller.js';
 import { createWeatherController } from '../controllers/weather.controller.js';
 import type { FarmProfileRepository } from '../services/farm/farmProfileRepository.js';
 import type { WeatherProvider } from '../services/weather/weatherProvider.js';
@@ -6,5 +7,6 @@ import type { WeatherProvider } from '../services/weather/weatherProvider.js';
 export function createWeatherRouter(farmProfiles: FarmProfileRepository | null, weather: WeatherProvider | null): Router {
   const router = Router();
   router.get('/weather', createWeatherController(farmProfiles, weather));
+  router.get('/water', createWaterController(farmProfiles, weather));
   return router;
 }

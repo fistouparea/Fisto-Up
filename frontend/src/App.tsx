@@ -12,6 +12,7 @@ import { FarmPage } from './pages/FarmPage';
 import { FarmSetupPage } from './pages/FarmSetupPage';
 import { HistoryDetailPage } from './pages/HistoryDetailPage';
 import { HistoryPage } from './pages/HistoryPage';
+import { WaterPage } from './pages/WaterPage';
 import { WeatherPage } from './pages/WeatherPage';
 import { hi } from './strings/hi';
 import { readFlag, setFlag } from './utils/offlineCache';
@@ -97,6 +98,8 @@ function Page({ route, diagnoseKey }: { route: Route; diagnoseKey: number }) {
       return <FarmSetupPage onDone={() => (window.location.hash = routes.farm)} />;
     case 'weather':
       return <WeatherPage />;
+    case 'water':
+      return <WaterPage />;
   }
 }
 

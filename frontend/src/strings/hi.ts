@@ -62,6 +62,22 @@ export const hi = {
       snow: 'बर्फ',
     },
   },
+  water: {
+    title: 'पानी की सलाह',
+    status: {
+      water_today: 'आज पानी दें',
+      water_later: 'दिन बाद दें',
+      skip: 'आज पानी न दें',
+      check_soil: 'मिट्टी देखें',
+      rainfed: 'बारिश पर निर्भर',
+    },
+    watered: 'आज पानी दिया',
+    wateredSaved: 'सेव हो गया: आज पानी दिया',
+    tipsTitle: 'पानी बचाने के तरीके',
+    disclaimer: 'यह सामान्य सलाह है, अपने खेत की नमी भी देखें।',
+    noCrops: 'पानी की सलाह के लिए अपने खेत की फसल भरें।',
+    addCrops: 'फसल भरें',
+  },
   farm: {
     title: 'मेरा खेत',
     setupTitle: 'अपने खेत के बारे में बताएँ',

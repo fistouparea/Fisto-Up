@@ -95,3 +95,79 @@ export const ALERT_TEXTS: Record<AlertType, AlertTexts> = {
     ],
   },
 };
+
+// ---------------------------------------------------------------------------
+// Water guidance (sandy soil of Churu is the default)
+// ---------------------------------------------------------------------------
+
+export const WATER_RULES = {
+  /** Don't water if at least this much rain is likely in the next days. */
+  rainExpected: { nextDays: 2, minRainMm: 10, minChancePercent: 60 },
+  /** Don't water if it rained at least this much in the last days. */
+  recentRain: { pastDays: 3, minRainMm: 15 },
+  /**
+   * Intervals below are for an average evapotranspiration (et0) of this many mm/day.
+   * Hotter, drier days (higher et0) shorten the interval proportionally.
+   */
+  referenceEt0MmPerDay: 5,
+  /** Safety limits for the adjusted interval. */
+  minIntervalDays: 3,
+  maxIntervalDays: 30,
+  /** On very hot days, water one day earlier. */
+  hotDay: { tempMaxC: 40, shortenByDays: 1 },
+  /** "N दिन बाद दें" is shown when watering is due within this many days. */
+  dueSoonDays: 2,
+} as const;
+
+/**
+ * Days between irrigations on sandy soil, per crop and stage.
+ * null = do not irrigate in this stage (reason in WATER_TEXTS.noWaterStage).
+ * ⚠️ VERIFY WITH KVK — typical values; depend on variety, soil and water quality.
+ */
+export const IRRIGATION_INTERVAL_DAYS: Record<CropId, Partial<Record<StageId, number | null>>> = {
+  bajra: { germination: 12, vegetative: 15, flowering: 10, grainFilling: 12 },
+  guar: { germination: 12, vegetative: 15, flowering: 12, grainFilling: 15 },
+  moong: { germination: 12, vegetative: 15, flowering: 10, grainFilling: 12 },
+  moth: { germination: 12, vegetative: 15, flowering: 12, grainFilling: 15 },
+  // Chana needs little water; watering at full bloom makes flowers drop.
+  chana: { germination: null, vegetative: 25, flowering: null, grainFilling: 25 },
+  sarson: { germination: null, vegetative: 25, flowering: 20, grainFilling: 25 },
+  // Jeera: light irrigations; too much water spreads disease.
+  jeera: { germination: 8, vegetative: 15, flowering: 20, grainFilling: 20 },
+  gehun: { germination: 12, vegetative: 10, flowering: 8, grainFilling: 10 },
+  other: { germination: 12, vegetative: 12, flowering: 10, grainFilling: 12 },
+};
+
+export const WATER_TEXTS = {
+  rainExpected: 'आज या कल बारिश की संभावना है।',
+  recentRain: 'हाल ही में अच्छी बारिश हुई है।',
+  harvest: 'कटाई का समय है, पानी न दें।',
+  sowing: 'अभी बुवाई हुई है, मिट्टी में हल्की नमी बनाए रखें।',
+  noWaterStage: {
+    germination: 'अभी पौधे छोटे हैं, बुवाई की नमी काफी है।',
+    flowering: 'फूल के समय पानी देने से फूल झड़ सकते हैं।',
+  } as Partial<Record<StageId, string>>,
+  notNeeded: 'इस समय पानी की ज़रूरत नहीं है।',
+  rainfed: 'बारिश पर निर्भर खेत: नमी बचाने के लिए गुड़ाई करें और पलवार बिछाएँ।',
+  unknownLastWatering: 'मिट्टी 2-3 इंच नीचे सूखी हो तो पानी दें। पानी देने के बाद "आज पानी दिया" दबाएँ।',
+  noWeather: 'मौसम की जानकारी नहीं मिली। मिट्टी देखकर पानी दें।',
+  wateredToday: 'आज पानी दे दिया है।',
+  /** {days} = days since the last irrigation */
+  due: 'पिछली सिंचाई को {days} दिन हो गए।',
+  dueHot: 'पिछली सिंचाई को {days} दिन हो गए और गर्मी ज़्यादा है।',
+  /** {days} = days until the next irrigation */
+  dueSoon: '{days} दिन बाद पानी दें।',
+  /** {days} = days since the last irrigation */
+  notDue: '{days} दिन पहले पानी दिया था।',
+};
+
+export type WaterTipId = 'evening' | 'mulch' | 'drip' | 'sprinkler' | 'light';
+
+/** Water-saving tips shown under the water cards. */
+export const WATER_TIPS: { id: WaterTipId; text: string }[] = [
+  { id: 'evening', text: 'सिंचाई शाम को या सुबह जल्दी करें। दोपहर में पानी भाप बनकर उड़ जाता है।' },
+  { id: 'mulch', text: 'पौधों के बीच सूखी घास या भूसा (पलवार) बिछाएँ, मिट्टी की नमी बनी रहती है।' },
+  { id: 'drip', text: 'ड्रिप (टपक) सिंचाई से पानी सीधे जड़ में जाता है और बहुत पानी बचता है।' },
+  { id: 'sprinkler', text: 'फव्वारा (स्प्रिंकलर) सिंचाई रेतीली मिट्टी में पानी बचाती है।' },
+  { id: 'light', text: 'रेतीली मिट्टी में एक बार में बहुत पानी न दें, हल्की सिंचाई ज़्यादा बार करें।' },
+];

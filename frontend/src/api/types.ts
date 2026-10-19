@@ -110,6 +110,21 @@ export interface WeatherResponse {
   alerts: WeatherAlert[];
 }
 
+export type WaterStatus = 'water_today' | 'water_later' | 'skip' | 'check_soil' | 'rainfed';
+export type WaterTipId = 'evening' | 'mulch' | 'drip' | 'sprinkler' | 'light';
+
+export interface WaterAdvice {
+  crop: CropId;
+  status: WaterStatus;
+  inDays?: number;
+  reason: string;
+}
+
+export interface WaterGuidance {
+  advice: WaterAdvice[];
+  tips: { id: WaterTipId; text: string }[];
+}
+
 /** Error codes sent by the backend, plus the ones the app itself can produce. */
 export const ERROR_CODES = [
   'INVALID_INPUT',
