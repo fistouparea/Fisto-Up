@@ -1,7 +1,9 @@
-import { useState, type FormEvent } from 'react';
+import { useCallback, useState, type FormEvent } from 'react';
 import type { CropId, Diagnosis } from '../api/types';
 import { useChat } from '../hooks/useChat';
 import { errorMessages, hi } from '../strings/hi';
+import { MicButton } from './MicButton';
+import { SpeakButton } from './SpeakButton';
 
 const MAX_QUESTION_LENGTH = 500;
 
@@ -18,6 +20,9 @@ export function ChatPanel({ crop, diagnosis }: ChatPanelProps) {
     setDraft(question);
     if (await ask(question)) setDraft('');
   };
+
+  // Spoken text goes into the box so the farmer can check it before sending.
+  const handleTranscript = useCallback((text: string) => setDraft(text.slice(0, MAX_QUESTION_LENGTH)), []);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -51,11 +56,12 @@ export function ChatPanel({ crop, diagnosis }: ChatPanelProps) {
         {messages.map((message, index) => (
           <li
             key={index}
-            className={`max-w-[90%] rounded-2xl px-4 py-3 text-xl leading-relaxed ${
+            className={`flex max-w-[90%] flex-col gap-2 rounded-2xl px-4 py-3 text-xl leading-relaxed ${
               message.role === 'user' ? 'self-end bg-green-700 text-white' : 'self-start bg-green-50 text-gray-900'
             }`}
           >
             {message.text}
+            {message.role === 'assistant' && <SpeakButton text={message.text} size="small" />}
           </li>
         ))}
       </ul>
@@ -67,7 +73,8 @@ export function ChatPanel({ crop, diagnosis }: ChatPanelProps) {
         </p>
       )}
 
-      <form onSubmit={handleSubmit} className="flex gap-2">
+      <form onSubmit={handleSubmit} className="flex items-start gap-2">
+        <MicButton onTranscript={handleTranscript} disabled={pending} />
         <input
           type="text"
           value={draft}

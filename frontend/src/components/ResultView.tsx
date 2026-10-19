@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import type { Diagnosis } from '../api/types';
 import { hi } from '../strings/hi';
+import { diagnosisToSpeech } from '../utils/speechText';
+import { SpeakButton } from './SpeakButton';
 
 interface ResultViewProps {
   diagnosis: Diagnosis;
@@ -9,6 +11,8 @@ interface ResultViewProps {
 export function ResultView({ diagnosis }: ResultViewProps) {
   return (
     <div className="flex flex-col gap-4">
+      <SpeakButton text={diagnosisToSpeech(diagnosis)} />
+
       <Section icon="🔍" title={hi.sections.problem} highlight>
         <p className="text-2xl font-bold">{diagnosis.problem_name}</p>
       </Section>
