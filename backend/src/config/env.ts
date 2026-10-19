@@ -5,6 +5,10 @@ const envSchema = z.object({
   GEMINI_MODEL: z.string().min(1, 'GEMINI_MODEL is required'),
   AI_PROVIDER: z.enum(['gemini']).default('gemini'),
   PORT: z.coerce.number().int().positive().default(4000),
+  /** Number of reverse proxies in front of the app (1 behind nginx in Docker), so rate limits see real client IPs. */
+  TRUST_PROXY: z.coerce.number().int().min(0).default(0),
+  /** Optional. Without it the app works, but diagnosis history is turned off. */
+  MONGO_URI: z.string().trim().min(1).optional(),
   CORS_ORIGIN: z
     .string()
     .min(1)

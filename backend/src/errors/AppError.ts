@@ -7,6 +7,7 @@ export type ErrorCode =
   | 'AI_TIMEOUT'
   | 'AI_ERROR'
   | 'NOT_FOUND'
+  | 'HISTORY_UNAVAILABLE'
   | 'INTERNAL';
 
 const HTTP_STATUS: Record<ErrorCode, number> = {
@@ -17,6 +18,7 @@ const HTTP_STATUS: Record<ErrorCode, number> = {
   AI_TIMEOUT: 504,
   AI_ERROR: 502,
   NOT_FOUND: 404,
+  HISTORY_UNAVAILABLE: 503,
   INTERNAL: 500,
 };
 

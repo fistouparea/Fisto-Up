@@ -1,6 +1,7 @@
 import { vi } from 'vitest';
 import { createApp } from '../src/app.js';
 import type { AiProvider } from '../src/services/ai/aiProvider.js';
+import type { HistoryRepository } from '../src/services/history/historyRepository.js';
 import type { AiDiagnosis } from '../src/types/diagnosis.js';
 
 /** Smallest byte sequence our magic-number check accepts as a JPEG. */
@@ -33,6 +34,9 @@ export function createFakeProvider(
   return { diagnose, chat } satisfies AiProvider;
 }
 
-export function createTestApp(provider: AiProvider = createFakeProvider()) {
-  return createApp({ aiProvider: provider, corsOrigins: ['http://localhost:5173'] });
+export function createTestApp(
+  provider: AiProvider = createFakeProvider(),
+  historyRepository: HistoryRepository | null = null,
+) {
+  return createApp({ aiProvider: provider, historyRepository, corsOrigins: ['http://localhost:5173'] });
 }

@@ -5,6 +5,19 @@ export const hi = {
   appName: 'AgriAI',
   appTagline: 'फसल की फोटो से बीमारी और इलाज जानें',
 
+  nav: {
+    newCheck: 'नई जाँच',
+    history: 'मेरी जाँच',
+  },
+  history: {
+    title: 'मेरी जाँच',
+    empty: 'अभी तक कोई जाँच नहीं हुई। फसल की फोटो लेकर पहली जाँच करें।',
+    loadMore: 'और देखें',
+    loading: 'लोड हो रहा है...',
+    back: '← मेरी जाँच',
+    checkedOn: 'जाँच की तारीख',
+  },
+
   chooseCrop: 'आपकी फसल कौन सी है?',
   selectedCrop: 'फसल',
   changeCrop: 'बदलें',
@@ -75,7 +88,8 @@ export const errorMessages: Record<ErrorCode, string> = {
   FILE_TOO_LARGE: 'फोटो बहुत बड़ी है। कृपया दूसरी फोटो लें।',
   INVALID_INPUT: 'कृपया पहले फसल चुनें, फिर फोटो लें।',
   AI_ERROR: SOMETHING_WENT_WRONG,
-  NOT_FOUND: SOMETHING_WENT_WRONG,
+  NOT_FOUND: 'यह जाँच नहीं मिली।',
+  HISTORY_UNAVAILABLE: 'अभी पुरानी जाँच नहीं दिख रही। थोड़ी देर बाद फिर से देखें।',
   INTERNAL: SOMETHING_WENT_WRONG,
   UNKNOWN: SOMETHING_WENT_WRONG,
 };

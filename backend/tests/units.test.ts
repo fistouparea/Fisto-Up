@@ -36,5 +36,7 @@ describe('loadEnv', () => {
     expect(env.PORT).toBe(4000);
     expect(env.AI_PROVIDER).toBe('gemini');
     expect(env.CORS_ORIGIN).toEqual(['http://a', 'http://b']);
+    expect(env.TRUST_PROXY).toBe(0);
+    expect(env.MONGO_URI).toBeUndefined();
   });
 });

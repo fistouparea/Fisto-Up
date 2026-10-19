@@ -1,5 +1,6 @@
 import request from 'supertest';
 import { describe, expect, it, vi } from 'vitest';
+import { createApp } from '../src/app.js';
 import { AppError } from '../src/errors/AppError.js';
 import { withPacketDoseNote } from '../src/services/dawaiSafety.js';
 import { MAX_IMAGE_BYTES } from '../src/types/diagnosis.js';
@@ -145,5 +146,26 @@ describe('other routes', () => {
 
     expect(allowed.headers['access-control-allow-origin']).toBe('http://localhost:5173');
     expect(blocked.headers['access-control-allow-origin']).toBeUndefined();
+  });
+});
+
+describe('AI rate limit behind a proxy', () => {
+  it('counts each client IP separately when trustProxyHops is set', async () => {
+    const app = createApp({
+      aiProvider: createFakeProvider(),
+      historyRepository: null,
+      corsOrigins: [],
+      trustProxyHops: 1,
+    });
+    const send = (ip: string) =>
+      request(app)
+        .post('/api/diagnose')
+        .set('X-Forwarded-For', ip)
+        .field('crop', 'bajra')
+        .attach('image', JPEG_BYTES, { filename: 'leaf.jpg', contentType: 'image/jpeg' });
+
+    for (let i = 0; i < 30; i++) await send('10.0.0.1');
+    expect((await send('10.0.0.1')).status).toBe(429);
+    expect((await send('10.0.0.2')).status).toBe(200);
   });
 });

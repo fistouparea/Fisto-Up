@@ -33,6 +33,7 @@ describe('diagnoseCrop', () => {
     expect(init.method).toBe('POST');
     const form = init.body as FormData;
     expect(form.get('crop')).toBe('bajra');
+    expect(form.get('deviceId')).toMatch(/^[0-9a-f-]{36}$/);
     expect(form.get('image')).toBeInstanceOf(Blob);
   });
 
