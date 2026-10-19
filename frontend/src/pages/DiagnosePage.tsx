@@ -17,16 +17,17 @@ import { diagnoseCrop } from '../api/diagnose';
 import type { CropId, Diagnosis, ErrorCode } from '../api/types';
 import { ChatPanel } from '../components/ChatPanel';
 import { CropGrid } from '../components/CropGrid';
-import { PhotoActions } from '../components/PhotoActions';
+import { PhotoActions, SquareButton } from '../components/PhotoActions';
 import { PhotoPreview } from '../components/PhotoPreview';
 import { ResultView } from '../components/ResultView';
 import { SelectedCrop } from '../components/SelectedCrop';
 import { Button } from '../components/ui/Button';
-import { Card } from '../components/ui/Card';
+import { Callout } from '../components/ui/Callout';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Loader } from '../components/ui/Loader';
 import { PageHeader } from '../components/ui/PageHeader';
 import { StepIndicator } from '../components/ui/StepIndicator';
+import { StickyActions } from '../components/ui/StickyActions';
 import { notifySuccess } from '../components/ui/notify';
 import { errorMessages, hi } from '../strings/hi';
 import { compressImage } from '../utils/compressImage';
@@ -38,6 +39,9 @@ type State =
   | { step: 'result'; crop: CropId; photo: Blob; diagnosis: Diagnosis }
   | { step: 'unclear'; crop: CropId; photo: Blob }
   | { step: 'error'; crop: CropId; photo: Blob | null; code: ErrorCode };
+
+/** Temporary problems (busy, slow, offline) are "ध्यान दें" yellow; real failures are red. */
+const TEMPORARY_ERRORS: ReadonlySet<ErrorCode> = new Set(['RATE_LIMITED', 'AI_TIMEOUT', 'NETWORK']);
 
 /** Errors where sending the same photo again can succeed. Others need a new photo. */
 const RETRYABLE_ERRORS: ReadonlySet<ErrorCode> = new Set([
@@ -124,26 +128,31 @@ export function DiagnosePage() {
             <>
               <SelectedCrop crop={state.crop} onChange={() => chooseAgain(null)} />
               <PhotoPreview photo={state.photo} />
-              <Button variant="accent" size="hero" icon={LuScanSearch} onClick={() => void runDiagnosis(state.crop, state.photo)}>
-                {hi.checkPhoto}
-              </Button>
-              <Button variant="secondary" icon={LuCamera} onClick={() => chooseAgain(state.crop)}>
-                {hi.retakePhoto}
-              </Button>
+              <StickyActions>
+                <Button
+                  variant="accent"
+                  size="hero"
+                  icon={LuScanSearch}
+                  onClick={() => void runDiagnosis(state.crop, state.photo)}
+                  className="flex-1"
+                >
+                  {hi.checkPhoto}
+                </Button>
+                <SquareButton icon={LuCamera} label={hi.retakeShort} ariaLabel={hi.retakePhoto} onClick={() => chooseAgain(state.crop)} />
+              </StickyActions>
             </>
           )}
 
           {state.step === 'checking' && (
             <>
-              <PhotoPreview photo={state.photo} dimmed small />
+              <PhotoPreview photo={state.photo} size="small" dimmed />
               <Loader title={hi.checking} hint={hi.checkingHint} />
             </>
           )}
 
           {state.step === 'result' && (
             <>
-              <SelectedCrop crop={state.crop} />
-              <PhotoPreview photo={state.photo} small />
+              <SelectedCrop crop={state.crop} photo={state.photo} />
               <ResultView diagnosis={state.diagnosis} />
               <ChatPanel crop={state.crop} diagnosis={state.diagnosis} />
               <Button icon={LuCamera} onClick={() => chooseAgain(null)}>
@@ -154,7 +163,7 @@ export function DiagnosePage() {
 
           {state.step === 'unclear' && (
             <>
-              <PhotoPreview photo={state.photo} small />
+              <SelectedCrop crop={state.crop} photo={state.photo} />
               <EmptyState icon={LuCameraOff} tone="warning" message={hi.unclearPhoto}>
                 <Button variant="accent" icon={LuCamera} onClick={() => chooseAgain(state.crop)}>
                   {hi.retakePhoto}
@@ -199,13 +208,15 @@ function ChooseStep({ crop, preparing, onSelect, onPick }: ChooseStepProps) {
     <>
       <PageHeader title={hi.chooseCrop} />
       <CropGrid selected={crop} onSelect={onSelect} />
+      {/* The camera appears once a crop is chosen, so it never hides the crop cards before that. */}
       {crop && (
-        <Card tone="cream" icon={LuScanEye} title={hi.takePhotoHint} speakText={hi.takePhotoHint} reveal />
+        <>
+          <Callout tone="cream" icon={LuScanEye} text={hi.takePhotoHint} />
+          <StickyActions>
+            <PhotoActions onPick={(file) => onPick(crop, file)} />
+          </StickyActions>
+        </>
       )}
-      {/* Sticky above the bottom navigation so the main action is always in reach. */}
-      <div className="sticky bottom-24 z-10 -mx-4 bg-linear-to-t from-surface-page from-70% to-transparent px-4 pt-6 pb-2">
-        <PhotoActions enabled={crop !== null} onPick={(file) => crop && onPick(crop, file)} />
-      </div>
     </>
   );
 }
@@ -218,7 +229,11 @@ interface ErrorStepProps {
 
 function ErrorStep({ code, onRetry, onRetake }: ErrorStepProps) {
   return (
-    <EmptyState icon={ERROR_ICONS[code] ?? LuServerCrash} tone="danger" message={errorMessages[code]}>
+    <EmptyState
+      icon={ERROR_ICONS[code] ?? LuServerCrash}
+      tone={TEMPORARY_ERRORS.has(code) ? 'warning' : 'danger'}
+      message={errorMessages[code]}
+    >
       {onRetry && (
         <Button variant="accent" icon={LuRefreshCw} onClick={onRetry}>
           {hi.tryAgain}

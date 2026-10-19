@@ -17,7 +17,6 @@ export const hi = {
     answer: 'जवाब',
   },
   home: {
-    pickCropFirst: 'पहले फसल चुनें',
     selected: 'चुनी गई',
   },
   severity: {
@@ -54,6 +53,7 @@ export const hi = {
 
   checkPhoto: 'जाँच करें',
   retakePhoto: 'दूसरी फोटो लें',
+  retakeShort: 'फिर से',
   checking: 'जाँच हो रही है...',
   checkingHint: 'कृपया रुकें, इसमें थोड़ा समय लग सकता है',
 
@@ -82,6 +82,7 @@ export const hi = {
 
   voice: {
     listen: 'सुनें',
+    listenAll: 'पूरा सुनें',
     stop: 'रोकें',
     speak: 'बोलकर पूछें',
     listening: 'बोलिए...',

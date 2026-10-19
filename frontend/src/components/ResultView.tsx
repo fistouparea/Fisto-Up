@@ -3,6 +3,7 @@ import type { Diagnosis } from '../api/types';
 import { hi } from '../strings/hi';
 import { diagnosisToSpeech } from '../utils/speechText';
 import { SeverityCard } from './SeverityCard';
+import { Callout } from './ui/Callout';
 import { Card } from './ui/Card';
 import { SpeakButton } from './ui/SpeakButton';
 
@@ -17,7 +18,7 @@ export function ResultView({ diagnosis }: ResultViewProps) {
     <div className="flex flex-col gap-4">
       {severity && <SeverityCard severity={severity} />}
 
-      <SpeakButton text={diagnosisToSpeech(diagnosis)} variant="pill" className="self-start" />
+      <SpeakButton text={diagnosisToSpeech(diagnosis)} variant="pill" label={hi.voice.listenAll} className="self-start" />
 
       <Card reveal icon={LuSearch} title={hi.sections.problem} speakText={`${hi.sections.problem}: ${problem_name}`}>
         <p className="text-2xl font-bold leading-snug">{problem_name}</p>
@@ -33,9 +34,7 @@ export function ResultView({ diagnosis }: ResultViewProps) {
         </Card>
       )}
 
-      {dawai.length > 0 && (
-        <Card reveal tone="warning" icon={LuShieldAlert} className="border-2" speakText={hi.dawaiWarning} title={hi.dawaiWarning} />
-      )}
+      {dawai.length > 0 && <Callout tone="warning" icon={LuShieldAlert} text={hi.dawaiWarning} />}
 
       <Card
         reveal
@@ -67,7 +66,7 @@ export function ResultView({ diagnosis }: ResultViewProps) {
         </Card>
       )}
 
-      <Card reveal tone="cream" icon={LuLandmark} title={hi.kvkAdvice} speakText={hi.kvkAdvice} className="border-2" />
+      <Callout tone="cream" icon={LuLandmark} text={hi.kvkAdvice} />
     </div>
   );
 }

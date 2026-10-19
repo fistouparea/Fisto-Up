@@ -25,7 +25,7 @@ export function CropGrid({ selected, onSelect }: CropGridProps) {
             onClick={() => onSelect(crop)}
             aria-pressed={isSelected}
             className={cn(
-              'relative flex min-h-32 flex-col items-center justify-center gap-1 rounded-3xl border-2 bg-surface p-2 shadow-card transition-colors',
+              'relative flex min-h-28 flex-col items-center justify-center gap-1 rounded-3xl border-2 bg-surface p-2 shadow-card transition-colors',
               isSelected ? 'border-primary-700 bg-primary-50 ring-4 ring-primary-200' : 'border-line hover:border-primary-300',
             )}
           >
@@ -35,7 +35,7 @@ export function CropGrid({ selected, onSelect }: CropGridProps) {
                 <span className="sr-only">{hi.home.selected}</span>
               </span>
             )}
-            <CropIcon crop={crop} className="size-14" />
+            <CropIcon crop={crop} className="size-12" />
             <span className="text-xl font-bold leading-tight text-ink-900">{label.hindi}</span>
             <span className="text-sm leading-tight text-ink-500">{label.english}</span>
           </m.button>

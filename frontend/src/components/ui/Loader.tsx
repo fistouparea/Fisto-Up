@@ -21,7 +21,7 @@ export function Loader({ title, hint }: LoaderProps) {
 
 function LeafScanIllustration() {
   return (
-    <svg viewBox="0 0 160 160" className="size-40" aria-hidden="true">
+    <svg viewBox="0 0 160 160" className="size-32" aria-hidden="true">
       <circle cx="80" cy="80" r="76" className="fill-surface-green" />
       <g className="origin-[80px_130px] animate-sway">
         <path d="M80 132 C 80 110, 80 90, 80 60" className="stroke-primary-700" strokeWidth="5" strokeLinecap="round" fill="none" />

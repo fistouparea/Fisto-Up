@@ -33,7 +33,7 @@ export function IconButton({ icon: Icon, label, tone = 'soft', size = 'md', clas
       whileTap={{ scale: 0.92 }}
       className={cn(
         'inline-flex shrink-0 items-center justify-center rounded-full transition-colors',
-        'disabled:cursor-not-allowed disabled:bg-ink-300/40 disabled:text-ink-500',
+        'disabled:cursor-not-allowed disabled:bg-line disabled:text-ink-500',
         TONES[tone],
         SIZES[size].button,
         className,

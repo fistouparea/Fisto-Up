@@ -9,22 +9,24 @@ interface SpeakButtonProps {
   text: string;
   /** "icon": round speaker next to headings. "pill": icon + "सुनें" label. */
   variant?: 'icon' | 'pill';
+  /** Pill label when not speaking; defaults to "सुनें". */
+  label?: string;
   className?: string;
 }
 
 /** Reads `text` aloud in Hindi; tap again to stop. Renders nothing if the browser cannot speak. */
-export function SpeakButton({ text, variant = 'icon', className }: SpeakButtonProps) {
+export function SpeakButton({ text, variant = 'icon', label: idleLabel = hi.voice.listen, className }: SpeakButtonProps) {
   const { supported, speaking, speak, stop } = useSpeechOutput();
   if (!supported) return null;
 
   const toggle = () => (speaking ? stop() : speak(text));
-  const label = speaking ? hi.voice.stop : hi.voice.listen;
+  const label = speaking ? hi.voice.stop : idleLabel;
 
   if (variant === 'icon') {
     return (
       <IconButton
         icon={speaking ? LuSquare : LuVolume2}
-        label={label}
+        label={speaking ? hi.voice.stop : hi.voice.listen}
         tone={speaking ? 'accent' : 'soft'}
         aria-pressed={speaking}
         onClick={toggle}

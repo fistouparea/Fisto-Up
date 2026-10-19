@@ -51,7 +51,7 @@ export function Button({
       whileTap={{ scale: 0.97 }}
       className={cn(
         'inline-flex items-center justify-center rounded-2xl font-bold transition-colors',
-        'disabled:cursor-not-allowed disabled:bg-ink-300/40 disabled:text-ink-500 disabled:shadow-none',
+        'disabled:cursor-not-allowed disabled:border-line disabled:bg-line disabled:text-ink-500 disabled:shadow-none',
         VARIANTS[variant],
         SIZES[size],
         fullWidth && 'w-full',

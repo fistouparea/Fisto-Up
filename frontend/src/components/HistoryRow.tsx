@@ -18,20 +18,21 @@ export function HistoryRow({ item }: { item: HistorySummary }) {
         href={routes.historyItem(item.id)}
         className="flex min-h-24 items-center gap-3 rounded-3xl border border-line bg-surface p-3 shadow-card hover:border-primary-300"
       >
-        <span className="flex size-16 shrink-0 items-center justify-center rounded-2xl bg-surface-green">
-          <CropIcon crop={item.crop} className="size-12" />
+        <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-surface-green">
+          <CropIcon crop={item.crop} className="size-10" />
         </span>
         <span className="flex min-w-0 flex-1 flex-col gap-1">
           <span className="text-lg font-bold leading-snug text-ink-900">{item.problemName}</span>
-          <span className="flex items-center gap-1 text-base text-ink-500">
+          <span className="text-base text-ink-700">{cropLabels[item.crop].hindi}</span>
+          <span className="flex items-center gap-1.5 text-sm text-ink-500">
             <LuCalendar aria-hidden="true" className="size-4 shrink-0" />
-            {cropLabels[item.crop].hindi} · {formatDate(item.createdAt)}
+            {formatDate(item.createdAt)}
           </span>
           {item.severity && (
             <Badge tone={SEVERITY_TONE[item.severity]} label={hi.severity[item.severity]} className="self-start" />
           )}
         </span>
-        <LuChevronRight aria-hidden="true" className="size-7 shrink-0 text-ink-500" />
+        <LuChevronRight aria-hidden="true" className="size-6 shrink-0 text-ink-500" />
       </a>
     </m.li>
   );
