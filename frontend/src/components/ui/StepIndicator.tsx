@@ -1,25 +1,25 @@
 import { Fragment } from 'react';
 import type { IconType } from 'react-icons';
-import { LuCamera, LuCheck, LuClipboardCheck, LuSprout } from 'react-icons/lu';
-import { hi } from '../../strings/hi';
+import { LuCheck } from 'react-icons/lu';
 import { cn } from '../../utils/cn';
 
-const STEPS: { label: string; icon: IconType }[] = [
-  { label: hi.steps.crop, icon: LuSprout },
-  { label: hi.steps.photo, icon: LuCamera },
-  { label: hi.steps.answer, icon: LuClipboardCheck },
-];
-
-interface StepIndicatorProps {
-  /** 0 = फसल चुनें, 1 = फोटो लें, 2 = जवाब */
-  current: 0 | 1 | 2;
+export interface Step {
+  label: string;
+  icon: IconType;
 }
 
-/** फसल चुनें → फोटो लें → जवाब, with icons, numbers and a check on finished steps. */
-export function StepIndicator({ current }: StepIndicatorProps) {
+interface StepIndicatorProps {
+  steps: Step[];
+  /** Index of the active step. */
+  current: number;
+  label: string;
+}
+
+/** Numbered steps with icons; finished steps get a check, the active one is highlighted. */
+export function StepIndicator({ steps, current, label }: StepIndicatorProps) {
   return (
-    <ol className="flex items-start" aria-label={hi.steps.label}>
-      {STEPS.map((step, index) => {
+    <ol className="flex items-start" aria-label={label}>
+      {steps.map((step, index) => {
         const done = index < current;
         const active = index === current;
         const Icon = done ? LuCheck : step.icon;

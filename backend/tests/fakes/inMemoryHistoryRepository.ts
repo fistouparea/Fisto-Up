@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import type { HistoryRepository } from '../src/services/history/historyRepository.js';
-import type { HistoryPage, HistoryRecord, NewHistoryEntry } from '../src/types/history.js';
+import type { HistoryRepository } from '../../src/services/history/historyRepository.js';
+import type { HistoryPage, HistoryRecord, NewHistoryEntry } from '../../src/types/history.js';
 
 /** Test double for HistoryRepository with the same ordering and ownership rules as the Mongo one. */
 export class InMemoryHistoryRepository implements HistoryRepository {

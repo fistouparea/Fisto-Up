@@ -48,6 +48,32 @@ export interface HistoryRecord {
   createdAt: string;
 }
 
+export const IRRIGATION_SOURCES = ['tubewell', 'canal', 'rainfed', 'tanka'] as const;
+export type IrrigationSource = (typeof IRRIGATION_SOURCES)[number];
+
+/** Dates are "YYYY-MM-DD" in India time. */
+export interface FarmCrop {
+  crop: CropId;
+  sowingDate: string;
+  lastWateredOn?: string;
+}
+
+export interface FarmLocation {
+  lat: number;
+  lon: number;
+  source: 'gps' | 'list';
+  district?: string;
+  tehsil?: string;
+}
+
+/** "मेरा खेत". Every part is optional because each onboarding screen can be skipped. */
+export interface FarmProfile {
+  location?: FarmLocation;
+  crops: FarmCrop[];
+  fieldSizeBigha?: number;
+  irrigation?: IrrigationSource;
+}
+
 /** Error codes sent by the backend, plus the ones the app itself can produce. */
 export const ERROR_CODES = [
   'INVALID_INPUT',
@@ -58,6 +84,7 @@ export const ERROR_CODES = [
   'AI_ERROR',
   'NOT_FOUND',
   'HISTORY_UNAVAILABLE',
+  'STORAGE_UNAVAILABLE',
   'INTERNAL',
   'NETWORK',
   'PHOTO_READ_FAILED',

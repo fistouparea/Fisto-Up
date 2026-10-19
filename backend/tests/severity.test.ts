@@ -3,7 +3,7 @@ import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { DIAGNOSIS_SYSTEM_PROMPT } from '../src/services/ai/prompt.js';
 import { createFakeProvider, createTestApp, healthyDiagnosis, JPEG_BYTES } from './helpers.js';
-import { InMemoryHistoryRepository } from './inMemoryHistoryRepository.js';
+import { InMemoryHistoryRepository } from './fakes/inMemoryHistoryRepository.js';
 
 function diagnose(app: ReturnType<typeof createTestApp>, deviceId?: string) {
   const req = request(app).post('/api/diagnose').field('crop', 'bajra');

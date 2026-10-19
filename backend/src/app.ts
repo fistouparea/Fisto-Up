@@ -6,13 +6,17 @@ import { createAiRateLimit } from './middleware/rateLimit.js';
 import { createChatRouter } from './routes/chat.routes.js';
 import { createDiagnoseRouter } from './routes/diagnose.routes.js';
 import { createHistoryRouter } from './routes/history.routes.js';
+import { createProfileRouter } from './routes/profile.routes.js';
 import type { AiProvider } from './services/ai/aiProvider.js';
+import type { FarmProfileRepository } from './services/farm/farmProfileRepository.js';
 import type { HistoryRepository } from './services/history/historyRepository.js';
 
 export interface AppDependencies {
   aiProvider: AiProvider;
   /** null when MONGO_URI is not set: diagnosis works, history endpoints return HISTORY_UNAVAILABLE. */
   historyRepository: HistoryRepository | null;
+  /** null when MONGO_URI is not set: "मेरा खेत" endpoints return STORAGE_UNAVAILABLE. */
+  farmProfiles?: FarmProfileRepository | null;
   corsOrigins: string[];
   /** Reverse proxies in front of the app; 0 when clients connect directly. */
   trustProxyHops?: number;
@@ -21,6 +25,7 @@ export interface AppDependencies {
 export function createApp({
   aiProvider,
   historyRepository,
+  farmProfiles = null,
   corsOrigins,
   trustProxyHops = 0,
 }: AppDependencies): Express {
@@ -29,7 +34,7 @@ export function createApp({
   app.disable('x-powered-by');
   app.set('trust proxy', trustProxyHops);
   app.use(helmet());
-  app.use(cors({ origin: corsOrigins, methods: ['GET', 'POST'] }));
+  app.use(cors({ origin: corsOrigins, methods: ['GET', 'POST', 'PUT'] }));
 
   app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok' });
@@ -39,6 +44,7 @@ export function createApp({
   app.use('/api', createDiagnoseRouter(aiProvider, historyRepository, aiRateLimit));
   app.use('/api', createChatRouter(aiProvider, aiRateLimit));
   app.use('/api', createHistoryRouter(historyRepository));
+  app.use('/api', createProfileRouter(farmProfiles));
 
   app.use(notFoundHandler);
   app.use(errorHandler);

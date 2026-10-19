@@ -4,12 +4,14 @@ import type { IconType } from 'react-icons';
 import {
   LuCamera,
   LuCameraOff,
+  LuClipboardCheck,
   LuHourglass,
   LuImageOff,
   LuRefreshCw,
   LuScanEye,
   LuScanSearch,
   LuServerCrash,
+  LuSprout,
   LuWifiOff,
 } from 'react-icons/lu';
 import { ApiError } from '../api/client';
@@ -26,7 +28,7 @@ import { Callout } from '../components/ui/Callout';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Loader } from '../components/ui/Loader';
 import { PageHeader } from '../components/ui/PageHeader';
-import { StepIndicator } from '../components/ui/StepIndicator';
+import { StepIndicator, type Step } from '../components/ui/StepIndicator';
 import { StickyActions } from '../components/ui/StickyActions';
 import { notifySuccess } from '../components/ui/notify';
 import { errorMessages, hi } from '../strings/hi';
@@ -52,6 +54,12 @@ const RETRYABLE_ERRORS: ReadonlySet<ErrorCode> = new Set([
   'INTERNAL',
   'UNKNOWN',
 ]);
+
+const DIAGNOSE_STEPS: Step[] = [
+  { label: hi.steps.crop, icon: LuSprout },
+  { label: hi.steps.photo, icon: LuCamera },
+  { label: hi.steps.answer, icon: LuClipboardCheck },
+];
 
 const ERROR_ICONS: Partial<Record<ErrorCode, IconType>> = {
   NETWORK: LuWifiOff,
@@ -104,7 +112,7 @@ export function DiagnosePage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <StepIndicator current={currentStep(state)} />
+      <StepIndicator steps={DIAGNOSE_STEPS} current={currentStep(state)} label={hi.steps.label} />
 
       <AnimatePresence mode="wait" initial={false}>
         <m.div
@@ -207,7 +215,7 @@ function ChooseStep({ crop, preparing, onSelect, onPick }: ChooseStepProps) {
   return (
     <>
       <PageHeader title={hi.chooseCrop} />
-      <CropGrid selected={crop} onSelect={onSelect} />
+      <CropGrid selected={crop ? [crop] : []} onSelect={onSelect} />
       {/* The camera appears once a crop is chosen, so it never hides the crop cards before that. */}
       {crop && (
         <>

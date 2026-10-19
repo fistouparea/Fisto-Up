@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { AppError } from '../src/errors/AppError.js';
 import type { HistoryRepository } from '../src/services/history/historyRepository.js';
 import { createFakeProvider, createTestApp, healthyDiagnosis, JPEG_BYTES } from './helpers.js';
-import { InMemoryHistoryRepository } from './inMemoryHistoryRepository.js';
+import { InMemoryHistoryRepository } from './fakes/inMemoryHistoryRepository.js';
 
 const DEVICE = randomUUID();
 const OTHER_DEVICE = randomUUID();

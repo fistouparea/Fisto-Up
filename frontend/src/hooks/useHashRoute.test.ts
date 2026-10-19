@@ -8,6 +8,8 @@ describe('parseRoute', () => {
     ['#/unknown', { name: 'diagnose' }],
     ['#/history', { name: 'history' }],
     ['#/history/abc123', { name: 'historyItem', id: 'abc123' }],
+    ['#/farm', { name: 'farm' }],
+    ['#/farm/setup', { name: 'farmSetup' }],
   ])('parses "%s"', (hash, expected) => {
     expect(parseRoute(hash)).toEqual(expected);
   });
