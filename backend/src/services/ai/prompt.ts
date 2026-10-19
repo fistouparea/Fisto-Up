@@ -44,6 +44,9 @@ Rules:
 9. savdhani: safety steps (gloves, mask, do not spray in wind, keep away from children and animals,
    waiting days before harvest) and things to avoid.
 10. Keep each list to at most 4 items.
+11. severity: "healthy" if the plant looks healthy; "mild" for an early or minor problem that simple care
+    can fix; "serious" if the problem is spreading fast, can destroy much of the crop, or needs action today.
+    When in doubt between two levels, choose the more serious one.
 `.trim();
 
 export function buildDiagnosisUserPrompt(cropName: string): string {

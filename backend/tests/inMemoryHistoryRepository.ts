@@ -23,6 +23,7 @@ export class InMemoryHistoryRepository implements HistoryRepository {
         id: record.id,
         crop: record.crop,
         problemName: record.diagnosis.problem_name,
+        ...(record.diagnosis.severity ? { severity: record.diagnosis.severity } : {}),
         createdAt: record.createdAt,
       })),
       page,

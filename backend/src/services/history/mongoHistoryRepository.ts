@@ -14,7 +14,7 @@ export class MongoHistoryRepository implements HistoryRepository {
     // Fetch one extra row to know whether another page exists.
     const rows = await withStorageErrors(() =>
       DiagnosisRecord.find({ deviceId })
-        .select('crop diagnosis.problem_name createdAt')
+        .select('crop diagnosis.problem_name diagnosis.severity createdAt')
         .sort({ createdAt: -1, _id: -1 })
         .skip((page - 1) * limit)
         .limit(limit + 1)
@@ -27,6 +27,7 @@ export class MongoHistoryRepository implements HistoryRepository {
         id: row._id.toString(),
         crop: row.crop as CropId,
         problemName: row.diagnosis.problem_name,
+        ...(row.diagnosis.severity ? { severity: row.diagnosis.severity } : {}),
         createdAt: row.createdAt,
       })),
       page,

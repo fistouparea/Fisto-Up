@@ -47,17 +47,23 @@ describe.skipIf(!MONGO_URI_TEST)('MongoHistoryRepository with a real MongoDB', (
       await repository.save({ deviceId: device, crop: 'guar', diagnosis: { ...diagnosis, problem_name: problem } });
     }
     await repository.save({ deviceId: randomUUID(), crop: 'bajra', diagnosis });
+    await repository.save({ deviceId: device, crop: 'chana', diagnosis: { ...diagnosis, problem_name: 'चौथा', severity: 'mild' } });
+
+    const newest = await repository.list(device, 1, 1);
+    expect(newest.items[0]).toMatchObject({ problemName: 'चौथा', severity: 'mild' });
+    expect((await repository.findById(device, newest.items[0]?.id ?? ''))?.diagnosis.severity).toBe('mild');
 
     const firstPage = await repository.list(device, 1, 2);
-    expect(firstPage.items.map((item) => item.problemName)).toEqual(['तीसरा', 'दूसरा']);
+    expect(firstPage.items.map((item) => item.problemName)).toEqual(['चौथा', 'तीसरा']);
     expect(firstPage.hasMore).toBe(true);
+    expect(firstPage.items[1]).not.toHaveProperty('severity');
     expect(firstPage.items[0]?.createdAt).toBeInstanceOf(Date);
 
     const secondPage = await repository.list(device, 2, 2);
-    expect(secondPage.items.map((item) => item.problemName)).toEqual(['पहला']);
+    expect(secondPage.items.map((item) => item.problemName)).toEqual(['दूसरा', 'पहला']);
     expect(secondPage.hasMore).toBe(false);
 
-    const id = firstPage.items[0]?.id ?? '';
+    const id = firstPage.items[1]?.id ?? '';
     const found = await repository.findById(device, id);
     expect(found).toMatchObject({ id, crop: 'guar', diagnosis: { ...diagnosis, problem_name: 'तीसरा' } });
 

@@ -31,9 +31,19 @@ const DIAGNOSIS_RESPONSE_SCHEMA: Schema = {
       },
     },
     savdhani: { type: Type.ARRAY, items: { type: Type.STRING } },
+    severity: { type: Type.STRING, enum: ['healthy', 'mild', 'serious'] },
   },
-  required: ['is_plant_image', 'confidence', 'problem_name', 'explanation', 'desi_upay', 'dawai', 'savdhani'],
-  propertyOrdering: ['is_plant_image', 'confidence', 'problem_name', 'explanation', 'desi_upay', 'dawai', 'savdhani'],
+  required: ['is_plant_image', 'confidence', 'problem_name', 'explanation', 'desi_upay', 'dawai', 'savdhani', 'severity'],
+  propertyOrdering: [
+    'is_plant_image',
+    'confidence',
+    'severity',
+    'problem_name',
+    'explanation',
+    'desi_upay',
+    'dawai',
+    'savdhani',
+  ],
 };
 
 /** Mirrors aiChatAnswerSchema. */

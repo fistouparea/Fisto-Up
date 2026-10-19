@@ -1,5 +1,5 @@
 import { model, Schema, type InferSchemaType } from 'mongoose';
-import { CROPS } from '../types/diagnosis.js';
+import { CROPS, SEVERITIES } from '../types/diagnosis.js';
 
 const dawaiSchema = new Schema(
   {
@@ -16,6 +16,7 @@ const diagnosisSchema = new Schema(
     desi_upay: { type: [String], default: [] },
     dawai: { type: [dawaiSchema], default: [] },
     savdhani: { type: [String], default: [] },
+    severity: { type: String, enum: SEVERITIES },
   },
   { _id: false },
 );

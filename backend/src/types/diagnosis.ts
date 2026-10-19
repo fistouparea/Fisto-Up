@@ -22,6 +22,9 @@ export type ImageMimeType = (typeof ALLOWED_IMAGE_TYPES)[number];
 
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
+export const SEVERITIES = ['healthy', 'mild', 'serious'] as const;
+export type Severity = (typeof SEVERITIES)[number];
+
 const hindiText = z.string().trim().max(1000);
 const hindiList = z.array(hindiText.min(1)).max(8);
 
@@ -41,6 +44,8 @@ export const aiDiagnosisSchema = z.object({
     )
     .max(8),
   savdhani: hindiList,
+  /** healthy = no problem, mild = needs attention, serious = act now. Optional: older records lack it. */
+  severity: z.enum(SEVERITIES).optional(),
 });
 
 export type AiDiagnosis = z.infer<typeof aiDiagnosisSchema>;

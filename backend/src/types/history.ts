@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { CropId, Diagnosis } from './diagnosis.js';
+import type { CropId, Diagnosis, Severity } from './diagnosis.js';
 
 export const deviceIdSchema = z.uuid();
 
@@ -32,6 +32,7 @@ export interface HistorySummary {
   id: string;
   crop: CropId;
   problemName: string;
+  severity?: Severity;
   createdAt: Date;
 }
 

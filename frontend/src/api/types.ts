@@ -7,12 +7,16 @@ export interface Dawai {
   kaise_use_karein: string;
 }
 
+/** healthy = green, mild = yellow (ध्यान दें), serious = red (गंभीर). Older saved results may not have it. */
+export type Severity = 'healthy' | 'mild' | 'serious';
+
 export interface Diagnosis {
   problem_name: string;
   explanation: string;
   desi_upay: string[];
   dawai: Dawai[];
   savdhani: string[];
+  severity?: Severity;
 }
 
 export interface ChatMessage {
@@ -27,6 +31,7 @@ export interface HistorySummary {
   id: string;
   crop: CropId;
   problemName: string;
+  severity?: Severity;
   createdAt: string;
 }
 
