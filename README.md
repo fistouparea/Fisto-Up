@@ -153,7 +153,8 @@ All errors: `{ "error": { "code": "..." } }`. The frontend turns each code into 
 **`POST /api/diagnose`** — `multipart/form-data`: `crop`, `image`, optional `deviceId` (UUID; saves to history).
 
 - `crop`: `bajra | guar | moong | moth | chana | sarson | jeera | gehun | other`
-- `200` → `{ "status": "ok", "diagnosis": { problem_name, explanation, desi_upay[], dawai[{name, kaise_use_karein}], savdhani[] } }`
+- `200` → `{ "status": "ok", "diagnosis": { problem_name, explanation, desi_upay[], dawai[{name, kaise_use_karein}], savdhani[], severity? } }`
+- `severity` (optional): `healthy` | `mild` | `serious`, shown as a green / yellow / red badge
   or `{ "status": "unclear" }`
 
 **`POST /api/chat`** — JSON:
@@ -222,12 +223,16 @@ backend/src/
 backend/tests/                    API + provider + repository tests (fake AI, in-memory history)
 frontend/src/
   pages/                          DiagnosePage, HistoryPage, HistoryDetailPage
-  components/                     CropPicker, PhotoPicker, ResultView, ChatPanel, MicButton, SpeakButton, ...
+  components/ui/                  design system: Button, IconButton, Card, Badge, Callout, SpeakButton, PageHeader,
+                                  StepIndicator, EmptyState, BottomNav, Loader, Skeleton, StickyActions, toasts
+  components/                     CropGrid + CropIcon (SVG), PhotoActions, ResultView, SeverityCard, ChatPanel, ...
+  index.css                       design tokens (Tailwind v4 @theme): colors, font, shadows
   hooks/                          useChat, useSpeech, useHistory, useHashRoute
   api/                            fetch client + diagnose/chat/history + shared types
   utils/                          compressImage, deviceId, formatDate, speechText
   strings/hi.ts                   all Hindi text
 docker-compose.yml                mongo + backend + frontend (nginx)
+docs/screenshots/                 UI screenshots at 360px width
 ```
 
 ## Safety note
