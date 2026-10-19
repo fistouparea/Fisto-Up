@@ -197,3 +197,110 @@ cd backend && npm test          # 78 tests (+1 Mongo test jo MONGO_URI_TEST se c
 cd frontend && npm test         # 31 tests
 cd backend && MONGO_URI_TEST=mongodb://localhost:27017 npm test   # asli Mongo test bhi
 ```
+
+---
+
+# UI Redesign
+
+Commits (ek-ek karke review kar sakte hain):
+
+```
+2a4f57c Add optional diagnosis severity (healthy/mild/serious) for the result badge
+8f37385 UI redesign: design system (tokens + ui components) and all screens
+7f4bc2b UI redesign: layout fixes from screenshot review + screenshots
+```
+
+**Screenshots:** `docs/screenshots/` mein 360px width par 14 screens hain. Sab mock data se bani hain:
+home, crop chuni hui, photo preview, loading, result (स्वस्थ / ध्यान दें / गंभीर), poora result, chat,
+history, khaali history, error, unclear photo aur history detail.
+
+**Status:** backend ke 84 tests aur frontend ke 31 tests pass hain. Lint, typecheck, build aur
+`npm audit` (0 vulnerabilities) dono apps mein clean hain.
+
+## ⚠️ Pehle ye padhein: backend mein ek chhota badlav
+Aapne kaha tha backend logic na badlein. Par result screen par **हरा/पीला/लाल severity badge** chahiye tha,
+aur backend severity deta hi nahi tha. Frontend mein andaaza lagata (jaise "dawai hai to peela") to kisan ko
+galat rang dikh sakta tha. Ye kisi aur jaanch ko galat "swasth" dikhane jaisa khatra hai.
+- Isliye AI ab ek extra field deta hai: `severity` = `healthy` | `mild` | `serious`.
+- Prompt mein likha hai: shak ho to zyada gambhir wala level chuno.
+- Ye **sirf jodna (additive) aur optional** hai. Purani history aur bina severity wale result pehle jaise chalte
+  hain; tab badge bas nahi dikhta.
+- Kuch aur nahi badla. Ye alag commit (`2a4f57c`) mein hai, nahi chahiye to sirf use revert kar dein.
+  Frontend bina severity ke bhi chalta hai.
+
+## Har screen par kya badla
+
+| Screen | Pehle | Ab |
+| --- | --- | --- |
+| Upar ki patti | Hara header + tabs | Patli brand bar (logo + naam). Navigation neeche chali gayi |
+| Neeche navigation | – | **Bottom bar**: 📷 नई जाँच, 🕘 मेरी जाँच. Active tab peeli pill mein |
+| Kadam | – | **3-step indicator**: फसल चुनें → फोटो लें → जवाब (icon + number + ✓) |
+| Home | Emoji wale crop buttons | **Original SVG crop chitra** (9 fasal), bade card, chuni hui par ✓. Fasal chunte hi neeche **bada peela "फोटो लें" button** aur "गैलरी" button aate hain (sticky, hamesha angoothe ki pahunch mein) |
+| Photo preview | Photo + 2 bade button | Photo + sticky **"जाँच करें"** (peela, hero) + "फिर से" |
+| Loading | Ghoomta circle | **Patte par magnifier ki animation** + "जाँच हो रही है..." + 🔊 |
+| Result | Ek ke baad ek box | Sabse upar **bada severity badge** (हरा ✓ स्वस्थ / पीला ⚠ ध्यान दें / लाल ⛔ गंभीर, 🔊 ke saath). Phir "पूरा सुनें". Phir cards: समस्या, कारण, देसी उपाय, दवाई, सावधानी, har ek ka apna icon aur 🔊. Dawai warning aur KVK line alag highlighted box mein |
+| Chat | Text box + chhota mic | **Bada gol mic button** main input, text box uske neeche. Kisan ka bubble daayein (hara), AI ka baayein (halka hara + 🌱 + 🔊). Jawab aate waqt "typing" dots |
+| Meri jaanch | Simple list | Card: fasal chitra, samasya, fasal naam, tareekh, **severity badge**, ›. Load hote waqt skeleton |
+| Khaali / error / unclear | Peela box | **Bada icon gola + ek line + 🔊 + ek saaf button** |
+| Messages | Inline text | **react-hot-toast** (icon ke saath): "जाँच पूरी हुई", chat error, "आवाज़ नहीं आई" |
+
+Har zaroori heading aur instruction ke paas 🔊 button hai (purana `useSpeech` hook hi use hua).
+
+## Naye libraries (sab chhote, jaane-maane)
+- `react-icons` (sirf Lucide set `react-icons/lu`). Sirf use hue 37 icons bundle mein jaate hain.
+- `react-hot-toast`: toasts.
+- `framer-motion`: halki animation (page badalna, result aana, button dabana). `LazyMotion` se, aur
+  animation engine pehli screen ke baad load hota hai.
+- `clsx` + `tailwind-merge`: `cn()` helper (`src/utils/cn.ts`).
+- `@fontsource/mukta`: Google Fonts ka **Mukta** font, apne server se (neeche dekhein).
+
+## Maine khud kaun se decisions liye
+1. **Severity backend se** (upar dekhein).
+2. **Design tokens:** Tailwind v4 mein config CSS mein (`@theme`) hota hai, isliye saare tokens
+   `src/index.css` mein hain: primary, accent, success, warning, danger (shades ke saath), surface, ink, line.
+   Components mein koi hex rang nahi hai. Saare text-background jode WCAG AA paas karte hain (kam se kam
+   5.4:1, zyadatar 7:1 se upar). Light theme default hai.
+3. **Base font 18px:** saare size (buttons, spacing) thode bade ho gaye. Sabse chhota button 56px+ ka hai.
+4. **Font apne server se:** Mukta (Google Fonts) ko `@fontsource` se bundle kiya. Google ko request nahi jaati,
+   aur PWA offline bhi font dikhata hai. Sirf 2 weight (400, 700) aur sirf Devanagari + Latin hain.
+   `font-display: swap` ki wajah se text turant system font mein dikhta hai. Font pehli baar use par cache
+   hota hai (precache nahi kiya, warna slow net par do baar download hota).
+5. **Emoji ki jagah SVG fasal chitra:** purane sasti Android phones mein 🫛 🫘 jaise naye emoji dabba (☐)
+   dikhte hain. Isliye 9 simple original SVG banaye (`CropIcon.tsx`), sirf token rangon se.
+6. **Camera button fasal chunne ke baad:** pehle bada button hamesha dikhta tha aur neeche ke crop cards
+   chhup jaate the. Ab fasal chunte hi camera button neeche se aata hai. Isse farmer ko agla kadam bhi
+   samajh aata hai.
+7. **Toast ya poori screen:**
+   - Chhote ya beech ke messages toast mein dikhte hain: jaanch poori, chat fail, mic ne nahi suna,
+     "aur dekhein" fail.
+   - Jo error aage badhne se rokte hain (jaanch fail, history load fail), wo poori screen par icon + line +
+     button ke saath dikhte hain.
+   - Ek hi baat do jagah na dikhe, isliye dono saath nahi aate.
+8. **Error ke rang:** "बहुत लोग जाँच करवा रहे हैं", internet band aur timeout jaise thodi der ke error
+   **peele** (ध्यान दें) hain. Asli kharabi **laal** hai. Rang ka matlab sab jagah ek jaisa hai.
+9. **Result par badi photo nahi:** photo ab fasal wali patti mein chhoti thumbnail hai, taaki severity badge
+   pehli screen par hi dikhe.
+10. **Animation halki:** sirf opacity/slide/scale, 0.2 second ke aas-paas. Phone mein "reduce motion" on ho to
+    band ho jaati hai (framer-motion `reducedMotion="user"` + CSS).
+11. **Bundle size:** pehli load JS 73 KB se 115 KB (gzip) hui. 18 KB animation engine baad mein load hota
+    hai. Pehli visit ke baad service worker sab cache kar leta hai.
+12. **Top tabs hata kar bottom bar:** angoothe se pahunchna aasaan. "नई जाँच" dabane par hamesha nayi jaanch
+    shuru hoti hai (pehle wala fix bana hua hai).
+
+## Kya check nahi ho paaya
+- Asli phone par dhoop mein test nahi hua. Contrast numbers se check kiya, aankh se screenshots mein.
+- Severity asli Gemini se test nahi hui (key nahi thi). Mock data se teeno rang check kiye.
+- Desktop par layout beech mein max-width wala hai, par screenshots sirf 360px ke liye.
+
+## Phone par kaise dekhein
+Pehle jaise hi chalayein (upar "Phone par test kaise karein" dekhein). Phir dekhein:
+1. **Home:** koi fasal tap karein. ✓ lage aur neeche bada peela "फोटो लें" button aaye.
+2. **Kadam:** upar step indicator 1 → 2 → 3 badle.
+3. **Severity:**
+   - Swasth patte ki photo: **hara "स्वस्थ"**.
+   - Halki beemari: **peela "ध्यान दें"**.
+   - Badi beemari: **laal "गंभीर"**.
+4. **Awaaz:** har card ke 🔊 se sirf wahi card bole. "पूरा सुनें" se poora result.
+5. **Chat:** mic button bada aur beech mein ho, bubbles alag rang ke hon.
+6. **Meri jaanch:** cards par severity badge ho. Wi-Fi band karke kholein: peela error + "फिर से कोशिश करें".
+7. Phone ki settings mein "Remove animations" on karein: app bina animation ke chale.
