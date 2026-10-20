@@ -5,6 +5,7 @@ import { startNotificationScheduler } from './jobs/scheduler.js';
 import { createAiProvider } from './services/ai/createAiProvider.js';
 import { MongoFarmProfileRepository } from './services/farm/mongoFarmProfileRepository.js';
 import { MongoHistoryRepository } from './services/history/mongoHistoryRepository.js';
+import { AgmarknetProvider } from './services/mandi/agmarknetProvider.js';
 import { MongoPushSubscriptionRepository } from './services/push/mongoPushSubscriptionRepository.js';
 import { WebPushSender } from './services/push/pushSender.js';
 import { OpenMeteoProvider } from './services/weather/openMeteoProvider.js';
@@ -28,6 +29,7 @@ const app = createApp({
   historyRepository,
   farmProfiles,
   weather,
+  mandi: env.DATA_GOV_API_KEY ? new AgmarknetProvider({ apiKey: env.DATA_GOV_API_KEY }) : null,
   push: { publicKey: vapid?.publicKey ?? null, subscriptions },
   corsOrigins: env.CORS_ORIGIN,
   trustProxyHops: env.TRUST_PROXY,

@@ -171,6 +171,21 @@ export interface Dashboard {
   followUps: AppNotification[];
 }
 
+export interface MandiPrice {
+  crop: CropId;
+  market: string;
+  /** ₹ per quintal */
+  modalPrice: number;
+  minPrice: number;
+  maxPrice: number;
+  date: string;
+}
+
+export interface MandiResponse {
+  available: boolean;
+  prices: MandiPrice[];
+}
+
 /** Error codes sent by the backend, plus the ones the app itself can produce. */
 export const ERROR_CODES = [
   'INVALID_INPUT',

@@ -9,6 +9,8 @@ const envSchema = z.object({
   TRUST_PROXY: z.coerce.number().int().min(0).default(0),
   /** Optional. Without it the app works, but diagnosis history is turned off. */
   MONGO_URI: z.string().trim().min(1).optional(),
+  /** Mandi prices from data.gov.in (optional). Free key: https://data.gov.in → My Account → API key. */
+  DATA_GOV_API_KEY: z.string().trim().min(1).optional(),
   /** Web push (optional). Generate with: npx web-push generate-vapid-keys */
   VAPID_PUBLIC_KEY: z.string().trim().min(1).optional(),
   VAPID_PRIVATE_KEY: z.string().trim().min(1).optional(),

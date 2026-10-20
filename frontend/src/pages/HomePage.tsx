@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { LuScanSearch, LuSprout } from 'react-icons/lu';
-import type { Dashboard, FarmProfile } from '../api/types';
+import type { Dashboard, FarmProfile, MandiPrice } from '../api/types';
 import { Greeting } from '../components/home/Greeting';
+import { MandiCard } from '../components/home/MandiCard';
 import { SeeAllLink } from '../components/home/SeeAllLink';
 import { TodayWorkCard } from '../components/home/TodayWorkCard';
 import { WaterSummaryCard } from '../components/home/WaterSummaryCard';
@@ -14,6 +15,7 @@ import { AlertCard } from '../components/weather/AlertCard';
 import { WeatherTodayCard } from '../components/weather/WeatherTodayCard';
 import { useDashboard } from '../hooks/useDashboard';
 import { useFarmProfile } from '../hooks/useFarmProfile';
+import { useMandi } from '../hooks/useMandi';
 import { routes } from '../hooks/useHashRoute';
 import { useNotifications } from '../hooks/useNotifications';
 import { hi } from '../strings/hi';
@@ -27,6 +29,7 @@ export function HomePage() {
   const { profile } = useFarmProfile();
   const { data, loading, reload } = useDashboard();
   const notifications = useNotifications();
+  const mandiPrices = useMandi();
   const place = profile?.location ? locationLabel(profile.location) : undefined;
 
   const onFollowUpAnswered = () => {
@@ -39,7 +42,7 @@ export function HomePage() {
       <Greeting place={place} />
 
       {!data && loading && <DashboardSkeleton />}
-      {data && dashboardCards(data, needsFarmInfo(profile), onFollowUpAnswered).slice(0, MAX_CARDS)}
+      {data && dashboardCards(data, mandiPrices, needsFarmInfo(profile), onFollowUpAnswered).slice(0, MAX_CARDS)}
 
       <Button variant="accent" size="hero" icon={LuScanSearch} onClick={() => navigateTo(routes.diagnose)}>
         {hi.home.photoCheck}
@@ -49,7 +52,12 @@ export function HomePage() {
 }
 
 /** Cards in order of importance; the caller shows the first few. */
-function dashboardCards(data: Dashboard, askForFarmInfo: boolean, onFollowUpAnswered: () => void): ReactNode[] {
+function dashboardCards(
+  data: Dashboard,
+  mandiPrices: MandiPrice[],
+  askForFarmInfo: boolean,
+  onFollowUpAnswered: () => void,
+): ReactNode[] {
   const [topAlert] = data.alerts;
   const [followUp] = data.followUps;
   return [
@@ -70,6 +78,7 @@ function dashboardCards(data: Dashboard, askForFarmInfo: boolean, onFollowUpAnsw
     followUp && <FollowUpCard key="followup" notification={followUp} onAnswered={onFollowUpAnswered} />,
     data.tasks.length > 0 && <TodayWorkCard key="tasks" tasks={data.tasks} />,
     data.water.length > 0 && <WaterSummaryCard key="water" water={data.water} />,
+    mandiPrices.length > 0 && <MandiCard key="mandi" prices={mandiPrices} />,
     <PushPermissionCard key="push" />,
   ].filter(Boolean);
 }

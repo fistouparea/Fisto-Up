@@ -12,6 +12,7 @@ import { createPushRouter } from './routes/push.routes.js';
 import type { AiProvider } from './services/ai/aiProvider.js';
 import type { FarmProfileRepository } from './services/farm/farmProfileRepository.js';
 import type { HistoryRepository } from './services/history/historyRepository.js';
+import type { MandiProvider } from './services/mandi/agmarknetProvider.js';
 import type { PushSubscriptionRepository } from './services/push/pushSubscriptionRepository.js';
 import type { WeatherProvider } from './services/weather/weatherProvider.js';
 
@@ -22,6 +23,8 @@ export interface AppDependencies {
   /** null when MONGO_URI is not set: "मेरा खेत" endpoints return STORAGE_UNAVAILABLE. */
   farmProfiles?: FarmProfileRepository | null;
   weather?: WeatherProvider | null;
+  /** Mandi prices (optional, needs DATA_GOV_API_KEY). */
+  mandi?: MandiProvider | null;
   /** Web push: public VAPID key (null = push off) and subscription storage. */
   push?: { publicKey: string | null; subscriptions: PushSubscriptionRepository | null };
   corsOrigins: string[];
@@ -34,6 +37,7 @@ export function createApp({
   historyRepository,
   farmProfiles = null,
   weather = null,
+  mandi = null,
   push = { publicKey: null, subscriptions: null },
   corsOrigins,
   trustProxyHops = 0,
@@ -54,7 +58,7 @@ export function createApp({
   app.use('/api', createChatRouter(aiProvider, aiRateLimit));
   app.use('/api', createHistoryRouter(historyRepository));
   app.use('/api', createProfileRouter(farmProfiles));
-  app.use('/api', createFarmAdviceRouter({ farmProfiles, history: historyRepository, weather }));
+  app.use('/api', createFarmAdviceRouter({ farmProfiles, history: historyRepository, weather }, mandi));
   app.use('/api', createPushRouter(push.publicKey, push.subscriptions));
 
   app.use(notFoundHandler);
