@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+/** Optional value; an empty line in .env (e.g. "DATA_GOV_API_KEY=") counts as not set. */
+function optional<T extends z.ZodType>(schema: T) {
+  return z.preprocess((value) => (typeof value === 'string' && value.trim() === '' ? undefined : value), schema.optional());
+}
+
 const envSchema = z.object({
   GEMINI_API_KEY: z.string().min(1, 'GEMINI_API_KEY is required'),
   GEMINI_MODEL: z.string().min(1, 'GEMINI_MODEL is required'),
@@ -8,14 +13,14 @@ const envSchema = z.object({
   /** Number of reverse proxies in front of the app (1 behind nginx in Docker), so rate limits see real client IPs. */
   TRUST_PROXY: z.coerce.number().int().min(0).default(0),
   /** Optional. Without it the app works, but diagnosis history is turned off. */
-  MONGO_URI: z.string().trim().min(1).optional(),
+  MONGO_URI: optional(z.string().trim().min(1)),
   /** Mandi prices from data.gov.in (optional). Free key: https://data.gov.in → My Account → API key. */
-  DATA_GOV_API_KEY: z.string().trim().min(1).optional(),
+  DATA_GOV_API_KEY: optional(z.string().trim().min(1)),
   /** Web push (optional). Generate with: npx web-push generate-vapid-keys */
-  VAPID_PUBLIC_KEY: z.string().trim().min(1).optional(),
-  VAPID_PRIVATE_KEY: z.string().trim().min(1).optional(),
+  VAPID_PUBLIC_KEY: optional(z.string().trim().min(1)),
+  VAPID_PRIVATE_KEY: optional(z.string().trim().min(1)),
   /** Contact for push services, e.g. mailto:you@example.com */
-  VAPID_SUBJECT: z.string().trim().regex(/^(mailto:|https:)/, 'must start with mailto: or https:').optional(),
+  VAPID_SUBJECT: optional(z.string().trim().regex(/^(mailto:|https:)/, 'must start with mailto: or https:')),
   CORS_ORIGIN: z
     .string()
     .min(1)

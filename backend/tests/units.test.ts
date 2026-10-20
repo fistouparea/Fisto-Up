@@ -58,3 +58,21 @@ describe('vapidConfig', () => {
     expect(() => loadEnv({ GEMINI_API_KEY: 'k', GEMINI_MODEL: 'm', VAPID_SUBJECT: 'me@example.com' })).toThrow(/VAPID_SUBJECT/);
   });
 });
+
+describe('loadEnv with an .env copied from .env.example', () => {
+  it('treats empty optional values as not set (server still starts)', async () => {
+    const { vapidConfig } = await import('../src/config/env.js');
+    const env = loadEnv({
+      GEMINI_API_KEY: 'k',
+      GEMINI_MODEL: 'm',
+      MONGO_URI: '',
+      VAPID_PUBLIC_KEY: '',
+      VAPID_PRIVATE_KEY: '  ',
+      VAPID_SUBJECT: 'mailto:you@example.com',
+      DATA_GOV_API_KEY: '',
+    });
+    expect(env.MONGO_URI).toBeUndefined();
+    expect(env.DATA_GOV_API_KEY).toBeUndefined();
+    expect(vapidConfig(env)).toBeNull();
+  });
+});
