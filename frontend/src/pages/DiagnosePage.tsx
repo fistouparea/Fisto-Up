@@ -1,4 +1,3 @@
-import { AnimatePresence, m } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import type { IconType } from 'react-icons';
 import {
@@ -28,6 +27,7 @@ import { Callout } from '../components/ui/Callout';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Loader } from '../components/ui/Loader';
 import { PageHeader } from '../components/ui/PageHeader';
+import { PageTransition } from '../components/ui/PageTransition';
 import { StepIndicator, type Step } from '../components/ui/StepIndicator';
 import { StickyActions } from '../components/ui/StickyActions';
 import { notifySuccess } from '../components/ui/notify';
@@ -117,15 +117,7 @@ export function DiagnosePage() {
     <div className="flex flex-col gap-5">
       <StepIndicator steps={DIAGNOSE_STEPS} current={currentStep(state)} label={hi.steps.label} />
 
-      <AnimatePresence mode="wait" initial={false}>
-        <m.div
-          key={state.step}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.18 }}
-          className="flex flex-col gap-4"
-        >
+      <PageTransition pageKey={state.step} className="flex flex-col gap-4">
           {state.step === 'choose' && (
             <ChooseStep
               crop={state.crop}
@@ -190,8 +182,7 @@ export function DiagnosePage() {
               onRetake={() => chooseAgain(state.crop)}
             />
           )}
-        </m.div>
-      </AnimatePresence>
+      </PageTransition>
     </div>
   );
 }

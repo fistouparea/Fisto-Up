@@ -1,9 +1,9 @@
-import { AnimatePresence, m } from 'framer-motion';
 import { useState } from 'react';
 import { LuCamera, LuHistory, LuHouse, LuSprout } from 'react-icons/lu';
 import { AppBar } from './components/AppBar';
 import { AppToaster } from './components/ui/AppToaster';
 import { BottomNav } from './components/ui/BottomNav';
+import { PageTransition } from './components/ui/PageTransition';
 import { FarmProfileProvider } from './context/FarmProfileProvider';
 import { NotificationsProvider } from './context/NotificationsProvider';
 import { useFarmProfile } from './hooks/useFarmProfile';
@@ -55,17 +55,9 @@ function AppShell() {
       <AppToaster />
       {/* Bottom padding keeps content clear of the fixed bottom navigation. */}
       <main className="mx-auto max-w-lg px-4 pt-4 pb-32">
-        <AnimatePresence mode="wait" initial={false}>
-          <m.div
-            key={showOnboarding ? 'onboarding' : pageKey(route, diagnoseKey)}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-          >
-            {showOnboarding ? <FarmSetupPage onDone={finishOnboarding} /> : <Page route={route} diagnoseKey={diagnoseKey} />}
-          </m.div>
-        </AnimatePresence>
+        <PageTransition pageKey={showOnboarding ? 'onboarding' : pageKey(route, diagnoseKey)}>
+          {showOnboarding ? <FarmSetupPage onDone={finishOnboarding} /> : <Page route={route} diagnoseKey={diagnoseKey} />}
+        </PageTransition>
       </main>
       <BottomNav
         label={hi.nav.label}
