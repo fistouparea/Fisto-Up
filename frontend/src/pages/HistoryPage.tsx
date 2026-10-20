@@ -36,7 +36,7 @@ export function HistoryPage() {
       {firstLoad && !loading && !errorCode && (
         <EmptyState icon={LuInbox} message={hi.history.empty}>
           <Button variant="accent" icon={LuCamera} onClick={() => (window.location.hash = routes.diagnose)}>
-            {hi.nav.newCheck}
+            {hi.newCheck}
           </Button>
         </EmptyState>
       )}

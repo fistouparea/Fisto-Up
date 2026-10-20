@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
 export type Route =
+  | { name: 'home' }
   | { name: 'diagnose' }
   | { name: 'history' }
   | { name: 'historyItem'; id: string }
@@ -12,7 +13,8 @@ export type Route =
   | { name: 'notifications' };
 
 export const routes = {
-  diagnose: '#/',
+  home: '#/',
+  diagnose: '#/check',
   history: '#/history',
   historyItem: (id: string) => `#/history/${encodeURIComponent(id)}`,
   farm: '#/farm',
@@ -42,7 +44,8 @@ export function parseRoute(hash: string): Route {
   if (section === 'water') return { name: 'water' };
   if (section === 'calendar') return { name: 'calendar' };
   if (section === 'notifications') return { name: 'notifications' };
-  return { name: 'diagnose' };
+  if (section === 'check') return { name: 'diagnose' };
+  return { name: 'home' };
 }
 
 function subscribe(onChange: () => void): () => void {

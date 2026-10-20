@@ -154,6 +154,23 @@ export interface AppNotification {
 
 export type FollowUpAnswer = 'better' | 'same' | 'worse';
 
+export interface DashboardTask {
+  crop: CropId;
+  stageName: string | null;
+  task: string;
+}
+
+/** Everything the home screen needs, in one response. */
+export interface Dashboard {
+  generatedAt: string;
+  hasProfile: boolean;
+  forecast: Forecast | null;
+  alerts: WeatherAlert[];
+  tasks: DashboardTask[];
+  water: WaterAdvice[];
+  followUps: AppNotification[];
+}
+
 /** Error codes sent by the backend, plus the ones the app itself can produce. */
 export const ERROR_CODES = [
   'INVALID_INPUT',

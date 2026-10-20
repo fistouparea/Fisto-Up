@@ -7,7 +7,8 @@ export const hi = {
 
   nav: {
     label: 'मुख्य मेन्यू',
-    newCheck: 'नई जाँच',
+    home: 'होम',
+    newCheck: 'जाँच',
     history: 'मेरी जाँच',
   },
   steps: {
@@ -15,9 +16,6 @@ export const hi = {
     crop: 'फसल चुनें',
     photo: 'फोटो लें',
     answer: 'जवाब',
-  },
-  home: {
-    selected: 'चुनी गई',
   },
   severity: {
     title: 'हालत',
@@ -111,6 +109,13 @@ export const hi = {
     later: 'अभी नहीं',
     enabled: 'सूचना चालू हो गई',
     denied: 'सूचना की अनुमति नहीं मिली। फोन की सेटिंग में बदल सकते हैं।',
+  },
+  home: {
+    greeting: 'राम राम सा',
+    photoCheck: 'फोटो से जाँच',
+    photoCheckHint: 'बीमार पौधे की फोटो लें',
+    seeAll: 'पूरा देखें',
+    fillFarm: 'अपने खेत की जानकारी भरें, फिर मौसम, पानी और काम की सलाह यहाँ दिखेगी।',
   },
   farm: {
     title: 'मेरा खेत',

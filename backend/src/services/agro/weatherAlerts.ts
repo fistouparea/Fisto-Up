@@ -1,4 +1,5 @@
-import { ALERT_RULES, ALERT_TEXTS } from '../../config/agroRules.js';
+import { ALERT_RULES, ALERT_TEXTS, IRRIGATION_INTERVAL_DAYS, NO_WATER_EXCEPTION } from '../../config/agroRules.js';
+import { CROP_NAMES } from '../../data/cropNames.js';
 import type { StageId } from '../../data/cropCalendar.js';
 import type { CropId } from '../../types/diagnosis.js';
 import type { AlertType, DayWeather, Forecast, WeatherAlert } from '../../types/weather.js';
@@ -65,7 +66,8 @@ function toAlert(trigger: Trigger, crops: CropInField[]): WeatherAlert {
   const texts = ALERT_TEXTS[trigger.type];
   const cropAdvice = crops.map((crop) => texts.byCrop?.[crop.crop]);
   const stageAdvice = crops.map((crop) => (crop.stage ? texts.byStage?.[crop.stage] : undefined));
-  const advice = [...new Set([...cropAdvice, ...stageAdvice, ...texts.general].filter((line): line is string => Boolean(line)))];
+  const watering = wateringAdvice(texts.watering ?? [], crops);
+  const advice = [...new Set([...cropAdvice, ...stageAdvice, ...watering, ...texts.general].filter((line): line is string => Boolean(line)))];
 
   return {
     type: trigger.type,
@@ -75,6 +77,19 @@ function toAlert(trigger: Trigger, crops: CropInField[]): WeatherAlert {
     detail: texts.detail.replace('{value}', String(trigger.value)),
     advice,
   };
+}
+
+/**
+ * Watering advice only when some growing crop may be watered now; crops in a no-water stage
+ * (e.g. chana in flowering) are named explicitly, so the alert never contradicts the water card.
+ */
+function wateringAdvice(lines: string[], crops: CropInField[]): string[] {
+  if (lines.length === 0) return [];
+  const growing = crops.filter((crop) => crop.stage !== null && crop.stage !== 'harvest');
+  const noWater = growing.filter((crop) => crop.stage !== null && IRRIGATION_INTERVAL_DAYS[crop.crop][crop.stage] === null);
+  const mayWater = growing.length === 0 || noWater.length < growing.length;
+  const exception = noWater.length > 0 ? [NO_WATER_EXCEPTION.replace('{crops}', noWater.map((crop) => CROP_NAMES[crop.crop]).join(', '))] : [];
+  return [...(mayWater ? lines : []), ...exception];
 }
 
 function severityRank(alert: WeatherAlert): number {

@@ -3,9 +3,10 @@ import { parseRoute, routes } from './useHashRoute';
 
 describe('parseRoute', () => {
   it.each([
-    ['', { name: 'diagnose' }],
-    ['#/', { name: 'diagnose' }],
-    ['#/unknown', { name: 'diagnose' }],
+    ['', { name: 'home' }],
+    ['#/', { name: 'home' }],
+    ['#/unknown', { name: 'home' }],
+    ['#/check', { name: 'diagnose' }],
     ['#/history', { name: 'history' }],
     ['#/history/abc123', { name: 'historyItem', id: 'abc123' }],
     ['#/farm', { name: 'farm' }],

@@ -31,35 +31,39 @@ interface AlertTexts {
   /** {value} is replaced with the number that triggered the alert. */
   detail: string;
   general: string[];
+  /**
+   * Advice that tells the farmer to irrigate. Shown only if at least one growing crop may be
+   * watered in its current stage (see IRRIGATION_INTERVAL_DAYS); crops in a no-water stage get
+   * an explicit "do not irrigate" line instead, so alerts never contradict the water card.
+   */
+  watering?: string[];
   byCrop?: Partial<Record<CropId, string>>;
   byStage?: Partial<Record<StageId, string>>;
 }
+
+/** Added when some crops must not be watered now. {crops} = crop names. */
+export const NO_WATER_EXCEPTION = '{crops} में अभी सिंचाई न करें।';
 
 export const ALERT_TEXTS: Record<AlertType, AlertTexts> = {
   heatwave: {
     title: 'लू / बहुत गर्मी',
     detail: '{value}°C तक गर्मी',
-    general: [
-      'सिंचाई सुबह जल्दी या शाम को करें, दोपहर में नहीं।',
-      'दोपहर में खेत में काम न करें, पानी पीते रहें।',
-      'पशुओं को छाया और भरपूर पानी दें।',
-    ],
+    general: ['दोपहर में खेत में काम न करें, पानी पीते रहें।', 'पशुओं को छाया और भरपूर पानी दें।'],
+    watering: ['शाम को या सुबह जल्दी हल्की सिंचाई करें, दोपहर में नहीं।'],
     byStage: {
-      germination: 'छोटे पौधे झुलस सकते हैं, हल्की सिंचाई करें।',
-      flowering: 'फूल के समय गर्मी से फूल झड़ते हैं, शाम को हल्की सिंचाई करें।',
+      germination: 'छोटे पौधे झुलस सकते हैं।',
+      flowering: 'फूल के समय गर्मी से फूल झड़ सकते हैं।',
     },
   },
   frost: {
     title: 'पाला / बहुत ठंड',
     detail: 'रात में {value}°C तक ठंड',
-    general: [
-      'शाम को खेत में हल्की सिंचाई करें, इससे पाले का असर कम होता है।',
-      'रात में खेत की मेड़ पर धुआँ करें (सूखी घास या कचरा जलाकर)।',
-    ],
+    general: ['रात में खेत की मेड़ पर धुआँ करें (सूखी घास या कचरा जलाकर)।'],
+    watering: ['शाम को खेत में हल्की सिंचाई करें, इससे पाले का असर कम होता है।'],
     byCrop: {
       sarson: 'सरसों में फूल और फली के समय पाला बहुत नुकसान करता है।',
       chana: 'चने के फूल पाले से झड़ सकते हैं।',
-      jeera: 'जीरे को पाले से बहुत खतरा है, रात में सिंचाई और धुआँ ज़रूर करें।',
+      jeera: 'जीरे को पाले से बहुत खतरा है, रात में धुआँ ज़रूर करें।',
     },
   },
   heavyRain: {
@@ -88,11 +92,8 @@ export const ALERT_TEXTS: Record<AlertType, AlertTexts> = {
   drySpell: {
     title: 'लंबा सूखा',
     detail: 'पिछले 7 और अगले 7 दिन में बारिश नहीं',
-    general: [
-      'निराई-गुड़ाई करें, इससे मिट्टी की नमी बचती है।',
-      'पौधों के बीच सूखी घास या भूसा (पलवार) बिछाएँ।',
-      'सिंचाई का साधन हो तो हल्की सिंचाई करें।',
-    ],
+    general: ['निराई-गुड़ाई करें, इससे मिट्टी की नमी बचती है।', 'पौधों के बीच सूखी घास या भूसा (पलवार) बिछाएँ।'],
+    watering: ['सिंचाई का साधन हो तो हल्की सिंचाई करें।'],
   },
 };
 

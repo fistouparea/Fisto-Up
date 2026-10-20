@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   createCalendarController,
+  createDashboardController,
   createNotificationsController,
   createWaterController,
   createWeatherController,
@@ -13,5 +14,6 @@ export function createFarmAdviceRouter(deps: FarmAdviceDeps): Router {
   router.get('/water', createWaterController(deps));
   router.get('/calendar', createCalendarController(deps));
   router.get('/notifications', createNotificationsController(deps));
+  router.get('/dashboard', createDashboardController(deps));
   return router;
 }

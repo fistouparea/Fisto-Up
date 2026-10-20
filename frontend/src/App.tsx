@@ -1,6 +1,6 @@
 import { AnimatePresence, m } from 'framer-motion';
 import { useState } from 'react';
-import { LuCamera, LuHistory, LuSprout } from 'react-icons/lu';
+import { LuCamera, LuHistory, LuHouse, LuSprout } from 'react-icons/lu';
 import { AppBar } from './components/AppBar';
 import { AppToaster } from './components/ui/AppToaster';
 import { BottomNav } from './components/ui/BottomNav';
@@ -14,6 +14,7 @@ import { FarmPage } from './pages/FarmPage';
 import { FarmSetupPage } from './pages/FarmSetupPage';
 import { HistoryDetailPage } from './pages/HistoryDetailPage';
 import { HistoryPage } from './pages/HistoryPage';
+import { HomePage } from './pages/HomePage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { WaterPage } from './pages/WaterPage';
 import { WeatherPage } from './pages/WeatherPage';
@@ -40,12 +41,12 @@ function AppShell() {
   const [onboardingDone, setOnboardingDone] = useState(() => readFlag(ONBOARDING_FLAG));
 
   // First open: ask about the farm once (every screen can be skipped).
-  const showOnboarding = profile === null && !onboardingDone && route.name === 'diagnose';
+  const showOnboarding = profile === null && !onboardingDone && route.name === 'home';
 
   const finishOnboarding = () => {
     setFlag(ONBOARDING_FLAG);
     setOnboardingDone(true);
-    window.location.hash = routes.diagnose;
+    window.location.hash = routes.home;
   };
 
   return (
@@ -69,6 +70,7 @@ function AppShell() {
       <BottomNav
         label={hi.nav.label}
         items={[
+          { href: routes.home, label: hi.nav.home, icon: LuHouse, active: route.name === 'home' },
           {
             href: routes.diagnose,
             label: hi.nav.newCheck,
@@ -91,6 +93,8 @@ function AppShell() {
 
 function Page({ route, diagnoseKey }: { route: Route; diagnoseKey: number }) {
   switch (route.name) {
+    case 'home':
+      return <HomePage />;
     case 'diagnose':
       return <DiagnosePage key={diagnoseKey} />;
     case 'history':

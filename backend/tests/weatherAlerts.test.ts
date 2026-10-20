@@ -77,3 +77,29 @@ describe('evaluateAlerts', () => {
     ]);
   });
 });
+
+describe('alert watering advice agrees with the water rules', () => {
+  const frost = makeForecast([{ tempMin: 3 }], [5]);
+  const frostWatering = ALERT_TEXTS.frost.watering?.[0] ?? '';
+
+  it('drops "irrigate" advice when every growing crop is in a no-water stage, and says so', () => {
+    const [alert] = evaluateAlerts(frost, [{ crop: 'chana', stage: 'flowering' }]);
+    expect(alert?.advice).not.toContain(frostWatering);
+    expect(alert?.advice).toContain('चना में अभी सिंचाई न करें।');
+  });
+
+  it('keeps "irrigate" advice for crops that may be watered, naming the exceptions', () => {
+    const [alert] = evaluateAlerts(frost, [
+      { crop: 'chana', stage: 'flowering' },
+      { crop: 'gehun', stage: 'vegetative' },
+    ]);
+    expect(alert?.advice).toContain(frostWatering);
+    expect(alert?.advice).toContain('चना में अभी सिंचाई न करें।');
+  });
+
+  it('adds no exception when all crops may be watered', () => {
+    const [alert] = evaluateAlerts(frost, [{ crop: 'gehun', stage: 'vegetative' }]);
+    expect(alert?.advice).toContain(frostWatering);
+    expect(alert?.advice.some((line) => line.includes('अभी सिंचाई न करें'))).toBe(false);
+  });
+});
