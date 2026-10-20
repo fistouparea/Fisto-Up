@@ -304,3 +304,193 @@ Pehle jaise hi chalayein (upar "Phone par test kaise karein" dekhein). Phir dekh
 5. **Chat:** mic button bada aur beech mein ho, bubbles alag rang ke hon.
 6. **Meri jaanch:** cards par severity badge ho. Wi-Fi band karke kholein: peela error + "फिर से कोशिश करें".
 7. Phone ki settings mein "Remove animations" on karein: app bina animation ke chale.
+
+---
+
+# Phase 2
+
+Har task ka alag commit hai (`git show <id>` se ek-ek dekh sakte hain):
+
+```
+513adcf Task 1: मेरा खेत (farm profile) with skippable onboarding
+4d872c1 Task 2: Weather (मौसम) with rule-based crop alerts
+1beb972 Task 3: Water guidance (पानी की सलाह), rule-based
+f72b83a Task 4: Crop calendar, follow-ups, notifications and web push
+3caa75a Task 5: Home dashboard + alerts never contradict water advice
+972eb6b Fix: screens could get stuck with 'reduce motion' on
+5d19a34 Task 6: Mandi bhav (optional, data.gov.in Agmarknet)
+0be9bfe Task 7: Offline support
+3464a88 Fix: backend refused to start with empty optional values in .env
+a3929b2 Docs: README, .env.example, screenshots
+```
+
+**Status:**
+- Backend ke 186 tests aur frontend ke 66 tests pass hain.
+- Lint aur typecheck dono apps mein clean hain.
+- Asli MongoDB wale tests bhi pass hue. Ye sirf throwaway `agriai_test_*` databases use karte hain; aapke
+  `FistoUp`, `DM-platform`, `sportDB` ko haath nahi lagaya.
+- Screenshots: `docs/screenshots/p2-*` (17 screens, 360px).
+
+## 1. Har task mein kya bana
+
+### Task 1 – मेरा खेत
+- **Onboarding:** pehli baar app khulne par 3 screens aate hain, har ek "छोड़ें" se skip ho sakta hai:
+  1. **Jagah:** "मेरी जगह लें" (GPS) ya Churu ki tehsil list se chunein.
+  2. **Fasal:** crop picture cards aur buvai ki tareekh ("1 हफ्ता", "1 महीना"... chips, ya date picker).
+  3. **Khet:** size बीघा mein (+/− aur chips) aur paani ka source (ट्यूबवेल, नहर, बारिश पर निर्भर, टांका/कुंड).
+- **Save:** MongoDB mein deviceId ke saath (`FarmProfile`). GPS ~1 km tak round karke save hota hai (privacy).
+- **"मेरा खेत" tab** se baad mein dekh aur badal sakte hain.
+- **Tehsil list:** `frontend/src/data/locations.ts` mein hai. Naya zila ya tehsil wahin jodein.
+
+### Task 2 – मौसम
+- Open-Meteo (free, bina key) se aaj + 7 din ka mausam. Backend 1 ghante cache karta hai, 8 second timeout.
+  Service band ho to pichhli copy deta hai.
+- **Mausam screen:** bada icon, tapmaan, baarish %, hawa, aur 7 din ki list.
+- **Alerts:** लू, पाला, भारी बारिश, तेज़ हवा/आँधी, लंबा सूखा. Rang se khatra: peela = ध्यान दें, laal = गंभीर.
+  Har alert ke saath fasal aur stage ke hisaab se simple Hindi salah aati hai.
+- **Saare numbers aur texts** `backend/src/config/agroRules.ts` mein hain, "VERIFY WITH KVK" mark ke saath.
+
+### Task 3 – पानी की सलाह
+- Har fasal ka card: "आज पानी दें" / "आज पानी न दें" / "2 दिन बाद दें" / "मिट्टी देखें", ek line ki wajah ke saath.
+- **Faisla in cheezon se hota hai:** fasal, stage, retili mitti, paani ka source, baarish ka forecast, garmi aur et0.
+  Saare rules `agroRules.ts` mein hain, AI ka andaaza nahi.
+- **"आज पानी दिया" button:** isse aakhri sinchai yaad rehti hai, aur agli salah sahi hoti hai.
+- Paani bachane ke tips (shaam ko sinchai, palwar, drip, fawwara, halki sinchai) aur hamesha ye line:
+  "यह सामान्य सलाह है, अपने खेत की नमी भी देखें।"
+
+### Task 4 – फसल कैलेंडर, follow-up, सूचनाएँ, push
+- **Fasal calendar:** har fasal ki timeline बुवाई → अंकुरण → बढ़वार → फूल → दाना/फली → कटाई. Abhi wali stage
+  highlight hoti hai, aur "आज का काम" ki list hoti hai. Data `backend/src/data/cropCalendar.ts` mein hai.
+- **Follow-up:** gambhir ya "ध्यान दें" wali jaanch ke 3 din baad "क्या फसल ठीक हुई?" aata hai, 3 bade
+  buttons ke saath (ठीक हुई / वैसी ही / और खराब). "और खराब" nayi photo jaanch kholta hai aur KVK ki salah deta hai.
+- **सूचनाएँ screen:** upar bell icon aur nayi suchnaon ki ginti. Kya padh liya, ye phone par yaad rehta hai.
+- **Web push (optional):** VAPID keys `.env` mein daalne par chalu hota hai.
+  - Din mein 2 baar (subah 7, shaam 6 baje) check hota hai, aur ek phone ko ek baar mein max 2 sandesh jaate hain.
+  - Ek hi sandesh dobara nahi aata.
+  - Permission tabhi maangi jaati hai jab kisan ek baar app use kar chuka ho, Hindi explanation ke saath.
+
+### Task 5 – होम dashboard
+- Upar "राम राम सा 🙏" + aaj ki tareekh + jagah. Phir zyada se zyada 5 card, zaroori pehle:
+  mausam → alert → follow-up → आज का काम → पानी → मंडी भाव.
+- Sabse neeche bada "फोटो से जाँच" button. Har card par 🔊 hai.
+- Neeche ke tabs ab hain: होम, जाँच, मेरी जाँच, मेरा खेत.
+- Khet ki jaankari adhuri ho to dashboard par "जानकारी भरें" card aata hai.
+
+### Task 6 – मंडी भाव (optional)
+- data.gov.in (Agmarknet) se kisan ki fasalon ke aaj ke bhav: Churu, Sardarshahar, Ratangarh, Sujangarh,
+  Taranagar, Rajgarh mandi. ₹ प्रति क्विंटल aur data ki tareekh dikhti hai.
+- Key na ho ya API fail ho to card chupchaap chhup jaata hai.
+
+### Task 7 – Offline
+- **App bina internet ke khulta hai** (service worker). Pichhla mausam, paani ki salah, calendar, dashboard,
+  सूचनाएँ, मेरा खेत, मेरी जाँच ki list aur kholi hui jaanch dikhti hain.
+- **Banner:** "इंटरनेट नहीं है, पुरानी जानकारी दिख रही है" + "आखिरी अपडेट" ka samay.
+- **Photo jaanch:** offline hone par saaf likha aata hai ki iske liye internet chahiye.
+- Production build ko asli offline reload karke check kiya.
+
+## 2. Maine khud kaun se decisions liye
+1. **Ek "farm snapshot":** mausam, alert, stage, paani, follow-up aur suchnaayein ek hi jagah
+   (`farmSnapshot.ts`) se banti hain. Dashboard, alag-alag screens aur push job sab yahi use karte hain, isliye
+   rules ek hi jagah rehte hain.
+2. **Dashboard ek request mein:** slow internet ke liye 4 ki jagah 1 request. Mandi alag request mein hai,
+   taaki slow mandi API baaki home ko na roke.
+3. **Paani ki salah conservative hai:** baarish aane wali ho, haal mein baarish hui ho, kataai ho, ya stage mein
+   paani nuksaan karta ho (jaise chane mein phool), to "न दें". Aakhri sinchai pata na ho to "मिट्टी देखें",
+   kabhi andaaze se "पानी दें" nahi.
+4. **Bahut zaroori: salah aapas mein nahi takraati.**
+   - Screenshot dekhte waqt maine pakda ki garmi ka alert "सिंचाई करें" bol raha tha, jabki usi screen par
+     paani card "चना: आज पानी न दें" bol raha tha.
+   - Ab alert ki sinchai wali lines alag list mein hain. Jis fasal ko abhi paani nahi dena, uske liye alert
+     mein saaf "चना में अभी सिंचाई न करें।" aata hai.
+   - Calendar ka "फूल के समय पानी की कमी न होने दें" bhi chane ke liye galat tha, wo bhi theek kiya.
+   - Dono ke liye tests hain.
+5. **Read/unread phone par:** suchnaon ki stable id hoti hai (jaise `alert:frost:2026-11-12`). Server bas yaad
+   rakhta hai ki kaun si push bhej di, isliye naya database table nahi bana.
+6. **Follow-up ka answer:** purani jaanch ke record mein ek naya field `followUp` joda hai. Purana data waise
+   hi chalta hai. Swasth (healthy) jaanch ka follow-up nahi poochha jaata, aur 21 din se purani ka bhi nahi.
+7. **Route badla:** home ab dashboard hai (`#/`), aur photo jaanch `#/check` par hai. Isliye purane route test
+   ki expectation badli. Ye jaan-boojhkar kiya, koi test kamzor nahi kiya.
+8. **GPS sirf HTTPS par chalta hai:** http (Wi-Fi testing) par "मेरी जगह लें" button nahi dikhta, tehsil list
+   hamesha hai. GPS ke baad sabse paas ki tehsil ka naam dikhta hai.
+9. **Mandi:** free API poore Rajasthan ka data deti hai. Hum apni taraf se paas ki mandi aur fasal chhaant'te
+   hain (keywords `data/mandis.ts` mein).
+10. **Bug jo maine pakde aur theek kiye:**
+    - Phone mein "reduce motion" on ho to screen atak jaati thi (onboarding nahi khulta tha).
+    - `.env.example` copy karke backend start nahi hota tha (khaali values ki wajah se).
+    - Har fix ka alag commit hai.
+11. **npm bug:** do baar npm ne `npm install` ke baad rolldown ki native file hata di. Dono baar `node_modules`
+    aur lockfile hata kar fresh install kiya (tareeka `CLAUDE.md` mein likha hai).
+
+## 3. Kya nahi hua / kya test nahi ho paaya
+- **Agro rules ka expert check nahi hua:** saare numbers (garmi 42°C, pala 4°C, sinchai ke din, stage ke din,
+  kaam) maine aam jaankari se rakhe hain. **KVK se check karwana zaroori hai**, file:
+  `backend/src/config/agroRules.ts` aur `backend/src/data/cropCalendar.ts`.
+- **Push asli phone par test nahi hui:** code, job aur subscription tests se check kiye, par asli Google/Chrome
+  push service tak sandesh nahi bheja. Iske liye VAPID keys + HTTPS + production build chahiye (neeche steps).
+- **Mandi asli data par test nahi hui:** data.gov.in key nahi thi. Mandi ke naam (spelling) asli data se
+  milaane padenge.
+- **GPS asli phone par test nahi hua.**
+- **Ek chhota edge case:** garmi alert mein "फूल के समय गर्मी से फूल झड़ सकते हैं" sab fasalon par aata hai.
+  Rabi mein Churu mein 42°C se upar phool ke samay bahut kam hota hai.
+- **Login abhi nahi hai:** browser data clear karne par history aur khet ki jaankari us phone se chali jaati hai.
+  Login (Phase 3) mein theek hoga.
+
+## 4. Phone par test kaise karein
+
+**Taiyari:**
+- `cp backend/.env.example backend/.env`, phir `GEMINI_API_KEY` bharein. MongoDB chalu rakhein (ya
+  `docker compose up --build`).
+- Wi-Fi par `http://<laptop-ip>:5173` (npm) ya `:8080` (Docker) kholein.
+- GPS, push aur "Install app" ke liye HTTPS chahiye:
+  ```bash
+  cd frontend && npm run build && npm run preview
+  cloudflared tunnel --url http://localhost:4173
+  ```
+  Jo `https://` link mile, wo phone par kholein.
+
+**Task 1 – मेरा खेत**
+1. Pehli baar kholte hi "अपने खेत के बारे में बताएँ" aaye.
+2. Tehsil chunein (HTTPS par "मेरी जगह लें" bhi try karein) → आगे.
+3. Fasal chunein → "1 महीना" chip → आगे.
+4. "5 बीघा" + "ट्यूबवेल" → सेव करें.
+5. "मेरा खेत" tab mein sab sahi dikhe. "बदलें" se badal kar dekhein.
+6. Naye browser/incognito mein teeno "छोड़ें" dabayein: home par "जानकारी भरें" card aaye.
+
+**Task 2 – मौसम**
+1. Home ka mausam card dabayein: aaj ka mausam aur 7 din ki list dikhe.
+2. Garmi/thand/baarish/aandhi ka asli alert mausam par nirbhar hai. Rules ki jaanch ke liye
+   `cd backend && npm test` (har alert ka test hai).
+3. Wi-Fi band karke kholein: pichhla mausam + offline banner.
+
+**Task 3 – पानी**
+1. Home ka "पानी की सलाह" → "पूरा देखें".
+2. Gehun par "मिट्टी देखें" aaye (aakhri sinchai pata nahi). "आज पानी दिया" dabayein: "आज पानी न दें"
+   ho jaana chahiye.
+3. Chana 2 mahine purana ho to phool ki stage mein "आज पानी न दें" aaye.
+
+**Task 4 – कैलेंडर, follow-up, सूचनाएँ, push**
+1. Home ka "आज का काम" → "पूरा देखें": timeline mein abhi wali stage peeli dikhe.
+2. Ek photo jaanch karein. Follow-up 3 din baad aata hai (healthy ke liye nahi). Jaldi dekhna ho to `npm test`
+   ka follow-up test dekhein.
+3. Upar bell dabayein: सूचनाएँ list, "नई" tag, "सब पढ़ लिया" se ginti 0 ho jaaye.
+4. **Push:**
+   - `cd backend && npx web-push generate-vapid-keys`, keys `.env` mein daalein, backend restart karein.
+   - HTTPS link par app use karein, phir bell screen par "हाँ, सूचना भेजें" dabayein.
+   - Subah 7 ya shaam 6 baje (India time) sandesh aayega.
+
+**Task 5 – होम**
+1. Home par upar se: राम राम सा → mausam → alert (ho to) → follow-up (ho to) → आज का काम → पानी → मंडी.
+   Zyada se zyada 5 card.
+2. Har card ka 🔊 dabakar sunein. Neeche "फोटो से जाँच" se jaanch khule.
+
+**Task 6 – मंडी**
+1. https://data.gov.in par free account banakar API key lein, `.env` mein `DATA_GOV_API_KEY` daalein,
+   backend restart karein.
+2. Home par "मंडी भाव" card aaye. Key hata dein to card gayab ho jaaye (koi error nahi).
+
+**Task 7 – Offline**
+1. Ek baar internet ke saath home, mausam, calendar aur meri jaanch kholein.
+2. Phone ka data/Wi-Fi band karke app band karein aur dobara kholein. App khule, upar peela
+   "इंटरनेट नहीं है, पुरानी जानकारी दिख रही है" + aakhri update ka samay dikhe.
+3. "जाँच" tab: "फोटो से जाँच के लिए इंटरनेट चाहिए" likha aaye.
+4. Internet wapas aate hi banner chala jaaye.
