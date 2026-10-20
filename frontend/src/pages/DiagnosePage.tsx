@@ -33,6 +33,7 @@ import { StickyActions } from '../components/ui/StickyActions';
 import { notifySuccess } from '../components/ui/notify';
 import { errorMessages, hi } from '../strings/hi';
 import { compressImage } from '../utils/compressImage';
+import { useConnectivity } from '../hooks/useConnectivity';
 import { setFlag } from '../utils/offlineCache';
 import { USED_ONCE_FLAG } from '../hooks/usePushPermission';
 
@@ -74,6 +75,7 @@ const ERROR_ICONS: Partial<Record<ErrorCode, IconType>> = {
 
 export function DiagnosePage() {
   const [state, setState] = useState<State>({ step: 'choose', crop: null, preparing: false });
+  const { offline } = useConnectivity();
 
   useEffect(() => {
     window.scrollTo({ top: 0 });
@@ -116,6 +118,9 @@ export function DiagnosePage() {
   return (
     <div className="flex flex-col gap-5">
       <StepIndicator steps={DIAGNOSE_STEPS} current={currentStep(state)} label={hi.steps.label} />
+      {offline && (state.step === 'choose' || state.step === 'preview') && (
+        <Callout tone="warning" icon={LuWifiOff} text={hi.offline.photoNeedsInternet} />
+      )}
 
       <PageTransition pageKey={state.step} className="flex flex-col gap-4">
           {state.step === 'choose' && (

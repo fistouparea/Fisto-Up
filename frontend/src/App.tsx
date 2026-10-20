@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { LuCamera, LuHistory, LuHouse, LuSprout } from 'react-icons/lu';
 import { AppBar } from './components/AppBar';
+import { OfflineBanner } from './components/OfflineBanner';
 import { AppToaster } from './components/ui/AppToaster';
 import { BottomNav } from './components/ui/BottomNav';
 import { PageTransition } from './components/ui/PageTransition';
@@ -52,6 +53,7 @@ function AppShell() {
   return (
     <div className="min-h-dvh bg-surface-page">
       <AppBar />
+      <OfflineBanner />
       <AppToaster />
       {/* Bottom padding keeps content clear of the fixed bottom navigation. */}
       <main className="mx-auto max-w-lg px-4 pt-4 pb-32">

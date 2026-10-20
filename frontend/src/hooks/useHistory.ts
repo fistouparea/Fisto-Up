@@ -2,16 +2,21 @@ import { useCallback, useEffect, useState } from 'react';
 import { ApiError } from '../api/client';
 import { fetchHistory, fetchHistoryRecord } from '../api/history';
 import type { ErrorCode, HistoryPage, HistoryRecord, HistorySummary } from '../api/types';
+import { readFromCache, saveToCache } from '../utils/offlineCache';
+
+const FIRST_PAGE_KEY = 'history:page1';
+const recordKey = (id: string) => `history:item:${id}`;
 
 function toErrorCode(error: unknown): ErrorCode {
   return error instanceof ApiError ? error.code : 'UNKNOWN';
 }
 
-/** Paginated "मेरी जाँच" list. Starts loading page 1 on mount. */
+/** Paginated "मेरी जाँच" list. Shows the saved first page at once (works offline), then refreshes. */
 export function useHistoryList() {
-  const [items, setItems] = useState<HistorySummary[]>([]);
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(false);
+  const [cachedFirstPage] = useState(() => readFromCache<HistoryPage>(FIRST_PAGE_KEY)?.data);
+  const [items, setItems] = useState<HistorySummary[]>(cachedFirstPage?.items ?? []);
+  const [page, setPage] = useState(cachedFirstPage ? 1 : 0);
+  const [hasMore, setHasMore] = useState(cachedFirstPage?.hasMore ?? false);
   const [loading, setLoading] = useState(true);
   const [errorCode, setErrorCode] = useState<ErrorCode | null>(null);
 
@@ -24,13 +29,18 @@ export function useHistoryList() {
   useEffect(() => {
     let cancelled = false;
     fetchHistory(1)
-      .then((result) => !cancelled && showPage(result, 1))
-      .catch((error: unknown) => !cancelled && setErrorCode(toErrorCode(error)))
+      .then((result) => {
+        if (cancelled) return;
+        saveToCache(FIRST_PAGE_KEY, result);
+        showPage(result, 1);
+      })
+      // With a saved copy on screen, a failed refresh is not an error (the offline banner explains it).
+      .catch((error: unknown) => !cancelled && !cachedFirstPage && setErrorCode(toErrorCode(error)))
       .finally(() => !cancelled && setLoading(false));
     return () => {
       cancelled = true;
     };
-  }, [showPage]);
+  }, [showPage, cachedFirstPage]);
 
   /** Loads the next page; also used to retry after an error. */
   const loadMore = async () => {
@@ -54,16 +64,26 @@ type RecordState =
   | { status: 'ok'; record: HistoryRecord }
   | { status: 'error'; code: ErrorCode };
 
-/** One saved diagnosis. Mount with `key={id}` so a new id starts from "loading". */
+/** One saved diagnosis (also kept for offline). Mount with `key={id}` so a new id starts fresh. */
 export function useHistoryRecord(id: string) {
-  const [state, setState] = useState<RecordState>({ status: 'loading' });
+  const [state, setState] = useState<RecordState>(() => {
+    const cached = readFromCache<HistoryRecord>(recordKey(id));
+    return cached ? { status: 'ok', record: cached.data } : { status: 'loading' };
+  });
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     fetchHistoryRecord(id)
-      .then((record) => !cancelled && setState({ status: 'ok', record }))
-      .catch((error: unknown) => !cancelled && setState({ status: 'error', code: toErrorCode(error) }));
+      .then((record) => {
+        if (cancelled) return;
+        saveToCache(recordKey(id), record);
+        setState({ status: 'ok', record });
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        setState((current) => (current.status === 'ok' ? current : { status: 'error', code: toErrorCode(error) }));
+      });
     return () => {
       cancelled = true;
     };

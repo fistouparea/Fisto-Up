@@ -1,3 +1,4 @@
+import { reportNetworkFailure, reportServerReached } from '../utils/connectivity';
 import { ERROR_CODES, type ErrorCode } from './types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
@@ -28,8 +29,11 @@ export async function requestApi<T>(
   try {
     response = await fetch(`${API_BASE_URL}${path}`, { ...init, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
   } catch (error) {
-    throw new ApiError(error instanceof DOMException && error.name === 'TimeoutError' ? 'AI_TIMEOUT' : 'NETWORK');
+    const timedOut = error instanceof DOMException && error.name === 'TimeoutError';
+    if (!timedOut) reportNetworkFailure();
+    throw new ApiError(timedOut ? 'AI_TIMEOUT' : 'NETWORK');
   }
+  reportServerReached();
 
   const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {
