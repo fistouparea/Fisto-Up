@@ -2,6 +2,7 @@ import type { RequestHandler, Response } from 'express';
 import { AppError } from '../errors/AppError.js';
 import type { HistoryRepository } from '../services/history/historyRepository.js';
 import {
+  followUpBodySchema,
   historyItemParamsSchema,
   historyItemQuerySchema,
   historyListQuerySchema,
@@ -34,6 +35,23 @@ export function createHistoryItemController(history: HistoryRepository | null): 
       throw new AppError('NOT_FOUND', 'History item not found');
     }
     res.json(record);
+  };
+}
+
+/** POST /api/history/:id/follow-up — "क्या फसल ठीक हुई?" answer. */
+export function createFollowUpController(history: HistoryRepository | null): RequestHandler {
+  return async (req, res: Response<{ ok: true }>) => {
+    const params = historyItemParamsSchema.safeParse(req.params);
+    const body = followUpBodySchema.safeParse(req.body);
+    if (!params.success || !body.success) {
+      throw new AppError('INVALID_INPUT', 'Invalid follow-up request');
+    }
+
+    const saved = await requireHistory(history).setFollowUp(body.data.deviceId, params.data.id, body.data.answer);
+    if (!saved) {
+      throw new AppError('NOT_FOUND', 'History item not found');
+    }
+    res.json({ ok: true });
   };
 }
 

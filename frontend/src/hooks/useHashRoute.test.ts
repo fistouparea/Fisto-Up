@@ -12,6 +12,8 @@ describe('parseRoute', () => {
     ['#/farm/setup', { name: 'farmSetup' }],
     ['#/weather', { name: 'weather' }],
     ['#/water', { name: 'water' }],
+    ['#/calendar', { name: 'calendar' }],
+    ['#/notifications', { name: 'notifications' }],
   ])('parses "%s"', (hash, expected) => {
     expect(parseRoute(hash)).toEqual(expected);
   });

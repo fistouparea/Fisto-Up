@@ -40,3 +40,21 @@ describe('loadEnv', () => {
     expect(env.MONGO_URI).toBeUndefined();
   });
 });
+
+describe('vapidConfig', () => {
+  it('enables push only when all three VAPID values are set', async () => {
+    const { vapidConfig } = await import('../src/config/env.js');
+    const base = loadEnv({ GEMINI_API_KEY: 'k', GEMINI_MODEL: 'm' });
+    expect(vapidConfig(base)).toBeNull();
+    expect(vapidConfig({ ...base, VAPID_PUBLIC_KEY: 'pub', VAPID_PRIVATE_KEY: 'priv' })).toBeNull();
+    expect(vapidConfig({ ...base, VAPID_PUBLIC_KEY: 'pub', VAPID_PRIVATE_KEY: 'priv', VAPID_SUBJECT: 'mailto:a@b.c' })).toEqual({
+      publicKey: 'pub',
+      privateKey: 'priv',
+      subject: 'mailto:a@b.c',
+    });
+  });
+
+  it('rejects a VAPID subject that is not mailto: or https:', () => {
+    expect(() => loadEnv({ GEMINI_API_KEY: 'k', GEMINI_MODEL: 'm', VAPID_SUBJECT: 'me@example.com' })).toThrow(/VAPID_SUBJECT/);
+  });
+});

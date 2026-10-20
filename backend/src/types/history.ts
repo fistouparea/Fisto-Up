@@ -14,6 +14,19 @@ export const historyListQuerySchema = z.object({
 export const historyItemParamsSchema = z.object({ id: z.string().min(1).max(64) });
 export const historyItemQuerySchema = z.object({ deviceId: deviceIdSchema });
 
+export const FOLLOW_UP_ANSWERS = ['better', 'same', 'worse'] as const;
+export type FollowUpAnswer = (typeof FOLLOW_UP_ANSWERS)[number];
+
+export const followUpBodySchema = z.object({ deviceId: deviceIdSchema, answer: z.enum(FOLLOW_UP_ANSWERS) });
+
+/** A past diagnosis waiting for "क्या फसल ठीक हुई?". */
+export interface FollowUpDue {
+  id: string;
+  crop: CropId;
+  problemName: string;
+  createdAt: Date;
+}
+
 export interface NewHistoryEntry {
   deviceId: string;
   crop: CropId;
@@ -25,6 +38,7 @@ export interface HistoryRecord {
   crop: CropId;
   diagnosis: Diagnosis;
   createdAt: Date;
+  followUp?: { answer: FollowUpAnswer; answeredAt: Date };
 }
 
 /** One row of the "मेरी जाँच" list. */

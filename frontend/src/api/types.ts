@@ -125,6 +125,35 @@ export interface WaterGuidance {
   tips: { id: WaterTipId; text: string }[];
 }
 
+export type StageId = 'sowing' | 'germination' | 'vegetative' | 'flowering' | 'grainFilling' | 'harvest';
+
+export interface CropStageInfo {
+  crop: CropId;
+  sowingDate: string;
+  daysSinceSowing: number;
+  /** null once the crop is harvested. */
+  stage: StageId | null;
+  stageName: string | null;
+  timeline: { stage: StageId; name: string; startDay: number; current: boolean; done: boolean }[];
+  tasks: string[];
+}
+
+export type NotificationType = 'alert' | 'task' | 'followup';
+
+export interface AppNotification {
+  id: string;
+  type: NotificationType;
+  severity: 'info' | 'warning' | 'danger';
+  title: string;
+  body: string;
+  href: string;
+  date: string;
+  crop?: CropId;
+  diagnosisId?: string;
+}
+
+export type FollowUpAnswer = 'better' | 'same' | 'worse';
+
 /** Error codes sent by the backend, plus the ones the app itself can produce. */
 export const ERROR_CODES = [
   'INVALID_INPUT',

@@ -10,6 +10,11 @@ export default tseslint.config(
   ...tseslint.configs.strict,
   reactHooks.configs.flat.recommended,
   {
+    // Service worker script (plain JS, runs in the worker scope).
+    files: ['public/**/*.js'],
+    languageOptions: { globals: globals.serviceworker },
+  },
+  {
     files: ['src/**/*.{ts,tsx}'],
     languageOptions: { globals: globals.browser },
     plugins: { 'react-refresh': reactRefresh },

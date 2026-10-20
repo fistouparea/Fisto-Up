@@ -1,5 +1,6 @@
 import { model, Schema, type InferSchemaType } from 'mongoose';
 import { CROPS, SEVERITIES } from '../types/diagnosis.js';
+import { FOLLOW_UP_ANSWERS } from '../types/history.js';
 
 const dawaiSchema = new Schema(
   {
@@ -27,6 +28,13 @@ const diagnosisRecordSchema = new Schema(
     deviceId: { type: String, required: true },
     crop: { type: String, required: true, enum: Object.keys(CROPS) },
     diagnosis: { type: diagnosisSchema, required: true },
+    /** "क्या फसल ठीक हुई?" answer, a few days after the check. */
+    followUp: {
+      type: new Schema(
+        { answer: { type: String, enum: FOLLOW_UP_ANSWERS, required: true }, answeredAt: { type: Date, required: true } },
+        { _id: false },
+      ),
+    },
   },
   { timestamps: { createdAt: true, updatedAt: false }, versionKey: false },
 );

@@ -2,7 +2,7 @@ import { isValidObjectId } from 'mongoose';
 import { AppError } from '../../errors/AppError.js';
 import { DiagnosisRecord } from '../../models/DiagnosisRecord.js';
 import type { CropId, Diagnosis } from '../../types/diagnosis.js';
-import type { HistoryPage, HistoryRecord, NewHistoryEntry } from '../../types/history.js';
+import type { FollowUpAnswer, FollowUpDue, HistoryPage, HistoryRecord, NewHistoryEntry } from '../../types/history.js';
 import type { HistoryRepository } from './historyRepository.js';
 
 export class MongoHistoryRepository implements HistoryRepository {
@@ -47,7 +47,37 @@ export class MongoHistoryRepository implements HistoryRepository {
       crop: row.crop as CropId,
       diagnosis: row.diagnosis as Diagnosis,
       createdAt: row.createdAt,
+      ...(row.followUp ? { followUp: { answer: row.followUp.answer as FollowUpAnswer, answeredAt: row.followUp.answeredAt } } : {}),
     };
+  }
+
+  async listFollowUpsDue(deviceId: string, from: Date, to: Date): Promise<FollowUpDue[]> {
+    const rows = await withStorageErrors(() =>
+      DiagnosisRecord.find({
+        deviceId,
+        followUp: { $exists: false },
+        'diagnosis.severity': { $ne: 'healthy' },
+        createdAt: { $gte: from, $lte: to },
+      })
+        .select('crop diagnosis.problem_name createdAt')
+        .sort({ createdAt: 1 })
+        .lean()
+        .exec(),
+    );
+    return rows.map((row) => ({
+      id: row._id.toString(),
+      crop: row.crop as CropId,
+      problemName: row.diagnosis.problem_name,
+      createdAt: row.createdAt,
+    }));
+  }
+
+  async setFollowUp(deviceId: string, id: string, answer: FollowUpAnswer): Promise<boolean> {
+    if (!isValidObjectId(id)) return false;
+    const result = await withStorageErrors(() =>
+      DiagnosisRecord.updateOne({ _id: id, deviceId }, { $set: { followUp: { answer, answeredAt: new Date() } } }).exec(),
+    );
+    return result.matchedCount > 0;
   }
 }
 

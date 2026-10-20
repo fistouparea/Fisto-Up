@@ -7,7 +7,9 @@ export type Route =
   | { name: 'farm' }
   | { name: 'farmSetup' }
   | { name: 'weather' }
-  | { name: 'water' };
+  | { name: 'water' }
+  | { name: 'calendar' }
+  | { name: 'notifications' };
 
 export const routes = {
   diagnose: '#/',
@@ -17,6 +19,8 @@ export const routes = {
   farmSetup: '#/farm/setup',
   weather: '#/weather',
   water: '#/water',
+  calendar: '#/calendar',
+  notifications: '#/notifications',
 };
 
 /**
@@ -36,6 +40,8 @@ export function parseRoute(hash: string): Route {
   if (section === 'farm') return { name: 'farm' };
   if (section === 'weather') return { name: 'weather' };
   if (section === 'water') return { name: 'water' };
+  if (section === 'calendar') return { name: 'calendar' };
+  if (section === 'notifications') return { name: 'notifications' };
   return { name: 'diagnose' };
 }
 

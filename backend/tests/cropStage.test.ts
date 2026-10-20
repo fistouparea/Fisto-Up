@@ -64,3 +64,20 @@ describe('getCropStage', () => {
     }
   });
 });
+
+describe('calendar and water rules agree', () => {
+  it('never tells the farmer to water in a stage where the water rules say "no irrigation"', async () => {
+    const { IRRIGATION_INTERVAL_DAYS } = await import('../src/config/agroRules.js');
+    const wateringWords = ['पानी की कमी न होने दें', 'सिंचाई करें', 'पानी दें'];
+    for (const crop of Object.keys(IRRIGATION_INTERVAL_DAYS) as (keyof typeof IRRIGATION_INTERVAL_DAYS)[]) {
+      for (const [stage, interval] of Object.entries(IRRIGATION_INTERVAL_DAYS[crop])) {
+        if (interval !== null) continue;
+        const day = CROP_CALENDARS[crop].starts[stage as keyof typeof CROP_CALENDARS.chana.starts];
+        const { tasks } = getCropStage(crop, sownDaysAgo(day), TODAY);
+        for (const task of tasks) {
+          for (const words of wateringWords) expect(task, `${crop} ${stage}: "${task}"`).not.toContain(words);
+        }
+      }
+    }
+  });
+});

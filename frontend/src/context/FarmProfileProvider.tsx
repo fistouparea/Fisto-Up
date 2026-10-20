@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { ApiError } from '../api/client';
 import { fetchFarmProfile, saveFarmProfile } from '../api/farm';
 import type { ErrorCode, FarmProfile } from '../api/types';
-import { readFromCache, saveToCache } from '../utils/offlineCache';
+import { readFromCache, saveToCache, setFlag } from '../utils/offlineCache';
+import { USED_ONCE_FLAG } from '../hooks/usePushPermission';
 import { FarmProfileContext, type FarmProfileState } from './farmProfileContext';
 
 const CACHE_KEY = 'farmProfile';
@@ -40,6 +41,7 @@ export function FarmProfileProvider({ children }: { children: ReactNode }) {
       try {
         setProfile(await saveFarmProfile(next));
         setErrorCode(null);
+        setFlag(USED_ONCE_FLAG);
         return true;
       } catch (error) {
         setErrorCode(error instanceof ApiError ? error.code : 'UNKNOWN');

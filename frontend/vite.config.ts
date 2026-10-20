@@ -29,6 +29,8 @@ export default defineConfig({
       workbox: {
         // Cache the app shell only; diagnosis results must always come from the server.
         navigateFallbackDenylist: [/^\/api\//],
+        // Push + notification-click handlers (public/push-sw.js).
+        importScripts: ['push-sw.js'],
         // Fonts are cached on first use (not precached, which would download them twice on slow networks).
         runtimeCaching: [
           {

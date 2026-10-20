@@ -33,6 +33,8 @@ import { StickyActions } from '../components/ui/StickyActions';
 import { notifySuccess } from '../components/ui/notify';
 import { errorMessages, hi } from '../strings/hi';
 import { compressImage } from '../utils/compressImage';
+import { setFlag } from '../utils/offlineCache';
+import { USED_ONCE_FLAG } from '../hooks/usePushPermission';
 
 type State =
   | { step: 'choose'; crop: CropId | null; preparing: boolean }
@@ -95,6 +97,7 @@ export function DiagnosePage() {
       const response = await diagnoseCrop(crop, photo);
       if (response.status === 'ok') {
         notifySuccess(hi.toast.resultReady);
+        setFlag(USED_ONCE_FLAG);
         setState({ step: 'result', crop, photo, diagnosis: response.diagnosis });
       } else {
         setState({ step: 'unclear', crop, photo });

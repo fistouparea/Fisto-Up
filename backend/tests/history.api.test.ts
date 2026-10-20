@@ -26,6 +26,12 @@ const brokenHistory: HistoryRepository = {
   findById: async () => {
     throw new AppError('HISTORY_UNAVAILABLE');
   },
+  listFollowUpsDue: async () => {
+    throw new AppError('HISTORY_UNAVAILABLE');
+  },
+  setFollowUp: async () => {
+    throw new AppError('HISTORY_UNAVAILABLE');
+  },
 };
 
 describe('saving diagnoses to history', () => {

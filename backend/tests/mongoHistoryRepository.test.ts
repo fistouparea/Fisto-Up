@@ -70,4 +70,20 @@ describe.skipIf(!MONGO_URI_TEST)('MongoHistoryRepository with a real MongoDB', (
     expect(await repository.findById(randomUUID(), id)).toBeNull();
     expect(await repository.findById(device, 'not-an-object-id')).toBeNull();
   });
+
+  it('lists follow-ups due (not healthy, not answered, in the window) and records answers', async () => {
+    const followDevice = randomUUID();
+    await repository.save({ deviceId: followDevice, crop: 'chana', diagnosis: { ...diagnosis, severity: 'serious' } });
+    await repository.save({ deviceId: followDevice, crop: 'bajra', diagnosis: { ...diagnosis, severity: 'healthy' } });
+    const window = { from: new Date(Date.now() - 60_000), to: new Date(Date.now() + 60_000) };
+
+    const due = await repository.listFollowUpsDue(followDevice, window.from, window.to);
+    expect(due.map((item) => item.crop)).toEqual(['chana']);
+    expect(await repository.listFollowUpsDue(followDevice, new Date(0), new Date(1000))).toEqual([]);
+
+    expect(await repository.setFollowUp(randomUUID(), due[0]?.id ?? '', 'better')).toBe(false);
+    expect(await repository.setFollowUp(followDevice, due[0]?.id ?? '', 'better')).toBe(true);
+    expect(await repository.listFollowUpsDue(followDevice, window.from, window.to)).toEqual([]);
+    expect((await repository.findById(followDevice, due[0]?.id ?? ''))?.followUp?.answer).toBe('better');
+  });
 });

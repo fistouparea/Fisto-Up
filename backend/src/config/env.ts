@@ -9,6 +9,11 @@ const envSchema = z.object({
   TRUST_PROXY: z.coerce.number().int().min(0).default(0),
   /** Optional. Without it the app works, but diagnosis history is turned off. */
   MONGO_URI: z.string().trim().min(1).optional(),
+  /** Web push (optional). Generate with: npx web-push generate-vapid-keys */
+  VAPID_PUBLIC_KEY: z.string().trim().min(1).optional(),
+  VAPID_PRIVATE_KEY: z.string().trim().min(1).optional(),
+  /** Contact for push services, e.g. mailto:you@example.com */
+  VAPID_SUBJECT: z.string().trim().regex(/^(mailto:|https:)/, 'must start with mailto: or https:').optional(),
   CORS_ORIGIN: z
     .string()
     .min(1)
@@ -17,6 +22,20 @@ const envSchema = z.object({
 });
 
 export type Env = z.infer<typeof envSchema>;
+
+export interface VapidConfig {
+  publicKey: string;
+  privateKey: string;
+  subject: string;
+}
+
+/** Push is on only when all three VAPID values are set. */
+export function vapidConfig(env: Env): VapidConfig | null {
+  const { VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT } = env;
+  return VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY && VAPID_SUBJECT
+    ? { publicKey: VAPID_PUBLIC_KEY, privateKey: VAPID_PRIVATE_KEY, subject: VAPID_SUBJECT }
+    : null;
+}
 
 /** Reads and validates environment variables. Throws on startup if anything is missing. */
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {

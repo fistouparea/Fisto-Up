@@ -5,13 +5,16 @@ import { AppBar } from './components/AppBar';
 import { AppToaster } from './components/ui/AppToaster';
 import { BottomNav } from './components/ui/BottomNav';
 import { FarmProfileProvider } from './context/FarmProfileProvider';
+import { NotificationsProvider } from './context/NotificationsProvider';
 import { useFarmProfile } from './hooks/useFarmProfile';
 import { routes, useHashRoute, type Route } from './hooks/useHashRoute';
+import { CalendarPage } from './pages/CalendarPage';
 import { DiagnosePage } from './pages/DiagnosePage';
 import { FarmPage } from './pages/FarmPage';
 import { FarmSetupPage } from './pages/FarmSetupPage';
 import { HistoryDetailPage } from './pages/HistoryDetailPage';
 import { HistoryPage } from './pages/HistoryPage';
+import { NotificationsPage } from './pages/NotificationsPage';
 import { WaterPage } from './pages/WaterPage';
 import { WeatherPage } from './pages/WeatherPage';
 import { hi } from './strings/hi';
@@ -22,7 +25,9 @@ const ONBOARDING_FLAG = 'onboardingDone';
 export function App() {
   return (
     <FarmProfileProvider>
-      <AppShell />
+      <NotificationsProvider>
+        <AppShell />
+      </NotificationsProvider>
     </FarmProfileProvider>
   );
 }
@@ -100,6 +105,10 @@ function Page({ route, diagnoseKey }: { route: Route; diagnoseKey: number }) {
       return <WeatherPage />;
     case 'water':
       return <WaterPage />;
+    case 'calendar':
+      return <CalendarPage />;
+    case 'notifications':
+      return <NotificationsPage />;
   }
 }
 
