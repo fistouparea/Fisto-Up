@@ -12,18 +12,29 @@ works on slow mobile internet, and installs on the phone like an app (PWA).
 | और पूछें (chat)       | Asks follow-up questions about the same diagnosis                                     |
 | Hindi voice          | 🎤 speaks the question, 🔊 सुनें reads the result and answers aloud (free, in-browser) |
 | मेरी जाँच (history)    | Sees past diagnoses on this phone (no login; anonymous device id)                     |
+| मेरा खेत (farm)        | Once: location (GPS or tehsil list), crops + sowing date, field size, water source     |
+| होम (dashboard)        | Today's weather, alert, आज का काम, water advice, mandi prices, then "फोटो से जाँच"     |
+| मौसम (weather)         | Today + 7 days, colored alerts (heat, frost, heavy rain, aandhi, dry spell) with advice |
+| पानी की सलाह (water)    | Per crop: आज पानी दें / न दें / N दिन बाद, with the reason, rule-based                |
+| फसल कैलेंडर (calendar)  | Stage timeline बुवाई → कटाई and today's tasks per crop                                 |
+| सूचनाएँ (notifications)  | Alerts, tasks, "क्या फसल ठीक हुई?" follow-ups; optional web push                      |
+| मंडी भाव (optional)     | Today's prices for the farmer's crops at nearby mandis                                |
+| Offline                | Opens without internet and shows the last saved data with "आखिरी अपडेट"              |
 
 ```
 frontend/  React + Vite + TS + Tailwind PWA ──/api──▶ backend/  Express + TS ──▶ Google Gemini (vision + chat)
-                                                                │
-                                                                └──▶ MongoDB (history, optional)
+                                                                ├──▶ MongoDB (history, farm, push; optional)
+                                                                ├──▶ Open-Meteo (weather, free, no key)
+                                                                ├──▶ data.gov.in Agmarknet (mandi, optional key)
+                                                                └──▶ Web Push (VAPID, optional) + node-cron
 ```
 
 ## Requirements
 
 - Node.js **22.9 or newer** (`node -v`)
 - A free Google Gemini API key (see below)
-- MongoDB (optional, only for "मेरी जाँच"), or Docker to run everything together
+- MongoDB for "मेरी जाँच", "मेरा खेत" and everything built on it (weather, water, calendar, notifications).
+  Without MongoDB only the photo check and chat work. Or use Docker to run everything together.
 
 ## 1. Get a free Gemini API key
 
@@ -87,10 +98,35 @@ docker compose up --build               # open http://localhost:8080
 | `MONGO_URI`      | no       | – (history off)         | e.g. `mongodb://localhost:27017/agriai`                             |
 | `TRUST_PROXY`    | no       | `0`                     | Reverse proxies in front of the backend (compose sets `1` for nginx) |
 | `CORS_ORIGIN`    | no       | `http://localhost:5173` | Allowed frontend URL(s), comma-separated                            |
+| `VAPID_PUBLIC_KEY`  | no    | – (push off)            | Web push public key (see "Web push" below)                          |
+| `VAPID_PRIVATE_KEY` | no    | – (push off)            | Web push private key. Keep secret                                   |
+| `VAPID_SUBJECT`     | no    | – (push off)            | Contact for push services: `mailto:you@example.com`                 |
+| `DATA_GOV_API_KEY`  | no    | – (mandi card hidden)   | Free key from https://data.gov.in (My Account → API key)            |
 
 The server checks these at startup and refuses to start with a clear message if something is wrong.
 
 `frontend/.env` is optional: set `VITE_API_BASE_URL` only if the API runs on a different domain in production.
+
+### Web push (optional)
+
+In-app सूचनाएँ always work. To also send notifications to the phone when the app is closed:
+
+```bash
+cd backend
+npx web-push generate-vapid-keys     # prints a Public Key and a Private Key
+```
+
+Put them in `backend/.env` as `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and set `VAPID_SUBJECT=mailto:you@example.com`,
+then restart the backend. A job runs at **7:00 and 18:00 India time** and pushes at most 2 new items per phone
+(most urgent first, never the same one twice). Push needs MongoDB, HTTPS and the production build
+(the service worker is off in `npm run dev`), so test it through the Cloudflare tunnel below.
+The app asks for permission only after the farmer has used it once, with a Hindi explanation.
+
+### Mandi prices (optional)
+
+Set `DATA_GOV_API_KEY` to show today's prices (Agmarknet, data.gov.in) for the farmer's crops at nearby mandis.
+Without a key, or if the service fails, the card is simply hidden. Mandi names and crop keywords are in
+`backend/src/data/mandis.ts`.
 
 ## 3. Test on your phone
 
@@ -143,12 +179,31 @@ Open the `https://….trycloudflare.com` address on the phone. Chrome menu → *
 - If the browser does not support either, the button is hidden. Typing always works.
 - Code: `frontend/src/hooks/useSpeech.ts` (`useSpeechInput`, `useSpeechOutput`).
 
+## Rules an expert can edit (⚠️ verify with KVK)
+
+All farming rules are data, not code. A KVK expert can change numbers and Hindi texts here without touching logic:
+
+| File | What |
+| --- | --- |
+| `backend/src/config/agroRules.ts` | Alert thresholds (heat 42°C, frost 4°C, heavy rain 50 mm, wind 50 km/h, dry spell) + advice texts; water rules, irrigation intervals per crop/stage, water tips |
+| `backend/src/data/cropCalendar.ts` | Stage start days per crop and "आज का काम" tasks per stage |
+| `backend/src/config/notificationRules.ts` | Follow-up timing (3–21 days), push limits and schedule |
+| `backend/src/data/mandis.ts` | Nearby mandis and crop names in Agmarknet |
+| `frontend/src/data/locations.ts` | Districts and tehsils (with coordinates) for the location list |
+
+Tests check that the calendar and alerts never tell the farmer to water a crop in a stage where the water rules say "no irrigation".
+
+## Screens (hash routes)
+
+`#/` होम · `#/check` फोटो जाँच · `#/history` मेरी जाँच · `#/farm` मेरा खेत · `#/farm/setup` खेत की जानकारी ·
+`#/weather` मौसम · `#/water` पानी की सलाह · `#/calendar` फसल कैलेंडर · `#/notifications` सूचनाएँ
+
 ## API
 
 All errors: `{ "error": { "code": "..." } }`. The frontend turns each code into a Hindi message
 (`frontend/src/strings/hi.ts`). Codes: `INVALID_INPUT` (400), `INVALID_IMAGE` (400), `FILE_TOO_LARGE` (413),
-`NOT_FOUND` (404), `RATE_LIMITED` (429), `AI_ERROR` (502), `HISTORY_UNAVAILABLE` (503), `AI_TIMEOUT` (504),
-`INTERNAL` (500).
+`NOT_FOUND` (404), `RATE_LIMITED` (429), `AI_ERROR` (502), `HISTORY_UNAVAILABLE` (503), `STORAGE_UNAVAILABLE` (503),
+`WEATHER_UNAVAILABLE` (503), `AI_TIMEOUT` (504), `INTERNAL` (500).
 
 **`POST /api/diagnose`** — `multipart/form-data`: `crop`, `image`, optional `deviceId` (UUID; saves to history).
 
@@ -176,6 +231,24 @@ All errors: `{ "error": { "code": "..." } }`. The frontend turns each code into 
 **`GET /api/history/:id?deviceId=<uuid>`** — `200` → `{ id, crop, diagnosis, createdAt }`.
 Returns `404` if the id belongs to another device.
 
+**`POST /api/history/:id/follow-up`** — `{ deviceId, answer: "better" | "same" | "worse" }` → `{ "ok": true }`.
+
+**Farm (all take `?deviceId=<uuid>`):**
+
+| Endpoint | Returns |
+| --- | --- |
+| `GET /api/profile` | `{ profile }` (`null` before onboarding) |
+| `PUT /api/profile` | body `{ deviceId, profile: { location?, crops[{crop, sowingDate}], fieldSizeBigha?, irrigation? } }` → `{ profile }` (GPS stored rounded to ~1 km) |
+| `POST /api/profile/watered` | body `{ deviceId, crop }`: records "आज पानी दिया" |
+| `GET /api/dashboard` | everything for the home screen in one request |
+| `GET /api/weather` | `{ forecast, alerts }` (`forecast: null` without a location) |
+| `GET /api/water` | `{ advice[{crop, status, inDays?, reason}], tips }` |
+| `GET /api/calendar` | `{ crops[{crop, daysSinceSowing, stage, timeline, tasks}] }` |
+| `GET /api/notifications` | `{ items[{id, type, severity, title, body, href}] }` (read state is kept on the phone) |
+| `GET /api/mandi` | `{ available, prices[] }` |
+| `GET /api/push/key` | `{ publicKey }` (`null` = push off) |
+| `POST /api/push/subscribe` | body `{ deviceId, subscription }` |
+
 **`GET /api/health`** → `{ "status": "ok" }`
 
 ## Switching AI provider
@@ -200,8 +273,8 @@ Prompts are in `services/ai/prompt.ts` (diagnosis + chat share the persona and m
 
 Backend production: `npm run build && npm start`.
 
-Tests mock the AI and use an in-memory history store. To also test the MongoDB repository against a real
-database (it creates and drops a throwaway `agriai_test_*` database):
+Tests mock the AI, Open-Meteo, data.gov.in and web push, and use in-memory stores. To also test the MongoDB
+repositories against a real database (they create and drop throwaway `agriai_test_*` databases):
 
 ```bash
 cd backend && MONGO_URI_TEST=mongodb://localhost:27017 npm test
@@ -212,24 +285,37 @@ cd backend && MONGO_URI_TEST=mongodb://localhost:27017 npm test
 ```
 backend/src/
   config/env.ts                   env validation (Zod)
-  routes/  controllers/           /api/diagnose, /api/chat, /api/history
+  config/agroRules.ts             ⚠️ alert + water rules and texts (verify with KVK)
+  config/notificationRules.ts     follow-up timing, push limits/schedule
+  data/                           cropCalendar (stages + tasks), cropNames, mandis
+  routes/  controllers/           diagnose, chat, history, profile, farm advice, push, mandi
   middleware/                     upload (multer, memory only), image type check, rate limit, error handler
   services/diagnosisService.ts    decides "ok" vs "unclear"
   services/dawaiSafety.ts         packet-dose note on every medicine
   services/ai/                    AiProvider interface, GeminiProvider, prompts, retry
   services/history/               HistoryRepository interface, MongoDB implementation, save helper
-  models/  db/                    Mongoose model, connection with retry
+  services/farm/                  FarmProfileRepository, farmSnapshot (one view used by all farm endpoints + push)
+  services/agro/                  cropStage, weatherAlerts, waterGuidance (pure rule engines)
+  services/weather/               WeatherProvider + OpenMeteoProvider (cache, timeout, stale fallback)
+  services/notifications/  push/  notification builder, web-push sender, subscriptions
+  services/mandi/                 AgmarknetProvider
+  jobs/                           push job + node-cron scheduler
+  models/  db/                    Mongoose models, connection with retry
   types/  errors/
 backend/tests/                    API + provider + repository tests (fake AI, in-memory history)
 frontend/src/
-  pages/                          DiagnosePage, HistoryPage, HistoryDetailPage
+  pages/                          Home, Diagnose, History(+Detail), Farm(+Setup), Weather, Water, Calendar, Notifications
   components/ui/                  design system: Button, IconButton, Card, Badge, Callout, SpeakButton, PageHeader,
                                   StepIndicator, EmptyState, BottomNav, Loader, Skeleton, StickyActions, toasts
   components/                     CropGrid + CropIcon (SVG), PhotoActions, ResultView, SeverityCard, ChatPanel, ...
   index.css                       design tokens (Tailwind v4 @theme): colors, font, shadows
-  hooks/                          useChat, useSpeech, useHistory, useHashRoute
-  api/                            fetch client + diagnose/chat/history + shared types
-  utils/                          compressImage, deviceId, formatDate, speechText
+  components/{farm,weather,water,calendar,notifications,home}/   feature components
+  context/                        FarmProfileProvider, NotificationsProvider
+  data/                           locations (tehsils), weather codes, icons per stage/alert/water status
+  hooks/                          useCachedResource (offline copy), useDashboard, useWeather, useWater, useSpeech, ...
+  api/                            fetch client (reports connectivity) + one module per endpoint group
+  utils/                          compressImage, deviceId, offlineCache, connectivity, push, dates, ...
+public/push-sw.js                 service worker push + notification-click handlers
   strings/hi.ts                   all Hindi text
 docker-compose.yml                mongo + backend + frontend (nginx)
 docs/screenshots/                 UI screenshots at 360px width

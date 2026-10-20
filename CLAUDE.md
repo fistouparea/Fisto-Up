@@ -21,4 +21,12 @@ never weaken tests, and run `npm test`, `npm run lint` and `npm run typecheck` i
 - Voice uses only the browser Web Speech API (`frontend/src/hooks/useSpeech.ts`); hide buttons when unsupported.
 - After `npm install <pkg>`, check `node_modules/@rolldown/` still has the native binding (npm optional-deps bug);
   if not, reinstall cleanly (remove node_modules + package-lock.json, then `npm install`).
-- Not built yet: login, weather, marketplace.
+- Phase 2 farm features (weather, water, calendar, notifications, mandi) all read one `farmSnapshot`
+  (`backend/src/services/farm/farmSnapshot.ts`). Rules and texts live in `config/agroRules.ts` and
+  `data/cropCalendar.ts` (marked "verify with KVK"); never put thresholds in components or controllers.
+- Alerts/calendar must never tell the farmer to water a crop in a stage where IRRIGATION_INTERVAL_DAYS is null
+  (tests enforce this).
+- External APIs (Open-Meteo, data.gov.in, web push) sit behind small provider interfaces with timeouts and are
+  mocked in tests. Empty optional env values must be treated as "not set".
+- Frontend routes: `#/` home dashboard, `#/check` photo check (see `hooks/useHashRoute.ts`).
+- Not built yet: login (phase 3), marketplace (mandi prices are the first step).

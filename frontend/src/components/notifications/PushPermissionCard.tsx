@@ -21,11 +21,11 @@ export function PushPermissionCard() {
         </div>
         <SpeakButton text={`${hi.push.question} ${hi.push.explain}`} />
       </header>
-      <div className="flex gap-2">
-        <Button variant="accent" size="md" icon={LuBellRing} onClick={allow} className="flex-1">
+      <div className="flex flex-col gap-1">
+        <Button variant="accent" size="md" icon={LuBellRing} onClick={allow}>
           {hi.push.allow}
         </Button>
-        <Button variant="ghost" size="md" fullWidth={false} onClick={later}>
+        <Button variant="ghost" size="md" onClick={later}>
           {hi.push.later}
         </Button>
       </div>
