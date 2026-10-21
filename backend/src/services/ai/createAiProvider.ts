@@ -6,6 +6,10 @@ import { GeminiProvider } from './geminiProvider.js';
 export function createAiProvider(env: Env): AiProvider {
   switch (env.AI_PROVIDER) {
     case 'gemini':
-      return new GeminiProvider({ apiKey: env.GEMINI_API_KEY, model: env.GEMINI_MODEL });
+      return new GeminiProvider({
+        apiKey: env.GEMINI_API_KEY,
+        model: env.GEMINI_MODEL,
+        thinkingLevel: env.GEMINI_THINKING_LEVEL,
+      });
   }
 }

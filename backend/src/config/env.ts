@@ -9,6 +9,11 @@ const envSchema = z.object({
   GEMINI_API_KEY: z.string().min(1, 'GEMINI_API_KEY is required'),
   GEMINI_MODEL: z.string().min(1, 'GEMINI_MODEL is required'),
   AI_PROVIDER: z.enum(['gemini']).default('gemini'),
+  /**
+   * How much the model "thinks" before answering. Newer Gemini models think a lot by default
+   * (a photo check took ~90 s); "low" answers in a few seconds. "off" sends no setting (older models).
+   */
+  GEMINI_THINKING_LEVEL: z.enum(['low', 'medium', 'high', 'off']).default('low'),
   PORT: z.coerce.number().int().positive().default(4000),
   /** Number of reverse proxies in front of the app (1 behind nginx in Docker), so rate limits see real client IPs. */
   TRUST_PROXY: z.coerce.number().int().min(0).default(0),

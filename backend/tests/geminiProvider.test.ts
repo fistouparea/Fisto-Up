@@ -149,3 +149,22 @@ describe('GeminiProvider.chat', () => {
     await expect(provider.chat(chatInput)).rejects.toMatchObject({ code: 'AI_ERROR' });
   });
 });
+
+describe('GeminiProvider thinking level', () => {
+  const okResponse = async () => textResponse(JSON.stringify(healthyDiagnosis));
+
+  it('asks for low thinking by default (newer models are very slow otherwise)', async () => {
+    const generate = vi.fn<GenerateContent>(okResponse);
+    const { provider } = createProvider(generate);
+    await provider.diagnose(input);
+    expect(generate.mock.calls[0]?.[0].config?.thinkingConfig).toEqual({ thinkingLevel: 'LOW' });
+  });
+
+  it('sends no thinking setting when turned off (older models)', async () => {
+    const generate = vi.fn<GenerateContent>(okResponse);
+    const client = { models: { generateContent: generate } } as unknown as Pick<GoogleGenAI, 'models'>;
+    const provider = new GeminiProvider({ apiKey: 'k', model: 'old-model', client, thinkingLevel: 'off' });
+    await provider.diagnose(input);
+    expect(generate.mock.calls[0]?.[0].config).not.toHaveProperty('thinkingConfig');
+  });
+});

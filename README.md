@@ -49,7 +49,9 @@ crop photo (with location data removed), the crop name, the diagnosis and the fa
 never any personal details.
 
 **Model name:** Gemini model names change over time. Check the current free **Flash** model that accepts images
-in AI Studio and put it in `GEMINI_MODEL`.
+in AI Studio and put it in `GEMINI_MODEL` (now `gemini-3.8-flash`; `gemini-2.5-flash` is no longer available to
+new users). Keep `GEMINI_THINKING_LEVEL=low`: with the model's default thinking a photo check took ~90 seconds,
+with `low` it takes about 20 seconds.
 
 ## 2a. Run with npm (no Docker)
 
@@ -92,8 +94,9 @@ docker compose up --build               # open http://localhost:8080
 | Variable         | Required | Default                 | Meaning                                                             |
 | ---------------- | -------- | ----------------------- | ------------------------------------------------------------------- |
 | `GEMINI_API_KEY` | yes      | –                       | Your Gemini API key                                                 |
-| `GEMINI_MODEL`   | yes      | –                       | e.g. `gemini-2.5-flash`                                             |
+| `GEMINI_MODEL`   | yes      | –                       | e.g. `gemini-3.8-flash`                                             |
 | `AI_PROVIDER`    | no       | `gemini`                | Which AI provider to use                                            |
+| `GEMINI_THINKING_LEVEL` | no | `low`                | `low` / `medium` / `high`, or `off` for older models                |
 | `PORT`           | no       | `4000`                  | Backend port                                                        |
 | `MONGO_URI`      | no       | – (history off)         | e.g. `mongodb://localhost:27017/agriai`                             |
 | `TRUST_PROXY`    | no       | `0`                     | Reverse proxies in front of the backend (compose sets `1` for nginx) |
@@ -169,7 +172,7 @@ Open the `https://….trycloudflare.com` address on the phone. Chrome menu → *
 7. Chat sends the crop, the earlier diagnosis and the last 10 messages (not the image). The answer is at most
    ~5 lines; non-farming questions get a polite "only farming" reply.
 8. On HTTP 429/503 from Gemini, the backend retries 3 times with growing waits (1 s, 2 s, 4 s + jitter).
-   Each attempt has a 30 s timeout. Diagnose and chat share one per-IP rate limit (30/min).
+   Each attempt has a 45 s timeout. Diagnose and chat share one per-IP rate limit (30/min).
 
 ### Voice (Web Speech API, free)
 

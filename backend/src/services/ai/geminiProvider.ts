@@ -1,4 +1,12 @@
-import { ApiError, GoogleGenAI, Type, type Content, type GenerateContentParameters, type Schema } from '@google/genai';
+import {
+  ApiError,
+  GoogleGenAI,
+  ThinkingLevel,
+  Type,
+  type Content,
+  type GenerateContentParameters,
+  type Schema,
+} from '@google/genai';
 import type { z } from 'zod';
 import { AppError } from '../../errors/AppError.js';
 import { aiChatAnswerSchema } from '../../types/chat.js';
@@ -58,9 +66,19 @@ type GenerateRequest = Pick<GenerateContentParameters, 'contents'> & {
   responseSchema: Schema;
 };
 
+export type GeminiThinkingLevel = 'low' | 'medium' | 'high' | 'off';
+
+const THINKING_LEVELS: Record<Exclude<GeminiThinkingLevel, 'off'>, ThinkingLevel> = {
+  low: ThinkingLevel.LOW,
+  medium: ThinkingLevel.MEDIUM,
+  high: ThinkingLevel.HIGH,
+};
+
 export interface GeminiProviderOptions {
   apiKey: string;
   model: string;
+  /** Defaults to "low": fast enough for farmers on slow phones. "off" = don't send the setting. */
+  thinkingLevel?: GeminiThinkingLevel;
   attemptTimeoutMs?: number;
   maxAttempts?: number;
   baseDelayMs?: number;
@@ -72,6 +90,7 @@ export interface GeminiProviderOptions {
 export class GeminiProvider implements AiProvider {
   private readonly client: Pick<GoogleGenAI, 'models'>;
   private readonly model: string;
+  private readonly thinkingLevel: GeminiThinkingLevel;
   private readonly attemptTimeoutMs: number;
   private readonly maxAttempts: number;
   private readonly baseDelayMs: number;
@@ -80,7 +99,9 @@ export class GeminiProvider implements AiProvider {
   constructor(options: GeminiProviderOptions) {
     this.client = options.client ?? new GoogleGenAI({ apiKey: options.apiKey });
     this.model = options.model;
-    this.attemptTimeoutMs = options.attemptTimeoutMs ?? 30_000;
+    this.thinkingLevel = options.thinkingLevel ?? 'low';
+    // Newer models take ~20 s for a photo even with low thinking; the phone waits up to 90 s in total.
+    this.attemptTimeoutMs = options.attemptTimeoutMs ?? 45_000;
     this.maxAttempts = options.maxAttempts ?? 3;
     this.baseDelayMs = options.baseDelayMs ?? 1_000;
     this.sleep = options.sleep;
@@ -132,6 +153,7 @@ export class GeminiProvider implements AiProvider {
         responseMimeType: 'application/json',
         responseSchema,
         temperature: 0.2,
+        ...(this.thinkingLevel === 'off' ? {} : { thinkingConfig: { thinkingLevel: THINKING_LEVELS[this.thinkingLevel] } }),
         abortSignal: AbortSignal.timeout(this.attemptTimeoutMs),
       },
     });
