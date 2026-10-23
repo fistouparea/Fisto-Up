@@ -7,6 +7,11 @@ import { BottomNav } from './components/ui/BottomNav';
 import { PageTransition } from './components/ui/PageTransition';
 import { AuthProvider } from './context/AuthProvider';
 import { LangProvider } from './context/LangProvider';
+import { MarketNotificationsProvider } from './context/MarketNotificationsProvider';
+import { NewOrderAlert } from './components/market/NewOrderAlert';
+import { OrderForm } from './components/market/OrderForm';
+import { OrdersPage } from './pages/market/OrdersPage';
+import { OrderPage } from './pages/market/OrderPage';
 import { FarmProfileProvider } from './context/FarmProfileProvider';
 import { NotificationsProvider } from './context/NotificationsProvider';
 import { useFarmProfile } from './hooks/useFarmProfile';
@@ -47,7 +52,9 @@ export function App() {
       <LangProvider>
         <FarmProfileProvider>
           <NotificationsProvider>
-            <AppShell />
+            <MarketNotificationsProvider>
+              <AppShell />
+            </MarketNotificationsProvider>
           </NotificationsProvider>
         </FarmProfileProvider>
       </LangProvider>
@@ -77,6 +84,7 @@ function AppShell() {
       <AppBar />
       <OfflineBanner />
       <AppToaster />
+      <NewOrderAlert />
       {/* Bottom padding keeps content clear of the fixed bottom navigation. */}
       {/* Shopping screens use the width of a tablet/desktop; farmer screens stay phone-narrow. */}
       <main className={cn('mx-auto px-4 pt-4 pb-32', WIDE_ROUTES.has(route.name) ? 'max-w-5xl' : 'max-w-lg')}>
@@ -115,7 +123,7 @@ function AppShell() {
 }
 
 const WIDE_ROUTES: ReadonlySet<Route['name']> = new Set(['market', 'listing']);
-const MARKET_ROUTES: ReadonlySet<Route['name']> = new Set(['market', 'listing', 'sell', 'sellNew']);
+const MARKET_ROUTES: ReadonlySet<Route['name']> = new Set(['market', 'listing', 'sell', 'sellNew', 'orders', 'order']);
 
 function Page({ route, diagnoseKey }: { route: Route; diagnoseKey: number }) {
   const { setUser } = useAuth();
@@ -160,7 +168,11 @@ function Page({ route, diagnoseKey }: { route: Route; diagnoseKey: number }) {
     case 'market':
       return <MarketPage />;
     case 'listing':
-      return <ListingDetailPage id={route.id} />;
+      return <ListingDetailPage id={route.id} actions={(listing) => <OrderForm listing={listing} />} />;
+    case 'orders':
+      return <RequireRole roles={['buyer', 'seller']}>{(user) => <OrdersPage user={user} />}</RequireRole>;
+    case 'order':
+      return <RequireRole>{() => <OrderPage id={route.id} />}</RequireRole>;
     case 'buyerProfile':
       return <RequireRole roles={['buyer']}>{(user) => <BuyerProfilePage user={user} onSaved={savedProfile} />}</RequireRole>;
   }
@@ -171,5 +183,6 @@ function pageKey(route: Route, diagnoseKey: number): string {
   if (route.name === 'diagnose') return `diagnose-${diagnoseKey}`;
   if (route.name === 'historyItem') return `history-${route.id}`;
   if (route.name === 'listing') return `listing-${route.id}`;
+  if (route.name === 'order') return `order-${route.id}`;
   return route.name;
 }

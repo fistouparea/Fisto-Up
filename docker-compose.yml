@@ -1,13 +1,27 @@
 # Runs the whole app: MongoDB + backend + frontend (nginx).
-# 1. Create backend/.env from backend/.env.example and add GEMINI_API_KEY.
+# 1. Create backend/.env from backend/.env.example and add GEMINI_API_KEY and JWT_SECRET.
 # 2. docker compose up --build
 # 3. Open http://localhost:8080
 services:
   mongo:
     image: mongo:8.0
     restart: unless-stopped
+    # Single-node replica set: marketplace orders use transactions (stock is reserved atomically).
+    command: ["--replSet", "rs0", "--bind_ip_all"]
     volumes:
       - mongo-data:/data/db
+    # Starts the replica set on first run; afterwards just reports healthy.
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - --quiet
+        - --eval
+        - "try { rs.status().ok } catch (e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongo:27017' }] }).ok }"
+      interval: 5s
+      timeout: 10s
+      start_period: 10s
+      retries: 20
     # No published port: only the backend can reach the database.
 
   backend:
@@ -15,12 +29,13 @@ services:
     restart: unless-stopped
     env_file: ./backend/.env
     environment:
-      MONGO_URI: mongodb://mongo:27017/agriai
+      MONGO_URI: mongodb://mongo:27017/agriai?replicaSet=rs0
       CORS_ORIGIN: http://localhost:8080
       TRUST_PROXY: 1
       PORT: 4000
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
 
   frontend:
     build: ./frontend

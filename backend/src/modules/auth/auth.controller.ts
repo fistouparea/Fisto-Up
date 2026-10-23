@@ -7,6 +7,10 @@ import { loginBodySchema, registerBodySchema, type AccountView } from './auth.ty
 import type { SessionTokens } from './sessionToken.js';
 import type { UserDocument } from './user.model.js';
 import { UserModel } from './user.model.js';
+import { PushSubscriptionModel } from '../../models/PushSubscription.js';
+import { z } from 'zod';
+
+const logoutBodySchema = z.object({ pushEndpoint: z.url().max(1000).optional() });
 
 export interface AuthControllerDeps {
   auth: AuthService;
@@ -33,7 +37,12 @@ export function createAuthController({ auth, tokens, cookieSecure }: AuthControl
   };
 
   const logout: RequestHandler = async (req, res: Response<{ ok: true }>) => {
-    if (req.user) await auth.logout(req.user.id);
+    if (req.user) {
+      await auth.logout(req.user.id);
+      // This phone should stop getting this account's order notifications.
+      const endpoint = logoutBodySchema.safeParse(req.body ?? {}).data?.pushEndpoint;
+      if (endpoint) await PushSubscriptionModel.updateOne({ endpoint, userId: req.user.id }, { $unset: { userId: 1 } }).exec();
+    }
     clearSessionCookie(res, cookieSecure);
     res.json({ ok: true });
   };

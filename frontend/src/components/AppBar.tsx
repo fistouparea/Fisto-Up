@@ -1,12 +1,15 @@
 import { LuBell, LuSprout, LuUserRound } from 'react-icons/lu';
 import { useAuth } from '../hooks/useAuth';
+import { useMarketNotifications } from '../hooks/useMarketNotifications';
 import { routes } from '../hooks/useHashRoute';
 import { useNotifications } from '../hooks/useNotifications';
 import { hi } from '../strings/hi';
 
 /** Slim top bar with the brand and the सूचनाएँ bell. Navigation lives in the bottom bar. */
 export function AppBar() {
-  const { unreadCount } = useNotifications();
+  const { unreadCount: farmUnread } = useNotifications();
+  const { unreadCount: marketUnread } = useMarketNotifications();
+  const unreadCount = farmUnread + marketUnread;
   const { user } = useAuth();
   const bellLabel = unreadCount > 0 ? `${hi.notifications.bell} (${unreadCount} ${hi.notifications.unread})` : hi.notifications.bell;
 

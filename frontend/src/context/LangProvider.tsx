@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
-import { enMarket } from '../strings/en';
+import { enMarket, enOrders } from '../strings/en';
 import { hi } from '../strings/hi';
 import { LangContext, type Lang, type LangState } from './langContext';
 
@@ -26,6 +26,9 @@ export function LangProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const value = useMemo<LangState>(() => ({ lang, setLang, t: lang === 'en' ? enMarket : hi.market }), [lang, setLang]);
+  const value = useMemo<LangState>(
+    () => ({ lang, setLang, t: lang === 'en' ? enMarket : hi.market, tOrders: lang === 'en' ? enOrders : hi.orders }),
+    [lang, setLang],
+  );
   return <LangContext.Provider value={value}>{children}</LangContext.Provider>;
 }

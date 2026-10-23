@@ -11,6 +11,8 @@ import { SpeakButton } from '../../components/ui/SpeakButton';
 import { routes } from '../../hooks/useHashRoute';
 import { useLang } from '../../hooks/useLang';
 import { useListing } from '../../hooks/useListing';
+import { useAuth } from '../../hooks/useAuth';
+import { ReportForm } from '../../components/market/order/ReportForm';
 import { unitLabels } from '../../strings/hi';
 import { formatRupees } from '../../utils/money';
 import { navigateTo } from '../../utils/navigate';
@@ -23,7 +25,8 @@ interface ListingDetailPageProps {
 }
 
 export function ListingDetailPage({ id, actions }: ListingDetailPageProps) {
-  const { lang, t } = useLang();
+  const { lang, t, tOrders } = useLang();
+  const { user } = useAuth();
   const { listing, loading, errorCode, retry } = useListing(id);
   const back = (
     <Button variant="ghost" size="md" fullWidth={false} icon={LuArrowLeft} onClick={() => navigateTo(routes.market)}>
@@ -127,6 +130,7 @@ export function ListingDetailPage({ id, actions }: ListingDetailPageProps) {
           </p>
         </section>
 
+        {user && user.role !== 'coordinator' && <ReportForm target={{ listingId: listing.id }} text={tOrders} />}
         <a
           href={whatsappShareUrl(shareText)}
           target="_blank"

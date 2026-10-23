@@ -32,7 +32,7 @@ const app = createApp({
   weather,
   mandi: env.DATA_GOV_API_KEY ? new AgmarknetProvider({ apiKey: env.DATA_GOV_API_KEY }) : null,
   push: { publicKey: vapid?.publicKey ?? null, subscriptions },
-  market: market ? { config: market } : null,
+  market: market ? { config: market, pushSender: vapid ? new WebPushSender(vapid) : null } : null,
   corsOrigins: env.CORS_ORIGIN,
   trustProxyHops: env.TRUST_PROXY,
 });

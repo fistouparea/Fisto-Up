@@ -1,4 +1,4 @@
-import { LuLogIn, LuLogOut, LuPencil, LuPhone, LuUserPlus, LuUserRound } from 'react-icons/lu';
+import { LuClipboardList, LuLogIn, LuLogOut, LuPencil, LuPhone, LuUserPlus, LuUserRound } from 'react-icons/lu';
 import { SellerStatusCallout } from '../../components/market/SellerStatusCallout';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
@@ -66,6 +66,11 @@ export function AccountPage() {
         <p className="mt-2 text-base text-ink-500">{hi.account.phonePrivate}</p>
       </Card>
 
+      {user.role !== 'coordinator' && (
+        <Button variant="secondary" icon={LuClipboardList} onClick={() => navigateTo(routes.orders)}>
+          {hi.orders.open}
+        </Button>
+      )}
       {editRoute && (
         <Button variant="secondary" icon={LuPencil} onClick={() => navigateTo(editRoute)}>
           {hi.account.editProfile}

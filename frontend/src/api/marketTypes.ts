@@ -212,3 +212,72 @@ export interface SearchPage {
   page: number;
   hasMore: boolean;
 }
+
+/** Mirrors backend/src/modules/orders/orderStateMachine.ts. The server decides which steps are allowed. */
+export type OrderStatus =
+  | 'requested'
+  | 'accepted'
+  | 'rejected'
+  | 'ready'
+  | 'out_for_delivery'
+  | 'ready_for_pickup'
+  | 'delivered'
+  | 'paid'
+  | 'completed'
+  | 'cancelled';
+export type Fulfilment = 'delivery' | 'pickup';
+export type PaymentMethod = 'upi' | 'cash';
+export const FINISHED_ORDER_STATUSES: readonly OrderStatus[] = ['rejected', 'completed', 'cancelled'];
+
+export interface NewOrder {
+  listingId: string;
+  quantity: number;
+  fulfilment: Fulfilment;
+  deliveryAddress?: string;
+  paymentMethod: PaymentMethod;
+  offeredPricePerUnitPaise?: number;
+  note?: string;
+}
+
+export interface Order {
+  id: string;
+  ref: string;
+  status: OrderStatus;
+  item: { listingId: string; product: ProductId; title: Bilingual; unit: Unit; photoUrl?: string };
+  quantity: number;
+  listedPricePerUnitPaise: number;
+  pricePerUnitPaise: number;
+  totalPaise: number;
+  isPriceRequest: boolean;
+  fulfilment: Fulfilment;
+  deliveryAddress?: string;
+  paymentMethod: PaymentMethod;
+  paidVia?: PaymentMethod;
+  note?: string;
+  buyer: { name: string; village?: string };
+  seller: { name: string; village?: string };
+  history: { status: OrderStatus; at: string; byRole: Role }[];
+  deliveryPerson?: { name: string; phone: string };
+  rating?: { stars: number; comment?: string };
+  commissionPaise?: number;
+  createdAt: string;
+  updatedAt: string;
+  viewerRole: 'buyer' | 'seller' | 'coordinator';
+  allowedNext: OrderStatus[];
+  contact?: { sellerPhone?: string; buyerPhone?: string; pickup?: Place };
+  payment?: { upiLink: string; upiId: string; payeeName: string; amountPaise: number };
+  canRate: boolean;
+}
+
+export type ReportReason = 'quality' | 'not_delivered' | 'payment' | 'wrong_item' | 'fake_listing' | 'behaviour' | 'other';
+
+export interface MarketNotification {
+  id: string;
+  kind: string;
+  title: string;
+  body: string;
+  href: string;
+  read: boolean;
+  orderId?: string;
+  createdAt: string;
+}

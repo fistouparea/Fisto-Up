@@ -12,11 +12,19 @@ import { createListingRouter } from './listings/listing.routes.js';
 import type { AiProvider } from '../services/ai/aiProvider.js';
 import type { MandiProvider } from '../services/mandi/agmarknetProvider.js';
 import { createPricingRouter } from './pricing/pricing.routes.js';
+import { MarketNotifier } from './notifications/notifier.js';
+import { createNotificationRouter } from './notifications/notification.routes.js';
+import { OrderService } from './orders/order.service.js';
+import { createOrderRouter } from './orders/order.routes.js';
+import { createReportRouter } from './reports/report.routes.js';
+import type { PushSender } from '../services/push/pushSender.js';
 
 export interface MarketDependencies {
   config: MarketConfig;
   /** Tests pass a cheaper bcrypt cost. */
   credentials?: CredentialMethod;
+  /** Web push for order notifications (null = in-app only). */
+  pushSender?: PushSender | null;
   now?: () => Date;
 }
 
@@ -33,7 +41,7 @@ export interface MarketSharedDeps {
 }
 
 export function createMarketRouter(
-  { config, credentials = new PinCredentials(), now }: MarketDependencies,
+  { config, credentials = new PinCredentials(), pushSender = null, now }: MarketDependencies,
   { ai, aiRateLimit, mandi }: MarketSharedDeps,
 ): Router {
   const auth = new AuthService(credentials, now);
@@ -45,6 +53,11 @@ export function createMarketRouter(
   router.use(createAccountRouter());
   router.use(createListingRouter({ ai, aiRateLimit }));
   router.use(createPricingRouter({ ai, mandi }, aiRateLimit));
+
+  const orders = new OrderService({ notifier: new MarketNotifier(pushSender), commissionBps: config.commissionBps, now });
+  router.use(createOrderRouter(orders));
+  router.use(createReportRouter());
+  router.use(createNotificationRouter(pushSender !== null));
   return router;
 }
 

@@ -8,9 +8,12 @@ import { PageHeader } from '../components/ui/PageHeader';
 import { Skeleton } from '../components/ui/Skeleton';
 import { useNotifications } from '../hooks/useNotifications';
 import { hi } from '../strings/hi';
+import { useMarketNotifications } from '../hooks/useMarketNotifications';
+import { MarketNotificationList } from '../components/market/MarketNotificationList';
 
 export function NotificationsPage() {
   const { items, unreadCount, isUnread, markRead, markAllRead, reload, loading } = useNotifications();
+  const market = useMarketNotifications();
   const followUps = items.filter((item) => item.type === 'followup');
   const others = items.filter((item) => item.type !== 'followup');
 
@@ -19,8 +22,10 @@ export function NotificationsPage() {
       <PageHeader title={hi.notifications.title} icon={LuBell} />
       <PushPermissionCard />
 
+      <MarketNotificationList items={market.items} onOpen={(id) => market.markRead([id])} />
+
       {loading && items.length === 0 && <Skeleton className="h-40" />}
-      {!loading && items.length === 0 && <EmptyState icon={LuInbox} message={hi.notifications.empty} />}
+      {!loading && items.length === 0 && market.items.length === 0 && <EmptyState icon={LuInbox} message={hi.notifications.empty} />}
 
       {followUps.map((item) => (
         <FollowUpCard key={item.id} notification={item} onAnswered={reload} />
@@ -34,8 +39,15 @@ export function NotificationsPage() {
         </ul>
       )}
 
-      {unreadCount > 0 && (
-        <Button variant="secondary" icon={LuCheckCheck} onClick={markAllRead}>
+      {unreadCount + market.unreadCount > 0 && (
+        <Button
+          variant="secondary"
+          icon={LuCheckCheck}
+          onClick={() => {
+            markAllRead();
+            market.markRead();
+          }}
+        >
           {hi.notifications.markAllRead}
         </Button>
       )}

@@ -10,6 +10,8 @@ const pushSubscriptionSchema = new Schema(
       required: true,
     },
     sentIds: { type: [String], default: [] },
+    /** Marketplace: the logged-in account on this phone (order notifications). Removed on logout. */
+    userId: { type: Schema.Types.ObjectId, ref: 'User', index: true },
   },
   { timestamps: true, versionKey: false },
 );

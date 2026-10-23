@@ -27,8 +27,9 @@ export async function register(input: RegisterInput): Promise<Account> {
   return requireUser(await sendJson('POST', '/api/auth/register', { ...input, deviceId: getDeviceId() }, isAccountResponse));
 }
 
-export async function logout(): Promise<void> {
-  await sendJson('POST', '/api/auth/logout', {}, isRecord);
+/** `pushEndpoint`: this phone stops getting the account's order notifications. */
+export async function logout(pushEndpoint?: string): Promise<void> {
+  await sendJson('POST', '/api/auth/logout', pushEndpoint ? { pushEndpoint } : {}, isRecord);
 }
 
 export async function saveSellerProfile(profile: SellerProfileInput): Promise<Account> {

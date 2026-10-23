@@ -3,6 +3,7 @@ import { fetchMe, logout as logoutRequest } from '../api/auth';
 import type { Account } from '../api/marketTypes';
 import { adoptDeviceId, getDeviceId } from '../utils/deviceId';
 import { AuthContext, type AuthState } from './authContext';
+import { currentPushEndpoint } from '../utils/marketPush';
 
 /** Who is logged in (marketplace). The advisor works the same with or without login. */
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -32,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
-      await logoutRequest();
+      await logoutRequest(await currentPushEndpoint());
     } finally {
       setUserState(null);
     }

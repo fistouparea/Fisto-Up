@@ -21,7 +21,7 @@ export function createAuthRouter(deps: AuthControllerDeps): Router {
 
   router.post('/auth/register', limiter(AUTH_RULES.registerRateLimit), json, controller.register);
   router.post('/auth/login', limiter(AUTH_RULES.loginRateLimit), json, controller.login);
-  router.post('/auth/logout', controller.logout);
+  router.post('/auth/logout', json, controller.logout);
   router.get('/auth/me', controller.me);
   return router;
 }
