@@ -17,6 +17,7 @@ import { createNotificationRouter } from './notifications/notification.routes.js
 import { OrderService } from './orders/order.service.js';
 import { createOrderRouter } from './orders/order.routes.js';
 import { createReportRouter } from './reports/report.routes.js';
+import { createAdminRouter } from './admin/admin.routes.js';
 import type { PushSender } from '../services/push/pushSender.js';
 
 export interface MarketDependencies {
@@ -58,6 +59,7 @@ export function createMarketRouter(
   router.use(createOrderRouter(orders));
   router.use(createReportRouter());
   router.use(createNotificationRouter(pushSender !== null));
+  router.use(createAdminRouter({ auth, orders, commissionBps: config.commissionBps }));
   return router;
 }
 

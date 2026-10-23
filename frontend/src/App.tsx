@@ -12,6 +12,7 @@ import { NewOrderAlert } from './components/market/NewOrderAlert';
 import { OrderForm } from './components/market/OrderForm';
 import { OrdersPage } from './pages/market/OrdersPage';
 import { OrderPage } from './pages/market/OrderPage';
+import { AdminPage } from './pages/admin/AdminPage';
 import { FarmProfileProvider } from './context/FarmProfileProvider';
 import { NotificationsProvider } from './context/NotificationsProvider';
 import { useFarmProfile } from './hooks/useFarmProfile';
@@ -104,7 +105,7 @@ function AppShell() {
             onClick: () => setDiagnoseKey((key) => key + 1),
           },
           {
-            href: user?.role === 'seller' ? routes.sell : routes.market,
+            href: user?.role === 'seller' ? routes.sell : user?.role === 'coordinator' ? routes.admin() : routes.market,
             label: hi.nav.market,
             icon: LuShoppingBasket,
             active: MARKET_ROUTES.has(route.name),
@@ -122,8 +123,8 @@ function AppShell() {
   );
 }
 
-const WIDE_ROUTES: ReadonlySet<Route['name']> = new Set(['market', 'listing']);
-const MARKET_ROUTES: ReadonlySet<Route['name']> = new Set(['market', 'listing', 'sell', 'sellNew', 'orders', 'order']);
+const WIDE_ROUTES: ReadonlySet<Route['name']> = new Set(['market', 'listing', 'admin']);
+const MARKET_ROUTES: ReadonlySet<Route['name']> = new Set(['market', 'listing', 'sell', 'sellNew', 'orders', 'order', 'admin']);
 
 function Page({ route, diagnoseKey }: { route: Route; diagnoseKey: number }) {
   const { setUser } = useAuth();
@@ -173,6 +174,8 @@ function Page({ route, diagnoseKey }: { route: Route; diagnoseKey: number }) {
       return <RequireRole roles={['buyer', 'seller']}>{(user) => <OrdersPage user={user} />}</RequireRole>;
     case 'order':
       return <RequireRole>{() => <OrderPage id={route.id} />}</RequireRole>;
+    case 'admin':
+      return <RequireRole roles={['coordinator']}>{() => <AdminPage tab={route.tab} />}</RequireRole>;
     case 'buyerProfile':
       return <RequireRole roles={['buyer']}>{(user) => <BuyerProfilePage user={user} onSaved={savedProfile} />}</RequireRole>;
   }
@@ -184,5 +187,6 @@ function pageKey(route: Route, diagnoseKey: number): string {
   if (route.name === 'historyItem') return `history-${route.id}`;
   if (route.name === 'listing') return `listing-${route.id}`;
   if (route.name === 'order') return `order-${route.id}`;
+  if (route.name === 'admin') return `admin-${route.tab}`;
   return route.name;
 }

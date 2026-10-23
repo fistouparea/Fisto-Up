@@ -1,5 +1,8 @@
 import { useSyncExternalStore } from 'react';
 
+export const ADMIN_TABS = ['overview', 'sellers', 'orders', 'reports', 'ledger', 'newListing'] as const;
+export type AdminTab = (typeof ADMIN_TABS)[number];
+
 export type Route =
   | { name: 'home' }
   | { name: 'diagnose' }
@@ -21,7 +24,8 @@ export type Route =
   | { name: 'market' }
   | { name: 'listing'; id: string }
   | { name: 'orders' }
-  | { name: 'order'; id: string };
+  | { name: 'order'; id: string }
+  | { name: 'admin'; tab: AdminTab };
 
 export const routes = {
   home: '#/',
@@ -45,6 +49,7 @@ export const routes = {
   listing: (id: string) => `#/market/listing/${encodeURIComponent(id)}`,
   orders: '#/orders',
   order: (id: string) => `#/orders/${encodeURIComponent(id)}`,
+  admin: (tab: AdminTab = 'overview') => (tab === 'overview' ? '#/admin' : `#/admin/${tab}`),
 };
 
 /**
@@ -60,6 +65,7 @@ export function parseRoute(hash: string): Route {
   const [, section, id, sub] = hash.replace(/^#/, '').split('/');
   if (section === 'market' && id === 'listing' && sub) return { name: 'listing', id: decodeURIComponent(sub) };
   if (section === 'market') return { name: 'market' };
+  if (section === 'admin') return { name: 'admin', tab: ADMIN_TABS.find((tab) => tab === id) ?? 'overview' };
   if (section === 'orders' && id) return { name: 'order', id: decodeURIComponent(id) };
   if (section === 'orders') return { name: 'orders' };
   if (section === 'history' && id) return { name: 'historyItem', id: decodeURIComponent(id) };
