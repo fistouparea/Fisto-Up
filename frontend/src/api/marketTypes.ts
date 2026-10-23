@@ -144,3 +144,22 @@ export interface SellerListing {
   visible: boolean;
   createdAt: string;
 }
+
+interface FairRange {
+  unit: Unit;
+  fairMinPaise: number;
+  fairMaxPaise: number;
+}
+
+/** Fair price suggestion for the listing form. `source: null` = no data, hide it. */
+export type PriceSuggestion =
+  | (FairRange & {
+      source: 'mandi';
+      mandiMinPaisePerQuintal: number;
+      mandiMaxPaisePerQuintal: number;
+      date: string;
+      markets: string[];
+    })
+  | (FairRange & { source: 'platform'; sampleSize: number })
+  | (FairRange & { source: 'ai' })
+  | { source: null };

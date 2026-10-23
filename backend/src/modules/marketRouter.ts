@@ -10,6 +10,8 @@ import { SessionTokens } from './auth/sessionToken.js';
 import { createAccountRouter } from './sellers/seller.routes.js';
 import { createListingRouter } from './listings/listing.routes.js';
 import type { AiProvider } from '../services/ai/aiProvider.js';
+import type { MandiProvider } from '../services/mandi/agmarknetProvider.js';
+import { createPricingRouter } from './pricing/pricing.routes.js';
 
 export interface MarketDependencies {
   config: MarketConfig;
@@ -26,11 +28,13 @@ export const MARKET_PATHS = ['/auth', '/account', '/market', '/admin'];
 export interface MarketSharedDeps {
   ai: AiProvider;
   aiRateLimit: RequestHandler;
+  /** Phase 2 mandi prices (optional) for the fair price suggestion. */
+  mandi: MandiProvider | null;
 }
 
 export function createMarketRouter(
   { config, credentials = new PinCredentials(), now }: MarketDependencies,
-  { ai, aiRateLimit }: MarketSharedDeps,
+  { ai, aiRateLimit, mandi }: MarketSharedDeps,
 ): Router {
   const auth = new AuthService(credentials, now);
   const tokens = new SessionTokens(config.jwtSecret);
@@ -40,6 +44,7 @@ export function createMarketRouter(
   router.use(createAuthRouter({ auth, tokens, cookieSecure: config.cookieSecure }));
   router.use(createAccountRouter());
   router.use(createListingRouter({ ai, aiRateLimit }));
+  router.use(createPricingRouter({ ai, mandi }, aiRateLimit));
   return router;
 }
 

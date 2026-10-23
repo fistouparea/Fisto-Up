@@ -45,3 +45,19 @@ describe('redactPersonalData', () => {
     expect(redactPersonalData('10 क्विंटल, 2500 रुपये')).toBe('10 क्विंटल, 2500 रुपये');
   });
 });
+
+describe('GeminiProvider.estimatePrice', () => {
+  it('sends only the product name and unit and returns the validated estimate', async () => {
+    const estimate = { min_rupees: 180, max_rupees: 240, confidence: 'medium' };
+    const { provider, generate } = providerReturning(JSON.stringify(estimate));
+    await expect(provider.estimatePrice({ productName: 'पापड़ (Papad)', unit: 'pack' })).resolves.toEqual(estimate);
+    expect(JSON.stringify(generate.mock.calls[0]?.[0]?.contents)).toBe(
+      JSON.stringify([{ role: 'user', parts: [{ text: 'Product: पापड़ (Papad)\nUnit: one pack' }] }]),
+    );
+  });
+
+  it('rejects a negative estimate as AI_ERROR', async () => {
+    const { provider } = providerReturning(JSON.stringify({ min_rupees: -1, max_rupees: 5, confidence: 'high' }));
+    await expect(provider.estimatePrice({ productName: 'x', unit: 'kg' })).rejects.toMatchObject({ code: 'AI_ERROR' });
+  });
+});

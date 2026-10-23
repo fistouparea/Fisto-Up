@@ -43,14 +43,12 @@ interface SnapListFlowProps {
   submit: (listing: NewListing) => Promise<SellerListing>;
   /** Shown above the photo step, e.g. the chosen seller and consent for assisted listing. */
   header?: ReactNode;
-  /** Extra hint under the price, e.g. the fair price suggestion. */
-  priceHint?: (form: ListingForm) => ReactNode;
   onFinished: () => void;
   finishLabel: string;
 }
 
 /** Photo → speak (or type) → AI fills the form → seller checks big cards → one button to list. */
-export function SnapListFlow({ submit, header, priceHint, onFinished, finishLabel }: SnapListFlowProps) {
+export function SnapListFlow({ submit, header, onFinished, finishLabel }: SnapListFlowProps) {
   const [state, setState] = useState<State>({ step: 'photo', preparing: false });
   const [errors, setErrors] = useState<Partial<Record<ListingFormField, string>>>({});
   const { offline } = useConnectivity();
@@ -169,7 +167,6 @@ export function SnapListFlow({ submit, header, priceHint, onFinished, finishLabe
               form={state.form}
               errors={errors}
               onChange={(form) => state.step === 'confirm' && setState({ ...state, form })}
-              priceHint={priceHint?.(state.form)}
             />
             <StickyActions>
               <Button

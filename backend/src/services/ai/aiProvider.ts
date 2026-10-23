@@ -1,6 +1,8 @@
 import type { ChatMessage } from '../../types/chat.js';
 import type { AiDiagnosis, Diagnosis, ImageMimeType } from '../../types/diagnosis.js';
 import type { AiListingDraft } from '../../modules/listings/listing.types.js';
+import type { AiPriceEstimate } from '../../modules/pricing/pricing.types.js';
+import type { Unit } from '../../config/marketCatalog.js';
 
 export interface DiagnoseInput {
   image: Buffer;
@@ -36,4 +38,6 @@ export interface AiProvider {
   chat(input: ChatInput): Promise<string>;
   /** "Snap & List": suggests a listing from a product photo and the seller's words. */
   draftListing(input: ListingDraftInput): Promise<AiListingDraft>;
+  /** Rough fair price for an SHG product. Only the product name and unit are sent. */
+  estimatePrice(input: { productName: string; unit: Unit }): Promise<AiPriceEstimate>;
 }

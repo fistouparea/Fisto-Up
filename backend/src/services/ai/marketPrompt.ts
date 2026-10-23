@@ -50,3 +50,16 @@ export function buildListingUserPrompt(sellerText: string): string {
 export function redactPersonalData(text: string): string {
   return text.replace(/(?:\+?91[\s-]?)?[6-9](?:[\s-]?\d){9}/g, '[नंबर]');
 }
+
+/** SHG product price estimate, used only when our platform has too few similar listings. */
+export const PRICE_ESTIMATE_SYSTEM_PROMPT = `
+You estimate fair retail prices in India (Rajasthan, 2026) for products made by rural self-help groups (SHG),
+such as home-made pickle, papad, spices, ker-sangri and handicrafts.
+Give a realistic range in rupees for ONE unit (kg, pack or piece) as a household buyer would pay in a small town.
+For "pack" and "piece" assume a common small size (e.g. a 500 g pack). If you are not reasonably sure,
+set confidence to "low". Never guess wildly: a narrow, honest range is better.
+`.trim();
+
+export function buildPriceEstimatePrompt(productName: string, unitName: string): string {
+  return `Product: ${productName}\nUnit: one ${unitName}`;
+}

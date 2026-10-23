@@ -4,6 +4,7 @@ import type { AiProvider } from '../src/services/ai/aiProvider.js';
 import type { HistoryRepository } from '../src/services/history/historyRepository.js';
 import type { AiDiagnosis } from '../src/types/diagnosis.js';
 import type { AiListingDraft } from '../src/modules/listings/listing.types.js';
+import type { AiPriceEstimate } from '../src/modules/pricing/pricing.types.js';
 
 /** Smallest byte sequence our magic-number check accepts as a JPEG. */
 export const JPEG_BYTES = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(100)]);
@@ -38,6 +39,7 @@ export const bajraListingDraft: AiListingDraft = {
 
 export interface FakeMarketAi {
   draftListing?: AiListingDraft | Error;
+  estimatePrice?: AiPriceEstimate | Error;
 }
 
 export function createFakeProvider(
@@ -58,7 +60,12 @@ export function createFakeProvider(
     if (result instanceof Error) throw result;
     return result;
   });
-  return { diagnose, chat, draftListing } satisfies AiProvider;
+  const estimatePrice = vi.fn<AiProvider['estimatePrice']>(async () => {
+    const result = market.estimatePrice ?? { min_rupees: 180, max_rupees: 240, confidence: 'medium' };
+    if (result instanceof Error) throw result;
+    return result;
+  });
+  return { diagnose, chat, draftListing, estimatePrice } satisfies AiProvider;
 }
 
 export function createTestApp(

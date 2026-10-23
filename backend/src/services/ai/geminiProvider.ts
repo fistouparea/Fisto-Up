@@ -14,7 +14,14 @@ import { aiDiagnosisSchema, type AiDiagnosis } from '../../types/diagnosis.js';
 import { CATEGORIES, PRODUCT_IDS, UNITS } from '../../config/marketCatalog.js';
 import { aiListingDraftSchema, type AiListingDraft } from '../../modules/listings/listing.types.js';
 import type { AiProvider, ChatInput, DiagnoseInput, ListingDraftInput } from './aiProvider.js';
-import { buildListingUserPrompt, LISTING_SYSTEM_PROMPT } from './marketPrompt.js';
+import {
+  buildListingUserPrompt,
+  buildPriceEstimatePrompt,
+  LISTING_SYSTEM_PROMPT,
+  PRICE_ESTIMATE_SYSTEM_PROMPT,
+} from './marketPrompt.js';
+import { aiPriceEstimateSchema, type AiPriceEstimate } from '../../modules/pricing/pricing.types.js';
+import { UNIT_NAMES, type Unit } from '../../config/marketCatalog.js';
 import { buildChatSystemPrompt, buildDiagnosisUserPrompt, DIAGNOSIS_SYSTEM_PROMPT } from './prompt.js';
 import { withRetry } from './retry.js';
 
@@ -111,6 +118,17 @@ const LISTING_RESPONSE_SCHEMA: Schema = {
   ],
 };
 
+/** Mirrors aiPriceEstimateSchema. */
+const PRICE_RESPONSE_SCHEMA: Schema = {
+  type: Type.OBJECT,
+  properties: {
+    min_rupees: { type: Type.NUMBER },
+    max_rupees: { type: Type.NUMBER },
+    confidence: { type: Type.STRING, enum: ['high', 'medium', 'low'] },
+  },
+  required: ['min_rupees', 'max_rupees', 'confidence'],
+};
+
 type GenerateRequest = Pick<GenerateContentParameters, 'contents'> & {
   systemInstruction: string;
   responseSchema: Schema;
@@ -192,6 +210,15 @@ export class GeminiProvider implements AiProvider {
       ],
     });
     return parseJson(rawText, aiListingDraftSchema);
+  }
+
+  async estimatePrice({ productName, unit }: { productName: string; unit: Unit }): Promise<AiPriceEstimate> {
+    const rawText = await this.generateJson({
+      systemInstruction: PRICE_ESTIMATE_SYSTEM_PROMPT,
+      responseSchema: PRICE_RESPONSE_SCHEMA,
+      contents: [{ role: 'user', parts: [{ text: buildPriceEstimatePrompt(productName, UNIT_NAMES[unit].en) }] }],
+    });
+    return parseJson(rawText, aiPriceEstimateSchema);
   }
 
   /** Calls Gemini in JSON mode with retries on "busy" errors. Returns the raw JSON text. */

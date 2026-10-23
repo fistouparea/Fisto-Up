@@ -65,7 +65,7 @@ export function createApp({
   app.use('/api', createProfileRouter(farmProfiles));
   app.use('/api', createFarmAdviceRouter({ farmProfiles, history: historyRepository, weather }, mandi));
   app.use('/api', createPushRouter(push.publicKey, push.subscriptions));
-  app.use('/api', market ? createMarketRouter(market, { ai: aiProvider, aiRateLimit }) : createMarketUnavailableRouter());
+  app.use('/api', market ? createMarketRouter(market, { ai: aiProvider, aiRateLimit, mandi }) : createMarketUnavailableRouter());
 
   app.use(notFoundHandler);
   app.use(errorHandler);

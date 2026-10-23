@@ -1,9 +1,11 @@
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { LuIndianRupee, LuPackage, LuPencil, LuScale, LuStore } from 'react-icons/lu';
 import { PRODUCT_CATALOG } from '../../data/marketCatalog';
 import { hi, productLabels, unitLabels } from '../../strings/hi';
 import { changeProduct, type ListingForm, type ListingFormField } from '../../utils/listingForm';
-import { formatRupees, rupeesToPaise, totalPaise } from '../../utils/money';
+import { formatRupees, paiseToRupeesInput, rupeesToPaise, totalPaise } from '../../utils/money';
+import { usePriceSuggestion } from '../../hooks/usePriceSuggestion';
+import { PriceSuggestionBox } from './PriceSuggestionBox';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Chip } from '../ui/Chip';
@@ -16,14 +18,13 @@ interface ListingConfirmFormProps {
   form: ListingForm;
   onChange: (form: ListingForm) => void;
   errors: Partial<Record<ListingFormField, string>>;
-  /** Fair price hint under the price card (Task 3), if any. */
-  priceHint?: ReactNode;
 }
 
 /** Three big cards (product, quantity, price) with speaker buttons, then optional details. */
-export function ListingConfirmForm({ form, onChange, errors, priceHint }: ListingConfirmFormProps) {
+export function ListingConfirmForm({ form, onChange, errors }: ListingConfirmFormProps) {
   const [pickingProduct, setPickingProduct] = useState(form.product === null);
   const [showDetails, setShowDetails] = useState(false);
+  const suggestion = usePriceSuggestion(form.product, form.unit);
   const set = (change: Partial<ListingForm>) => onChange({ ...form, ...change });
 
   const product = form.product;
@@ -96,7 +97,11 @@ export function ListingConfirmForm({ form, onChange, errors, priceHint }: Listin
             {hi.sell.total}: <strong>{formatRupees(totalPaise(form.quantity, price))}</strong>
           </p>
         ) : null}
-        {priceHint}
+        <PriceSuggestionBox
+          suggestion={suggestion}
+          pricePaise={price}
+          onUse={(paise) => set({ priceInput: paiseToRupeesInput(paise) })}
+        />
       </Card>
 
       <Card icon={LuPackage} title={hi.sell.minOrder}>
