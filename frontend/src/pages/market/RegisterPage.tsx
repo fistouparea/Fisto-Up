@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { AlreadyLoggedIn } from '../../components/market/AlreadyLoggedIn';
 import { LuHouse, LuLogIn, LuShoppingBasket, LuStore, LuUserPlus, LuWheat } from 'react-icons/lu';
 import { register } from '../../api/auth';
 import type { BuyerType } from '../../api/marketTypes';
@@ -15,7 +16,7 @@ import { afterLoginTarget } from '../../utils/loginRedirect';
 import { navigateTo } from '../../utils/navigate';
 
 export function RegisterPage() {
-  const { setUser } = useAuth();
+  const { user: current, setUser } = useAuth();
   const [role, setRole] = useState<'seller' | 'buyer' | null>(null);
   const [buyerType, setBuyerType] = useState<BuyerType>('household');
   const [name, setName] = useState('');
@@ -40,10 +41,11 @@ export function RegisterPage() {
       register({ role, name: name.trim(), phone, pin, ...(role === 'buyer' && { buyerType }) }),
     );
     if (!user) return;
-    setUser(user);
     // A new seller fills village, UPI ID and pickup place next.
-    navigateTo(user.role === 'seller' ? routes.sellerProfile : afterLoginTarget(user.role));
+    setUser(user, user.role === 'seller' ? routes.sellerProfile : afterLoginTarget(user.role));
   };
+
+  if (current) return <AlreadyLoggedIn user={current} />;
 
   return (
     <form className="flex flex-col gap-5" onSubmit={(event) => void submit(event)} noValidate>

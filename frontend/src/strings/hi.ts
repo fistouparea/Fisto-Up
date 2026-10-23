@@ -268,6 +268,8 @@ export const hi = {
     welcome: 'स्वागत है',
     forgotPin: 'PIN भूल गए? अपने संयोजक से बात करें।',
     advisorFree: 'फसल जाँच और खेत की सलाह बिना लॉगिन के भी चलती है।',
+    loggedInAs: 'आप लॉगिन हैं:',
+    continue: 'आगे बढ़ें',
   },
   account: {
     title: 'मेरा खाता',

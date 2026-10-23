@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { AlreadyLoggedIn } from '../../components/market/AlreadyLoggedIn';
 import { LuLogIn, LuUserPlus } from 'react-icons/lu';
 import { login } from '../../api/auth';
 import { Button } from '../../components/ui/Button';
@@ -13,7 +14,7 @@ import { afterLoginTarget } from '../../utils/loginRedirect';
 import { navigateTo } from '../../utils/navigate';
 
 export function LoginPage() {
-  const { setUser } = useAuth();
+  const { user: current, setUser } = useAuth();
   const [phone, setPhone] = useState('');
   const [pin, setPin] = useState('');
   const [showErrors, setShowErrors] = useState(false);
@@ -27,11 +28,10 @@ export function LoginPage() {
     setShowErrors(true);
     if (!phoneOk || !pinOk) return;
     const user = await run(() => login(phone, pin));
-    if (user) {
-      setUser(user);
-      navigateTo(afterLoginTarget(user.role));
-    }
+    if (user) setUser(user, afterLoginTarget(user.role));
   };
+
+  if (current) return <AlreadyLoggedIn user={current} />;
 
   return (
     <form className="flex flex-col gap-5" onSubmit={(event) => void submit(event)} noValidate>

@@ -21,14 +21,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [attempt]);
 
-  const setUser = useCallback((next: Account) => {
+  const setUser = useCallback((next: Account, nextHash?: string) => {
     // Logged in on another phone: use the account's device id so its farm profile and history appear here.
     if (next.deviceId && next.deviceId !== getDeviceId()) {
       adoptDeviceId(next.deviceId);
+      if (nextHash) window.location.hash = nextHash;
       window.location.reload();
       return;
     }
     setUserState(next);
+    if (nextHash) window.location.hash = nextHash;
   }, []);
 
   const logout = useCallback(async () => {

@@ -1,5 +1,5 @@
 import { LuArrowLeft, LuClipboardList, LuMapPin, LuPhone, LuRefreshCw, LuSearchX, LuTruck } from 'react-icons/lu';
-import type { Order } from '../../api/marketTypes';
+import type { Order, Place } from '../../api/marketTypes';
 import { ListingPhoto } from '../../components/market/ListingPhoto';
 import { OrderActions } from '../../components/market/order/OrderActions';
 import { OrderStatusBadge } from '../../components/market/order/OrderStatusBadge';
@@ -86,7 +86,10 @@ export function OrderPage({ id }: { id: string }) {
           {order.isPriceRequest && <Row label={text.listedPrice} value={`${formatRupees(order.listedPricePerUnitPaise)} (${text.priceRequest})`} />}
           <Row label={text.total} value={formatRupees(order.totalPaise)} strong />
           <Row label={text.payment} value={order.paidVia ? `${text[order.paidVia]} ✓` : text[order.paymentMethod]} />
-          <Row label={order.fulfilment === 'delivery' ? text.delivery : text.pickup} value={order.deliveryAddress ?? ''} />
+          <Row
+            label={order.fulfilment === 'delivery' ? text.delivery : text.pickup}
+            value={order.deliveryAddress ?? placeText(order.contact?.pickup) ?? order.seller.village ?? ''}
+          />
           {order.note && <Row label={text.note} value={order.note} />}
           {order.commissionPaise !== undefined && <Row label={text.commission} value={formatRupees(order.commissionPaise)} />}
           {order.rating && <Row label={text.yourRating} value={`${'★'.repeat(order.rating.stars)} ${order.rating.comment ?? ''}`} />}
@@ -98,6 +101,10 @@ export function OrderPage({ id }: { id: string }) {
       {order.viewerRole !== 'coordinator' && <ReportForm target={{ orderId: order.id }} text={text} />}
     </section>
   );
+}
+
+function placeText(place: Place | undefined): string | undefined {
+  return place ? [place.address, place.tehsil, place.district].filter(Boolean).join(', ') : undefined;
 }
 
 function Row({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {

@@ -41,7 +41,6 @@ import { RequireRole } from './components/market/RequireRole';
 import { useAuth } from './hooks/useAuth';
 import type { Account } from './api/marketTypes';
 import { roleHome } from './utils/loginRedirect';
-import { navigateTo } from './utils/navigate';
 import { hi } from './strings/hi';
 import { readFlag, setFlag } from './utils/offlineCache';
 
@@ -128,10 +127,7 @@ const MARKET_ROUTES: ReadonlySet<Route['name']> = new Set(['market', 'listing', 
 
 function Page({ route, diagnoseKey }: { route: Route; diagnoseKey: number }) {
   const { setUser } = useAuth();
-  const savedProfile = (user: Account) => {
-    setUser(user);
-    navigateTo(roleHome(user.role));
-  };
+  const savedProfile = (user: Account) => setUser(user, roleHome(user.role));
 
   switch (route.name) {
     case 'home':
