@@ -20,10 +20,16 @@ works on slow mobile internet, and installs on the phone like an app (PWA).
 | सूचनाएँ (notifications)  | Alerts, tasks, "क्या फसल ठीक हुई?" follow-ups; optional web push                      |
 | मंडी भाव (optional)     | Today's prices for the farmer's crops at nearby mandis                                |
 | Offline                | Opens without internet and shows the last saved data with "आखिरी अपडेट"              |
+| **बाज़ार (marketplace)** | Phase 3, see [Marketplace](#marketplace-phase-3) below                               |
+| बेचें (Snap & List)     | Seller takes a photo and speaks "दस क्विंटल बाजरा, पच्चीस सौ रुपये" → AI fills the listing |
+| Fair price             | Mandi range (Agmarknet) or similar listings / AI estimate, clearly a suggestion       |
+| खरीदें                  | Buyers browse, filter, order or ask a bulk price; pay the seller directly by UPI or cash |
+| Orders                 | Accept/reject with voice alert, stock reserved safely, UPI QR, rating, problem reports |
+| संयोजक पैनल             | Verify sellers, moderate, orders board, assisted listing, commission ledger + CSV     |
 
 ```
 frontend/  React + Vite + TS + Tailwind PWA ──/api──▶ backend/  Express + TS ──▶ Google Gemini (vision + chat)
-                                                                ├──▶ MongoDB (history, farm, push; optional)
+                                                                ├──▶ MongoDB (history, farm, push; marketplace needs a replica set)
                                                                 ├──▶ Open-Meteo (weather, free, no key)
                                                                 ├──▶ data.gov.in Agmarknet (mandi, optional key)
                                                                 └──▶ Web Push (VAPID, optional) + node-cron
@@ -35,6 +41,8 @@ frontend/  React + Vite + TS + Tailwind PWA ──/api──▶ backend/  Expres
 - A free Google Gemini API key (see below)
 - MongoDB for "मेरी जाँच", "मेरा खेत" and everything built on it (weather, water, calendar, notifications).
   Without MongoDB only the photo check and chat work. Or use Docker to run everything together.
+- The marketplace additionally needs MongoDB as a **replica set** (orders use transactions) and a `JWT_SECRET`.
+  Docker sets up the replica set for you; for npm see [MongoDB replica set](#mongodb-replica-set-for-npm-dev).
 
 ## 1. Get a free Gemini API key
 
@@ -81,12 +89,13 @@ Open the **Local** URL. In development Vite forwards `/api` to the backend on po
 ## 2b. Run with Docker (backend + frontend + MongoDB)
 
 ```bash
-cp backend/.env.example backend/.env    # add GEMINI_API_KEY (MONGO_URI is set by compose)
+cp backend/.env.example backend/.env    # add GEMINI_API_KEY and JWT_SECRET (MONGO_URI is set by compose)
 docker compose up --build               # open http://localhost:8080
 ```
 
 - `frontend` is served by nginx on port **8080** and forwards `/api` to `backend`.
-- `mongo` keeps data in the `mongo-data` volume and is not exposed outside Docker.
+- `mongo` keeps data in the `mongo-data` volume and is not exposed outside Docker. It runs as a single-node
+  replica set (`rs0`), started automatically by its healthcheck; the backend waits until it is healthy.
 - Stop with `docker compose down` (add `-v` only if you want to delete all saved history).
 
 ### Environment variables (`backend/.env`)
@@ -104,7 +113,10 @@ docker compose up --build               # open http://localhost:8080
 | `VAPID_PUBLIC_KEY`  | no    | – (push off)            | Web push public key (see "Web push" below)                          |
 | `VAPID_PRIVATE_KEY` | no    | – (push off)            | Web push private key. Keep secret                                   |
 | `VAPID_SUBJECT`     | no    | – (push off)            | Contact for push services: `mailto:you@example.com`                 |
-| `DATA_GOV_API_KEY`  | no    | – (mandi card hidden)   | Free key from https://data.gov.in (My Account → API key)            |
+| `DATA_GOV_API_KEY`  | no    | – (mandi card hidden)   | Free key from https://data.gov.in (My Account → API key). Also used for the marketplace fair price |
+| `JWT_SECRET`        | for marketplace | – (marketplace off) | Signs the login cookie. At least 32 random characters: `openssl rand -hex 32`. Keep secret |
+| `COOKIE_SECURE`     | no    | `true` when `NODE_ENV=production` | Login cookie only over HTTPS. Set `false` only to test over plain http on Wi-Fi |
+| `COMMISSION_PERCENT`| no    | `3`                     | Our commission on completed orders, 2–5 (%)                          |
 
 The server checks these at startup and refuses to start with a clear message if something is wrong.
 
@@ -182,6 +194,96 @@ Open the `https://….trycloudflare.com` address on the phone. Chrome menu → *
 - If the browser does not support either, the button is hidden. Typing always works.
 - Code: `frontend/src/hooks/useSpeech.ts` (`useSpeechInput`, `useSpeechOutput`).
 
+## Marketplace (Phase 3)
+
+Farmers and SHG (self-help group) women of Churu sell grain, pulses and SHG products (achar, papad, masale,
+ker-sangri, handicraft) to shops, hotels, traders (B2B) and households (B2C). **No money passes through the app:**
+the buyer pays the seller directly by UPI (deep link + QR) or cash. Our income is a commission (default 3%,
+`COMMISSION_PERCENT`) recorded per completed order in a ledger and collected offline by coordinators.
+
+The advisor (photo check, chat, farm, weather …) works exactly as before, with or without login.
+
+### Roles
+
+| Role | Signs up | Can |
+| --- | --- | --- |
+| `seller` | in the app (`#/register` → "बेचना है") | fill profile (village, SHG, UPI ID, pickup place), list with Snap & List, edit/pause listings, accept/reject orders, confirm "पैसे मिल गए". Listings are public only after a coordinator verifies the seller. Changing the UPI ID sends a verified seller back to "pending". |
+| `buyer` | in the app ("खरीदना है", household or business) | browse (also without login), order, ask a bulk price, pay, confirm receipt, rate, report |
+| `coordinator` | **only** with the server script below | everything in `#/admin`, and every seller step on an order (for sellers who cannot use the app) |
+
+Login is phone number + 4-digit PIN (bcrypt; easy PINs like 1234/1111 refused; 5 wrong PINs lock the account
+for 15 minutes; per-IP rate limit). The session is a JWT in an httpOnly, SameSite=Strict cookie (`Secure` in
+production). Logout ends all sessions of the account. Every write needs the `X-Requested-With: agriai` header
+(CSRF defence). Auth is behind `CredentialMethod` (`modules/auth/credentials.ts`) so phone OTP can be added later.
+
+On first login the phone's anonymous advisor data (farm profile, "मेरी जाँच") is linked to the account. On
+another phone the app switches to the account's data.
+
+### Create the first coordinator
+
+```bash
+cd backend
+npm run create-coordinator -- --phone 9876543210 --name "Sunita Sharma"     # asks for a 4-digit PIN (hidden)
+# Docker:
+docker compose exec backend node dist/scripts/createCoordinator.js --phone 9876543210 --name "Sunita Sharma"
+```
+
+The PIN can also come from `COORDINATOR_PIN=1357` (e.g. in scripts). Then log in at `#/login`; the coordinator
+lands on `#/admin`. Coordinators can add more sellers themselves (संयोजक पैनल → विक्रेता → नया विक्रेता जोड़ें).
+
+### Demo data
+
+```bash
+cd backend && npm run seed          # Docker: docker compose exec backend node dist/scripts/seed.js
+```
+
+Creates (every demo PIN is **2580**):
+
+| Phone | Who |
+| --- | --- |
+| 9000000001 | coordinator |
+| 9000000101 – 9000000104 | verified sellers (रमेश, सुनीता SHG, मोहन, कमला SHG) |
+| 9000000105 | pending seller (गीता) |
+| 9000000201 | business buyer (होटल मरुधर) |
+| 9000000202 | household buyer |
+
+plus 12 listings with drawn demo photos (`backend/seed-assets/`), orders in every main state (two completed with
+commission and ratings, one collected), and one open report. Running it again removes only earlier demo data
+(`demo: true`); real accounts are never touched.
+
+### MongoDB replica set (for npm dev)
+
+Orders reserve stock inside a MongoDB transaction, which needs a replica set. Docker does this for you. With npm,
+run a separate MongoDB as a single-node replica set, e.g.:
+
+```bash
+docker run -d --name agriai-mongo -p 27018:27017 mongo:8.0 --replSet rs0 --bind_ip_all
+docker exec agriai-mongo mongosh --quiet --eval "rs.initiate({_id:'rs0',members:[{_id:0,host:'localhost:27017'}]})"
+# backend/.env
+MONGO_URI=mongodb://localhost:27018/agriai?directConnection=true
+```
+
+Without a replica set the backend logs a warning at startup; browsing and listing work, accepting orders fails.
+
+### Business rules (edit here, not in code)
+
+| File | What |
+| --- | --- |
+| `backend/src/config/marketRules.ts` | PIN/lockout/session rules, commission (default/min/max + rounding), listing limits, fair-price bands, order limits |
+| `backend/src/config/marketCatalog.ts` | Products (grains + SHG), allowed units, food (FSSAI field), mandi crop. Mirrored in `frontend/src/api/marketTypes.ts` + `data/marketCatalog.ts` |
+| `backend/src/config/marketMessages.ts` | Hindi notification texts per order step |
+| `backend/src/modules/orders/orderStateMachine.ts` | **The** order state machine: every allowed step, who may take it, and its effect (reserve/release stock, record commission) |
+
+Order states: `requested → accepted/rejected → ready → out_for_delivery | ready_for_pickup → delivered → paid → completed`, plus `cancelled`.
+Accepting takes the stock with a conditional atomic update inside a transaction (two accepts can never oversell);
+cancelling an accepted order gives it back. Money is always **integer paise**; commission is rounded half up.
+Phone numbers are shared only after the seller accepts. A B2B "भाव पूछें" is an order with an offered price
+(only on bulk listings with a minimum order, ≥ 50% of the listed price).
+
+Only the product photo and the seller's words (phone numbers removed) are sent to the AI for Snap & List; only
+the product name and unit for an SHG price estimate. The AI's JSON is validated with Zod; the seller confirms
+and sets the final price. If the AI fails, the seller fills the form by hand; listing is never blocked.
+
 ## Rules an expert can edit (⚠️ verify with KVK)
 
 All farming rules are data, not code. A KVK expert can change numbers and Hindi texts here without touching logic:
@@ -200,6 +302,10 @@ Tests check that the calendar and alerts never tell the farmer to water a crop i
 
 `#/` होम · `#/check` फोटो जाँच · `#/history` मेरी जाँच · `#/farm` मेरा खेत · `#/farm/setup` खेत की जानकारी ·
 `#/weather` मौसम · `#/water` पानी की सलाह · `#/calendar` फसल कैलेंडर · `#/notifications` सूचनाएँ
+
+Marketplace: `#/login` · `#/register` · `#/account` · `#/account/seller` · `#/account/buyer` · `#/sell` मेरी बिक्री ·
+`#/sell/new` बेचें · `#/market` बाज़ार · `#/market/listing/:id` · `#/orders` · `#/orders/:id` ·
+`#/admin` (+ `/sellers`, `/orders`, `/reports`, `/ledger`, `/newListing`)
 
 ## API
 
@@ -254,6 +360,29 @@ Returns `404` if the id belongs to another device.
 
 **`GET /api/health`** → `{ "status": "ok" }`
 
+### Marketplace API
+
+All marketplace writes need the login cookie and the header `X-Requested-With: agriai`. Errors use the same
+`{ "error": { "code" } }` shape; new codes: `UNAUTHORIZED` (401), `FORBIDDEN` (403), `INVALID_LOGIN` (401),
+`LOGIN_LOCKED` (429), `PHONE_TAKEN` (409), `WEAK_PIN` (400), `SELLER_PROFILE_MISSING` (403), `OUT_OF_STOCK` (409),
+`INVALID_TRANSITION` (409), `CONFLICT` (409). Without MongoDB/`JWT_SECRET` all of these answer 503.
+
+| Endpoint | Who | What |
+| --- | --- | --- |
+| `POST /api/auth/register` · `/login` · `/logout`, `GET /api/auth/me` | anyone | phone + PIN; `me` returns `{ user: null }` when logged out |
+| `PUT /api/account/seller-profile` · `/buyer-profile` | seller · buyer | own profile |
+| `POST /api/market/listings/draft` (multipart `image`, `text`) | seller, coordinator | Snap & List → `{ status: 'ok', photoId, draft }` or `{ status: 'retake', reason }` |
+| `POST /api/market/photos` · `GET /api/market/photos/:id` | seller, coordinator · public | upload / show a listing photo |
+| `POST /api/market/listings` · `PATCH /api/market/listings/:id` · `GET /api/market/my/listings` | seller (PATCH also coordinator) | create / edit (price, quantity, min order, pause, sold out) / mine |
+| `GET /api/market/listings?category&product&q&minPrice&maxPrice&minQty&bulk&lat&lon&radiusKm&sort&page` · `GET /api/market/listings/:id` | public | browse (no phone/UPI ever) |
+| `GET /api/market/pricing/suggest?product&unit` | seller, coordinator | `{ source: 'mandi' \| 'platform' \| 'ai' \| null, … }` |
+| `POST /api/market/orders` · `GET /api/market/orders` · `GET /api/market/orders/:id` | buyer · participants | order (optional `offeredPricePerUnitPaise`); views include `allowedNext`, contact after acceptance, UPI link for the buyer |
+| `POST /api/market/orders/:id/status` `{ to, paidVia? }` | per state machine | one step |
+| `POST /api/market/orders/:id/rating` · `POST /api/market/reports` | buyer · participants | 1–5 stars once · report an order or listing |
+| `GET /api/market/notifications` · `POST …/read` · `POST /api/market/push/subscribe` | logged in | in-app list (polled every 30 s) · link this phone for web push |
+| `/api/admin/*` (stats, sellers, verify/reject, reports, hide/unhide, assisted listing, orders, delivery, commission, `export.csv`) | coordinator | coordinator panel |
+
+
 ## Switching AI provider
 
 All AI code is behind `AiProvider` in `backend/src/services/ai/aiProvider.ts` (`diagnose()` and `chat()`):
@@ -276,7 +405,9 @@ Prompts are in `services/ai/prompt.ts` (diagnosis + chat share the persona and m
 
 Backend production: `npm run build && npm start`.
 
-Tests mock the AI, Open-Meteo, data.gov.in and web push, and use in-memory stores. To also test the MongoDB
+Tests mock the AI, Open-Meteo, data.gov.in and web push. Advisor tests use in-memory stores; marketplace tests run
+against a throwaway in-memory MongoDB replica set (`mongodb-memory-server`, real transactions; it downloads a
+MongoDB binary once into `~/.cache/mongodb-binaries`, and never touches the MongoDB on your machine). To also test the MongoDB
 repositories against a real database (they create and drop throwaway `agriai_test_*` databases):
 
 ```bash
@@ -305,9 +436,23 @@ backend/src/
   jobs/                           push job + node-cron scheduler
   models/  db/                    Mongoose models, connection with retry
   types/  errors/
+  config/marketRules.ts           marketplace rules (commission, PIN, limits, pricing bands)
+  config/marketCatalog.ts         products + units;   config/marketMessages.ts  notification texts
+  modules/                        marketplace, one folder per feature:
+    auth/  sellers/                 accounts, PIN login, sessions, roles, seller/buyer profiles
+    listings/  pricing/             Snap & List, photos, search; fair price suggestion
+    orders/                         orderStateMachine.ts, order service (transactions), UPI link
+    commission/  notifications/     ledger; in-app + push notifications
+    reports/  admin/                problem reports; coordinator panel API
+  scripts/                        createCoordinator, seed
+backend/seed-assets/              drawn demo photos for the seed
 backend/tests/                    API + provider + repository tests (fake AI, in-memory history)
+backend/tests/market/             marketplace tests (real MongoDB replica set in memory)
 frontend/src/
   pages/                          Home, Diagnose, History(+Detail), Farm(+Setup), Weather, Water, Calendar, Notifications
+  pages/market/  pages/admin/     marketplace screens (login, sell, market, orders) and coordinator panel
+  components/market/  admin/      listing form, Snap & List flow, cards, order actions, UPI QR, stat tiles
+  strings/en.ts                   English for the buyer marketplace (Hindi/English toggle)
   components/ui/                  design system: Button, IconButton, Card, Badge, Callout, SpeakButton, PageHeader,
                                   StepIndicator, EmptyState, BottomNav, Loader, Skeleton, StickyActions, toasts
   components/                     CropGrid + CropIcon (SVG), PhotoActions, ResultView, SeverityCard, ChatPanel, ...

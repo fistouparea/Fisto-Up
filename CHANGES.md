@@ -494,3 +494,231 @@ a3929b2 Docs: README, .env.example, screenshots
    "इंटरनेट नहीं है, पुरानी जानकारी दिख रही है" + aakhri update ka samay dikhe.
 3. "जाँच" tab: "फोटो से जाँच के लिए इंटरनेट चाहिए" likha aaye.
 4. Internet wapas aate hi banner chala jaaye.
+
+---
+
+# Phase 3 – Marketplace
+
+Har task ka alag commit hai (`git show <id>` se ek-ek dekh sakte hain):
+
+```
+1b74bc5 Task 1: Accounts and roles (phone + PIN login)
+a3ae605 Task 2: Snap & List for sellers
+9ff2fc4 Task 3: Fair price suggestion
+01e9ce7 Task 4: Buyer marketplace
+d34e003 Task 5: Orders with a tested state machine
+714c99d Task 6: Coordinator dashboard
+6da65a3 Seed script + per-account limits on orders and reports
+35e45c8 Screenshots + fixes found while reviewing them
+```
+
+**Status:**
+- Backend ke 361 tests aur frontend ke 109 tests pass hain. Lint aur typecheck dono apps mein clean hain.
+- `npm audit`: dono apps mein 0 vulnerabilities.
+- Marketplace ke tests asli MongoDB par chalte hain (memory mein ek alag replica set, har test file ka apna
+  `agriai_test_*` database). Aapke `FistoUp`, `DM-platform`, `sportDB` ya `agriai` ko haath nahi lagaya.
+- Screenshots: `docs/screenshots/p3-*` (47 screens: 360px + 3 desktop).
+- **Docker mein poora check kiya:**
+  - Alag project naam aur port par `docker compose up --build`. MongoDB replica set apne-aap bana (healthy).
+  - Container ke andar seed aur create-coordinator chalaye.
+  - nginx ke through order स्वीकार kiya (transaction chala) aur photos khulin.
+  - Check ke baad woh containers, volume aur images hata diye. Aapka `mongo-data` volume nahi chhua.
+
+## 1. Har task mein kya bana
+
+### Task 1 – Khaate aur roles
+- **3 roles:** विक्रेता (seller), खरीदार (buyer), संयोजक (coordinator). Advisor (फोटो जाँच, खेत, मौसम…) bina
+  login ke pehle jaisa chalta hai.
+- **Login:** mobile number + 4 अंक ka PIN.
+  - PIN bcrypt se hash hota hai. 1234, 1111 jaise aasaan PIN mana hain.
+  - 5 baar galat PIN par khaata 15 minute band. IP par bhi rate limit hai.
+  - Galat number aur galat PIN par ek hi message aata hai.
+- **Session:** JWT, httpOnly cookie mein (SameSite=Strict, production mein Secure). Logout karne par us khaate ke
+  saare sessions band ho jaate hain.
+- **CSRF:** har likhne wali request par `X-Requested-With: agriai` header zaroori hai.
+- **OTP baad mein:** login `CredentialMethod` interface ke peeche hai, OTP isi mein jud jaayega.
+- **Device link:** pehli baar login karne par is phone ki खेत की जानकारी aur मेरी जाँच khaate se jud jaati hai.
+  Doosre phone par login karne par wahi data dikhta hai.
+- **Seller profile:** naam, gaanv, SHG (agar hai), UPI ID, saamaan uthane ki jagah (tehsil + nishaani).
+  - Naya seller "जाँच बाकी" (pending) rehta hai, aur coordinator ke verify karne tak uska saamaan bazaar mein nahi dikhta.
+  - Verify ke baad UPI ID badalne par seller phir se pending ho jaata hai, kyunki paise isi ID par aate hain.
+- **Phone number kabhi public nahi:** sirf order मंज़ूर hone ke baad buyer aur seller ko ek-doosre ka number milta hai.
+- **Coordinator sirf script se banta hai** (app mein sign-up nahi): `npm run create-coordinator` (README dekhein).
+
+### Task 2 – बेचें (Snap & List)
+- Bada "बेचें" button (home aur मेरी बिक्री par) → फोटो → बोलें ya लिखें → AI jaankari bharta hai.
+- **AI ko sirf photo aur seller ki baat jaati hai.** Phone number apne-aap hata diya jaata hai.
+- **AI ka JSON zod se check hota hai:** saamaan, matra, unit, bhav, quality, title aur jaankari (hindi + english).
+  "ढाई क्विंटल" jaise aadhe numbers 250 किलो ban jaate hain (bhav bhi prati kilo).
+- **AI photo bhi jaanchta hai:** photo mein saamaan na dikhe to "दूसरी फोटो लें" aata hai, aur woh photo save nahi hoti.
+- **Pakka karne ki screen:** bade cards (saamaan, matra, bhav, thok minimum), har card par 🔊. Ek bada
+  "पक्का करें, बेचें" button.
+- **AI fail ho to bhi listing nahi rukti:** photo alag se save hoti hai aur seller form khud bharta hai.
+- **SHG khane ke saamaan** ke liye FSSAI number ka field (optional, 14 अंक).
+- **मेरी बिक्री:** listings ke saath भाव बदलें, मात्रा बदलें, रोकें / फिर चालू करें, बिक गया. Upar नए ऑर्डर bhi
+  dikhte hain.
+- **Photos MongoDB mein** save hoti hain (koi paid storage nahi). Bina use hui photos 24 ghante mein apne-aap mit jaati hain.
+
+### Task 3 – सही भाव का सुझाव
+- **Fasal:** Phase 2 wali Agmarknet mandi service. Dikhta hai "मंडी भाव: ₹X – ₹Y प्रति क्विंटल (तारीख)" aur
+  सही भाव ka range (median ±5%). Kilo mein bechne par prati kilo bhav.
+- **SHG saamaan:** platform par milte-julte kam se kam 3 listings ka median (±15%). Na hon to AI ka andaaza.
+  AI ko sirf saamaan ka naam aur unit jaata hai. Kam bharose wala jawab chhupa diya jaata hai, aur jawab 1 din cache hota hai.
+- **Saaf likha hai** "यह सिर्फ़ सुझाव है। भाव आप खुद तय करें।" Ek "सुझाया भाव भरें" button bhi hai.
+  Bhav bahut kam ya zyada ho (jaise ek zero chhoot gaya) to halki chetavni aati hai, par listing kabhi rukti nahi.
+- **Data na ho to sujhav chhup jaata hai.**
+
+### Task 4 – खरीदार का बाज़ार
+- Saaf shopping UI, mobile par 2 column, desktop par 3–4 column. **हिंदी / English toggle**
+  (`strings/en.ts`), jo khareedar ki order screens par bhi chalta hai.
+- **Filters:** category chips, saamaan chips, search (hindi/english), bhav range, kam se kam uplabdh matra,
+  सिर्फ़ थोक (B2B), tehsil/GPS se doori (25/50/100 km), sasta/mehnga/naya pehle. Filters wapas aane par yaad rehte hain.
+- **Bina login bhi browse** ho sakta hai. Sirf verified seller ka chalu, bina chhupa aur stock wala saamaan dikhta hai.
+- **Listing page:** photos (swipe), bhav, uplabdh matra, kam se kam order, quality, FSSAI, seller ka gaanv,
+  सत्यापित badge, rating aur WhatsApp share (wa.me link).
+- **B2B:** seller kam se kam order matra rakhta hai. Khareedar "कम भाव पूछें" se apna bhav bhejta hai, aur seller
+  स्वीकार ya मना karta hai.
+
+### Task 5 – ऑर्डर
+- **State machine ek hi jagah:** `backend/src/modules/orders/orderStateMachine.ts`. Har step ke liye likha hai
+  ki kaun kar sakta hai aur uska asar kya hai:
+  `requested → accepted/rejected → ready → out_for_delivery / ready_for_pickup → delivered → paid → completed`,
+  aur `cancelled`.
+- **Stock atomic:** स्वीकार karte hi MongoDB transaction ke andar shart wala atomic update stock ghatata hai.
+  - Do log ek saath aakhri bori accept karein to sirf ek safal hota hai (test hai).
+  - Order cancel karne par stock wapas aata hai.
+  - Stock 0 hone par listing "बिक गया" ho jaati hai.
+- **Seller ko naya order** do tarah se dikhta hai:
+  - App mein, kisi bhi screen par: popup + awaaz mein padhkar + bade "स्वीकार करें / मना करें" buttons.
+  - Web push se (agar chalu hai).
+- **Bhugtan:** khareedar ko UPI deep link (`upi://pay` – seller ka UPI ID, naam, rakam, order number) aur QR milta hai.
+  Seller ek tap mein "पैसे मिल गए" (UPI ya नकद) dabata hai. Naqad (delivery par) bhi allowed hai.
+- **Saara paisa integer paise mein.** Order poora hone par commission ledger mein ek line banti hai
+  (rate config se, half-up rounding). Ek order par do baar commission ho hi nahi sakta (unique index).
+- **Har badlaav par suchna:** khareedar, seller aur saare coordinators ko in-app (har 30 second check) +
+  web push (agar VAPID keys hain). Jisne step liya, use nahi jaati.
+- **Order poora hone ke baad** khareedar 1–5 star rating aur comment de sakta hai. "समस्या बताएँ" button order
+  aur listing dono par hai.
+- **docker-compose ka MongoDB ab single-node replica set hai** (transactions ke liye).
+
+### Task 6 – संयोजक पैनल (`#/admin`)
+- Desktop par chauda, phone par bhi chalta hai. Tabs: सारांश, विक्रेता, ऑर्डर, शिकायतें, कमीशन, मदद से लिस्टिंग.
+- **विक्रेता:** filter/search, सत्यापित करें, नामंज़ूर karein (kaaran seller ko dikhta hai). Jo app nahi chala
+  sakte, unka khaata coordinator khud bana sakta hai (seedha verified).
+- **शिकायतें:** flagged listing aur order ki samasya. Listing chhupa sakte hain aur phir dikha sakte hain,
+  aur shikayat band kar sakte hain.
+- **ऑर्डर board:** status ke hisaab se groups. Seller ki taraf se har step le sakte hain, aur delivery wale ka
+  naam + phone tay kar sakte hain (khareedar aur seller ko dikhta hai).
+- **मदद से लिस्टिंग:** seller chunein, sahmati ka tareeka (बोलकर / अंगूठा / हस्ताक्षर) + note likhein, phir wahi
+  Snap & List. Sahmati listing ke saath save hoti hai.
+- **कमीशन:**
+  - Mahine ke totals aur har seller ka baaki.
+  - "वसूल किया" button transaction mein chalta hai, isliye do baar dabane par paisa do baar nahi gina jaata.
+  - CSV download (Excel ke liye, Hindi naam sahi dikhte hain, formula injection se safe).
+- **सारांश:** sellers, buyers, listings, orders, kul bikri, commission (baaki/vasool), khuli shikayatein, commission dar.
+- Har `/api/admin` route server par coordinator role check karta hai (test hai).
+
+### Quality
+- Naya code `backend/src/modules/{auth,sellers,listings,pricing,orders,commission,notifications,reports,admin}`
+  mein hai. Business rules `config/marketRules.ts`, `config/marketCatalog.ts` aur `config/marketMessages.ts` mein hain.
+- Har input zod se check hota hai. Har protected route par role aur malik (ownership) check hota hai. Code mein koi secret nahi.
+- **Seed:** `npm run seed`. Isse demo coordinator, 5 sellers (1 pending), 2 buyers, 12 listings (banayi hui photos)
+  aur har state ke orders bante hain. Saare demo PIN 2580 hain (README mein list hai).
+
+## 2. Maine khud kaun se decisions liye
+1. **Marketplace tabhi chalu hota hai jab `MONGO_URI` aur `JWT_SECRET` dono hon.** Warna marketplace ke routes
+   503 dete hain aur advisor pehle jaisa chalta hai.
+2. **Ek khaata = ek role.** Seller ko kharidna ho to alag number se buyer khaata banaye.
+3. **Naye packages** (har ek ki wajah):
+   - `bcryptjs`: pure JS, Docker slim image mein native build ki dikkat nahi.
+   - `jose`: JWT, bina dependency ke.
+   - `cookie-parser`.
+   - `mongodb-memory-server`: sirf dev. Transactions asli MongoDB par test karne ke liye, kyunki mock se stock
+     reservation ka test bekaar hota.
+   - `qrcode`: frontend UPI QR.
+4. **Price request = order with offer:** alag system banane ki jagah order mein `offeredPricePerUnitPaise` hai.
+   Seller स्वीकार / मना karta hai, aur state machine wahi rehti hai.
+   - Sirf thok listings (min order > 1) par.
+   - Bhav listed se kam aur kam se kam 50% hona chahiye.
+5. **Matra poore numbers mein** (10 क्विंटल, 250 किलो). Aadha quintal kilo mein badal jaata hai. Isse paise ka
+   hisaab hamesha integer rehta hai.
+6. **"paid → completed" khareedar karta hai** ("ऑर्डर पूरा करें"), aur jawab na de to coordinator.
+   Commission completion par banta hai.
+7. **Logout se us khaate ke saare sessions band** hote hain (tokenVersion). Isse churaya gaya cookie bhi bekaar ho jaata hai.
+8. **Photos MongoDB mein** (max 3, phone par chhoti aur bina GPS ki hoti hain).
+9. **Suchnaayein polling se (har 30 s).** WebSocket nahi, kyunki slow network par polling sasta aur bharosemand hai.
+   App band ho to web push.
+10. **Limits:** ek khaata ghante mein max 30 order aur 10 shikayat kar sakta hai (spam se bachne ke liye, config mein).
+11. **Screenshot review mein mile bug (theek kiye):**
+    - **Doosre phone par login** ke baad app wapas login screen par atak jaata tha. Ab sahi screen khulti hai, aur
+      login hote hue login screen kholne par "आप लॉगिन हैं" aata hai.
+    - Price field 360px par card se bahar ja raha tha.
+    - Chips ka text toot raha tha.
+    - Pickup order mein jagah khaali dikh rahi thi.
+    - Admin tab phone par dikh nahi raha tha.
+12. **Seed script mein bug pakda:** "ek commission vasool" wala step galti se asli (non-demo) line badal sakta
+    tha. Ab sirf demo seller ki line badalti hai.
+
+## 3. Kya nahi hua / kya test nahi ho paaya
+- **OTP nahi hai:** koi bhi kisi bhi number se khaata bana sakta hai. Isliye seller verification zaroori hai.
+  OTP ke liye interface taiyaar hai, par free SMS service nahi mili (paid SMS mana tha).
+- **PIN bhool gaye:** abhi app mein reset nahi hai. Coordinator naya khaata bana sakta hai, par PIN reset ka
+  button nahi hai.
+- **Asli Gemini se Snap & List test nahi kiya:** saare tests aur screenshots mein AI ka jawab mock tha. Asli
+  photo + awaaz se ek baar zaroor check karein (prompt `services/ai/marketPrompt.ts` mein hai).
+- **Mandi bhav asli key se test nahi hua.** Screenshot mein mandi sujhav mock tha.
+- **UPI link asli UPI app (GPay/PhonePe) mein nahi khola.** Format NPCI ke hisaab se hai aur test bhi hai, par asli
+  phone par ₹1 bhejkar check karein.
+- **Web push asli phone par nahi gaya** (Phase 2 jaisa). In-app suchnaayein test hui hain.
+- **Mic (awaaz se likhna)** headless browser mein nahi chalta, isliye screenshot mein mic button nahi dikhta.
+  Phone par HTTPS ke saath check karein.
+- **Bazaar offline nahi chalta:** sirf मेरी बिक्री aur मेरे ऑर्डर ki aakhri copy offline dikhti hai. Bazaar ke liye
+  internet chahiye (saaf message aata hai).
+- **Order screens ka English** sirf khareedar ke liye hai. Seller aur coordinator screens Hindi mein hain.
+- **Delivery wale ka apna app/login nahi hai.** Coordinator uska naam aur phone daalta hai.
+- **Demo photos asli nahi hain,** banayi hui illustrations hain.
+
+## 4. Phone par test kaise karein
+
+**Taiyari:**
+1. `backend/.env` mein `JWT_SECRET` daalein (`openssl rand -hex 32`). Phir `docker compose up --build`
+   (MongoDB replica set apne-aap ban jaata hai).
+   - npm se chalana ho to README ka "MongoDB replica set" dekhein.
+   - Wi-Fi par plain http se test karne ke liye `COOKIE_SECURE=false` rakhein.
+2. Demo data: `docker compose exec backend node dist/scripts/seed.js` (ya `cd backend && npm run seed`).
+   Saare demo PIN **2580** hain.
+3. Apna coordinator: `docker compose exec backend node dist/scripts/createCoordinator.js --phone <aapka number> --name "<naam>"`.
+4. Phone par `http://<laptop-ip>:8080` kholein. Mic aur push ke liye Cloudflare HTTPS tunnel use karein (Phase 2 jaisa).
+
+**Seller (बेचने वाला)**
+1. "खाता" icon → नया खाता बनाएँ → "बेचना है" → naam, number, PIN do baar.
+2. Vikreta ki jaankari bharein: gaanv, UPI ID, tehsil → सेव करें. Upar peela "जाँच बाकी" dikhe.
+3. "बेचें" → फोटो लें → 🎤 dabakar bolein "मेरे पास दस क्विंटल बाजरा है, पच्चीस सौ रुपये क्विंटल" → आगे.
+4. Cards mein बाजरा, 10 क्विंटल, ₹2500 bhare hone chahiye. Mandi key ho to "मंडी भाव" box dikhe. 🔊 dabakar sunein.
+5. "पक्का करें, बेचें" → "संयोजक की जाँच के बाद दिखेगा". मेरी बिक्री mein listing dikhe.
+6. Kisi kitaab ya chehre ki photo lein: "दूसरी फोटो लें" aana chahiye.
+7. Demo seller 9000000102 / 2580 se login karein: "नया ऑर्डर आया!" popup aaye aur awaaz mein padha jaaye.
+   "स्वीकार करें" dabayein.
+8. Order screen par: माल तैयार है → उठाने के लिए तैयार. Khareedar ke "सामान मिल गया" ke baad "पैसे मिल गए" → UPI.
+
+**Khareedar (खरीदने वाला)**
+1. नीचे "बाज़ार" tab: bina login ke saamaan dikhe. English button dabayein: sab English mein ho jaaye.
+2. फ़िल्टर → "सिर्फ़ थोक (B2B)" + "सस्ता पहले" → दिखाएँ. Search mein "अचार" ya "pickle" likhein.
+3. Koi listing kholein → "WhatsApp पर भेजें". Link dabane par wahi listing khule.
+4. "ऑर्डर करें": login maangega. Demo 9000000201 / 2580 (hotel). Matra, डिलीवरी / खुद उठाएँगे, UPI / नकद → ऑर्डर भेजें.
+5. Thok listing (साफ़ देसी बाजरा) par "कम भाव पूछें" mein ₹2350 bhejein.
+6. Seller ke accept karne ke baad order screen par seller ka number, "UPI ऐप से भेजें" button aur QR dikhe.
+   Phone par button UPI app kholna chahiye (sahi naam, rakam aur AG… number ke saath).
+7. "सामान मिल गया" → (seller "पैसे मिल गए") → "ऑर्डर पूरा करें" → stars dekar rating bhejein.
+8. "समस्या बताएँ" → "माल खराब है" → भेजें.
+
+**Coordinator (संयोजक)**
+1. 9000000001 / 2580 se login karein: seedha "संयोजक पैनल" khule.
+2. विक्रेता → "जाँच बाकी" → गीता कंवर → सत्यापित करें. Uski दरी ab bazaar mein dikhe.
+3. नया विक्रेता जोड़ें: kisi bina smartphone wali didi ka khaata banayein, aur unhe PIN bata dein.
+4. शिकायतें → shikayat padhein → listing chhupayein (bazaar se gayab ho) → phir dikhayein → शिकायत बंद करें.
+5. ऑर्डर → "जवाब बाकी" order ko seller ki taraf se स्वीकार karein. Delivery order par "डिलीवरी वाला तय करें".
+6. मदद से लिस्टिंग → रमेश जाट → "अंगूठा लगाया" → आगे → photo + bolkar listing banayein.
+7. कमीशन → mahine ka total → kisi seller par "वसूल किया" (rakam confirm ho). "CSV डाउनलोड करें" ko Excel mein
+   kholein: Hindi naam sahi dikhein.
+8. Laptop par bhi `#/admin` kholkar dekhein (chauda layout).
