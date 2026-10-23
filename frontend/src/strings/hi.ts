@@ -1,4 +1,5 @@
 import type { CropId, ErrorCode } from '../api/types';
+import type { Role, SellerStatus } from '../api/marketTypes';
 
 /** All Hindi text shown in the app lives here. */
 export const hi = {
@@ -235,6 +236,74 @@ export const hi = {
     notHeard: 'आवाज़ नहीं आई, फिर से बोलें',
   },
 
+  auth: {
+    loginTitle: 'लॉगिन करें',
+    loginHint: 'बेचने या खरीदने के लिए अपना मोबाइल नंबर और 4 अंक का PIN डालें।',
+    phone: 'मोबाइल नंबर',
+    phoneHint: '10 अंक का नंबर',
+    phoneInvalid: 'सही 10 अंक का मोबाइल नंबर डालें',
+    pin: 'PIN (4 अंक)',
+    newPin: 'नया PIN चुनें (4 अंक)',
+    pinAgain: 'वही PIN फिर से डालें',
+    pinHint: '1234 या 1111 जैसा आसान PIN न रखें। PIN किसी को न बताएँ।',
+    pinInvalid: 'PIN में 4 अंक होने चाहिए',
+    pinMismatch: 'दोनों PIN एक जैसे नहीं हैं',
+    login: 'लॉगिन करें',
+    loggingIn: 'रुकिए...',
+    noAccount: 'नया खाता बनाएँ',
+    haveAccount: 'पहले से खाता है? लॉगिन करें',
+    registerTitle: 'नया खाता बनाएँ',
+    whoAreYou: 'आप क्या करना चाहते हैं?',
+    roleSeller: 'बेचना है',
+    roleSellerHint: 'किसान / स्वयं सहायता समूह',
+    roleBuyer: 'खरीदना है',
+    roleBuyerHint: 'घर, दुकान, होटल, व्यापारी',
+    name: 'आपका नाम',
+    nameInvalid: 'अपना नाम लिखें',
+    buyerType: 'आप किसके लिए खरीदेंगे?',
+    household: 'घर के लिए',
+    business: 'दुकान / होटल / व्यापार',
+    createAccount: 'खाता बनाएँ',
+    welcome: 'स्वागत है',
+    forgotPin: 'PIN भूल गए? अपने संयोजक से बात करें।',
+    advisorFree: 'फसल जाँच और खेत की सलाह बिना लॉगिन के भी चलती है।',
+  },
+  account: {
+    title: 'मेरा खाता',
+    open: 'मेरा खाता',
+    login: 'लॉगिन',
+    logout: 'लॉगआउट',
+    loggedOut: 'आप लॉगआउट हो गए',
+    phone: 'मोबाइल',
+    editProfile: 'जानकारी बदलें',
+    pendingHint: 'संयोजक आपकी जानकारी जाँचेंगे। उसके बाद आपका सामान बाज़ार में दिखेगा।',
+    rejectedHint: 'आपकी जानकारी नामंज़ूर हुई। जानकारी ठीक करके फिर सेव करें। कारण:',
+    fillSellerProfile: 'बेचने से पहले अपनी जानकारी भरें: गाँव, UPI ID और सामान उठाने की जगह।',
+    phonePrivate: 'आपका मोबाइल नंबर किसी को नहीं दिखता। ऑर्डर मंज़ूर होने के बाद ही सामने वाले को मिलता है।',
+    linkedData: 'इस फोन की फसल जाँच और खेत की जानकारी अब आपके खाते में है।',
+  },
+  sellerProfile: {
+    title: 'विक्रेता की जानकारी',
+    name: 'नाम',
+    village: 'गाँव',
+    shgName: 'स्वयं सहायता समूह (अगर है)',
+    upiId: 'UPI ID',
+    upiHint: 'जैसे 9876543210@ybl। खरीदार इसी पर पैसे भेजेंगे।',
+    upiInvalid: 'सही UPI ID डालें, जैसे name@bank',
+    upiChangedNote: 'UPI ID बदलने पर संयोजक दोबारा जाँच करेंगे।',
+    pickup: 'सामान कहाँ से उठेगा?',
+    pickupAddress: 'पता या निशानी (जैसे मंदिर के पास)',
+    chooseTehsil: 'तहसील चुनें',
+    saved: 'जानकारी सेव हो गई',
+    required: 'यह भरना ज़रूरी है',
+  },
+  buyerProfile: {
+    title: 'खरीदार की जानकारी',
+    businessName: 'दुकान / होटल का नाम',
+    village: 'गाँव / शहर',
+    address: 'पूरा पता (डिलीवरी के लिए)',
+  },
+
   unclearPhoto: 'फोटो साफ नहीं है, कृपया पास से और रोशनी में दोबारा फोटो लें।',
   tryAgain: 'फिर से कोशिश करें',
 } as const;
@@ -249,6 +318,18 @@ export const cropLabels: Record<CropId, { hindi: string; english: string; emoji:
   jeera: { hindi: 'जीरा', english: 'Jeera', emoji: '🌿' },
   gehun: { hindi: 'गेहूं', english: 'Wheat', emoji: '🌾' },
   other: { hindi: 'अन्य', english: 'Other', emoji: '🌱' },
+};
+
+export const roleLabels: Record<Role, string> = {
+  seller: 'विक्रेता',
+  buyer: 'खरीदार',
+  coordinator: 'संयोजक',
+};
+
+export const sellerStatusLabels: Record<SellerStatus, string> = {
+  pending: 'जाँच बाकी',
+  verified: 'सत्यापित',
+  rejected: 'नामंज़ूर',
 };
 
 const SOMETHING_WENT_WRONG = 'कुछ गड़बड़ हो गई। कृपया फिर से कोशिश करें।';
@@ -266,7 +347,25 @@ export const errorMessages: Record<ErrorCode, string> = {
   NOT_FOUND: 'यह जाँच नहीं मिली।',
   HISTORY_UNAVAILABLE: 'अभी पुरानी जाँच नहीं दिख रही। थोड़ी देर बाद फिर से देखें।',
   WEATHER_UNAVAILABLE: 'अभी मौसम की जानकारी नहीं मिल रही। थोड़ी देर बाद देखें।',
+  UNAUTHORIZED: 'कृपया पहले लॉगिन करें।',
+  FORBIDDEN: 'आप यह काम नहीं कर सकते।',
+  INVALID_LOGIN: 'मोबाइल नंबर या PIN गलत है।',
+  LOGIN_LOCKED: 'बहुत बार गलत PIN डाला। 15 मिनट बाद फिर कोशिश करें।',
+  PHONE_TAKEN: 'इस नंबर से पहले ही खाता बना है। लॉगिन करें।',
+  WEAK_PIN: 'यह PIN बहुत आसान है। कोई और 4 अंक चुनें।',
+  SELLER_PROFILE_MISSING: 'बेचने से पहले अपनी जानकारी (गाँव, UPI ID) भरें।',
+  OUT_OF_STOCK: 'इतना माल अब नहीं बचा है।',
+  INVALID_TRANSITION: 'यह ऑर्डर बदल चुका है। स्क्रीन फिर से खोलें।',
+  CONFLICT: 'जानकारी बदल चुकी है। फिर से कोशिश करें।',
   STORAGE_UNAVAILABLE: 'अभी जानकारी सेव नहीं हो पा रही। थोड़ी देर बाद फिर से कोशिश करें।',
   INTERNAL: SOMETHING_WENT_WRONG,
   UNKNOWN: SOMETHING_WENT_WRONG,
 };
+
+/** Error text for marketplace screens: a few codes need wording that is not about the photo check. */
+export function marketErrorMessage(code: ErrorCode): string {
+  if (code === 'INVALID_INPUT') return 'कुछ जानकारी सही नहीं है। देखकर फिर से भरें।';
+  if (code === 'NOT_FOUND') return 'यह जानकारी नहीं मिली।';
+  if (code === 'STORAGE_UNAVAILABLE') return 'बाज़ार अभी नहीं खुल रहा। थोड़ी देर बाद कोशिश करें।';
+  return errorMessages[code];
+}

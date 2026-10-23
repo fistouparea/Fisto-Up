@@ -27,7 +27,14 @@ export async function requestApi<T>(
 ): Promise<T> {
   let response: Response;
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, { ...init, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...init,
+      // The marketplace login cookie (httpOnly) must travel with requests, also to a separate API domain.
+      credentials: 'include',
+      // CSRF defence: the backend refuses cookie-authenticated writes without this header.
+      headers: { ...init.headers, 'X-Requested-With': 'agriai' },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
   } catch (error) {
     const timedOut = error instanceof DOMException && error.name === 'TimeoutError';
     if (!timedOut) reportNetworkFailure();
@@ -51,6 +58,19 @@ export function postJson<T>(path: string, payload: unknown, isValid: (body: unkn
     { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) },
     isValid,
   );
+}
+
+export function sendJson<T>(
+  method: 'POST' | 'PUT' | 'PATCH',
+  path: string,
+  payload: unknown,
+  isValid: (body: unknown) => body is T,
+): Promise<T> {
+  return requestApi(path, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }, isValid);
+}
+
+export function getJson<T>(path: string, isValid: (body: unknown) => body is T): Promise<T> {
+  return requestApi(path, { method: 'GET' }, isValid);
 }
 
 export function isRecord(value: unknown): value is Record<string, unknown> {

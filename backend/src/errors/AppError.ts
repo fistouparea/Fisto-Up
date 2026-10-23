@@ -10,6 +10,16 @@ export type ErrorCode =
   | 'HISTORY_UNAVAILABLE'
   | 'STORAGE_UNAVAILABLE'
   | 'WEATHER_UNAVAILABLE'
+  | 'UNAUTHORIZED'
+  | 'FORBIDDEN'
+  | 'INVALID_LOGIN'
+  | 'LOGIN_LOCKED'
+  | 'PHONE_TAKEN'
+  | 'WEAK_PIN'
+  | 'SELLER_PROFILE_MISSING'
+  | 'OUT_OF_STOCK'
+  | 'INVALID_TRANSITION'
+  | 'CONFLICT'
   | 'INTERNAL';
 
 const HTTP_STATUS: Record<ErrorCode, number> = {
@@ -23,6 +33,20 @@ const HTTP_STATUS: Record<ErrorCode, number> = {
   HISTORY_UNAVAILABLE: 503,
   STORAGE_UNAVAILABLE: 503,
   WEATHER_UNAVAILABLE: 503,
+  /** Not logged in (or the session expired). */
+  UNAUTHORIZED: 401,
+  /** Logged in, but this role or account may not do this. */
+  FORBIDDEN: 403,
+  INVALID_LOGIN: 401,
+  LOGIN_LOCKED: 429,
+  PHONE_TAKEN: 409,
+  WEAK_PIN: 400,
+  /** A seller must fill name, village, UPI ID and pickup place before listing. */
+  SELLER_PROFILE_MISSING: 403,
+  OUT_OF_STOCK: 409,
+  /** The order is not in a state where this step is allowed (or someone else changed it first). */
+  INVALID_TRANSITION: 409,
+  CONFLICT: 409,
   INTERNAL: 500,
 };
 

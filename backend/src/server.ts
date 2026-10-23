@@ -1,5 +1,5 @@
 import { createApp } from './app.js';
-import { loadEnv, vapidConfig } from './config/env.js';
+import { loadEnv, marketConfig, vapidConfig } from './config/env.js';
 import { connectMongo } from './db/mongo.js';
 import { startNotificationScheduler } from './jobs/scheduler.js';
 import { createAiProvider } from './services/ai/createAiProvider.js';
@@ -12,6 +12,7 @@ import { OpenMeteoProvider } from './services/weather/openMeteoProvider.js';
 
 const env = loadEnv();
 const vapid = vapidConfig(env);
+const market = marketConfig(env);
 
 if (env.MONGO_URI) {
   connectMongo(env.MONGO_URI);
@@ -31,6 +32,7 @@ const app = createApp({
   weather,
   mandi: env.DATA_GOV_API_KEY ? new AgmarknetProvider({ apiKey: env.DATA_GOV_API_KEY }) : null,
   push: { publicKey: vapid?.publicKey ?? null, subscriptions },
+  market: market ? { config: market } : null,
   corsOrigins: env.CORS_ORIGIN,
   trustProxyHops: env.TRUST_PROXY,
 });
@@ -39,6 +41,10 @@ if (vapid && farmProfiles && subscriptions) {
   startNotificationScheduler({ farmProfiles, history: historyRepository, weather, subscriptions, sender: new WebPushSender(vapid) });
 } else {
   console.warn('Web push is off (needs MONGO_URI and VAPID_* in .env). In-app notifications still work.');
+}
+
+if (!market) {
+  console.warn('Marketplace is off (needs MONGO_URI and JWT_SECRET in .env). The advisor still works.');
 }
 
 app.listen(env.PORT, () => {

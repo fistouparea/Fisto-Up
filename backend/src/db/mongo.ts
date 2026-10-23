@@ -16,12 +16,21 @@ export function connectMongo(uri: string): void {
     try {
       await mongoose.connect(uri, { serverSelectionTimeoutMS: 5_000 });
       console.log('MongoDB connected');
+      await warnIfNoReplicaSet();
     } catch (error) {
       console.error(`MongoDB not reachable, history is off. Retrying in ${RETRY_DELAY_MS / 1000}s.`, errorMessage(error));
       setTimeout(() => void tryConnect(), RETRY_DELAY_MS).unref();
     }
   };
   void tryConnect();
+}
+
+/** Marketplace orders use transactions, which need a replica set (docker compose sets one up). */
+async function warnIfNoReplicaSet(): Promise<void> {
+  const hello = await mongoose.connection.db?.admin().command({ hello: 1 });
+  if (hello && !hello.setName) {
+    console.warn('MongoDB is not a replica set: marketplace orders cannot be accepted. See README "MongoDB replica set".');
+  }
 }
 
 function errorMessage(error: unknown): string {

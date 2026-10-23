@@ -15,6 +15,11 @@ describe('parseRoute', () => {
     ['#/water', { name: 'water' }],
     ['#/calendar', { name: 'calendar' }],
     ['#/notifications', { name: 'notifications' }],
+    ['#/login', { name: 'login' }],
+    ['#/register', { name: 'register' }],
+    ['#/account', { name: 'account' }],
+    ['#/account/seller', { name: 'sellerProfile' }],
+    ['#/account/buyer', { name: 'buyerProfile' }],
   ])('parses "%s"', (hash, expected) => {
     expect(parseRoute(hash)).toEqual(expected);
   });

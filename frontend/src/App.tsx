@@ -5,6 +5,7 @@ import { OfflineBanner } from './components/OfflineBanner';
 import { AppToaster } from './components/ui/AppToaster';
 import { BottomNav } from './components/ui/BottomNav';
 import { PageTransition } from './components/ui/PageTransition';
+import { AuthProvider } from './context/AuthProvider';
 import { FarmProfileProvider } from './context/FarmProfileProvider';
 import { NotificationsProvider } from './context/NotificationsProvider';
 import { useFarmProfile } from './hooks/useFarmProfile';
@@ -19,6 +20,16 @@ import { HomePage } from './pages/HomePage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { WaterPage } from './pages/WaterPage';
 import { WeatherPage } from './pages/WeatherPage';
+import { AccountPage } from './pages/market/AccountPage';
+import { BuyerProfilePage } from './pages/market/BuyerProfilePage';
+import { LoginPage } from './pages/market/LoginPage';
+import { RegisterPage } from './pages/market/RegisterPage';
+import { SellerProfilePage } from './pages/market/SellerProfilePage';
+import { RequireRole } from './components/market/RequireRole';
+import { useAuth } from './hooks/useAuth';
+import type { Account } from './api/marketTypes';
+import { roleHome } from './utils/loginRedirect';
+import { navigateTo } from './utils/navigate';
 import { hi } from './strings/hi';
 import { readFlag, setFlag } from './utils/offlineCache';
 
@@ -26,11 +37,13 @@ const ONBOARDING_FLAG = 'onboardingDone';
 
 export function App() {
   return (
-    <FarmProfileProvider>
-      <NotificationsProvider>
-        <AppShell />
-      </NotificationsProvider>
-    </FarmProfileProvider>
+    <AuthProvider>
+      <FarmProfileProvider>
+        <NotificationsProvider>
+          <AppShell />
+        </NotificationsProvider>
+      </FarmProfileProvider>
+    </AuthProvider>
   );
 }
 
@@ -86,6 +99,12 @@ function AppShell() {
 }
 
 function Page({ route, diagnoseKey }: { route: Route; diagnoseKey: number }) {
+  const { setUser } = useAuth();
+  const savedProfile = (user: Account) => {
+    setUser(user);
+    navigateTo(roleHome(user.role));
+  };
+
   switch (route.name) {
     case 'home':
       return <HomePage />;
@@ -107,6 +126,16 @@ function Page({ route, diagnoseKey }: { route: Route; diagnoseKey: number }) {
       return <CalendarPage />;
     case 'notifications':
       return <NotificationsPage />;
+    case 'login':
+      return <LoginPage />;
+    case 'register':
+      return <RegisterPage />;
+    case 'account':
+      return <AccountPage />;
+    case 'sellerProfile':
+      return <RequireRole roles={['seller']}>{(user) => <SellerProfilePage user={user} onSaved={savedProfile} />}</RequireRole>;
+    case 'buyerProfile':
+      return <RequireRole roles={['buyer']}>{(user) => <BuyerProfilePage user={user} onSaved={savedProfile} />}</RequireRole>;
   }
 }
 

@@ -18,6 +18,19 @@ export function getDeviceId(): string {
   }
 }
 
+/**
+ * After login on another phone, this phone uses the account's device id, so the farm profile and
+ * "मेरी जाँच" of the account show up here too.
+ */
+export function adoptDeviceId(id: string): void {
+  if (!UUID_PATTERN.test(id)) return;
+  try {
+    localStorage.setItem(STORAGE_KEY, id);
+  } catch {
+    fallbackId = id;
+  }
+}
+
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 /**

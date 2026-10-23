@@ -1,4 +1,5 @@
-import { LuBell, LuSprout } from 'react-icons/lu';
+import { LuBell, LuSprout, LuUserRound } from 'react-icons/lu';
+import { useAuth } from '../hooks/useAuth';
 import { routes } from '../hooks/useHashRoute';
 import { useNotifications } from '../hooks/useNotifications';
 import { hi } from '../strings/hi';
@@ -6,6 +7,7 @@ import { hi } from '../strings/hi';
 /** Slim top bar with the brand and the सूचनाएँ bell. Navigation lives in the bottom bar. */
 export function AppBar() {
   const { unreadCount } = useNotifications();
+  const { user } = useAuth();
   const bellLabel = unreadCount > 0 ? `${hi.notifications.bell} (${unreadCount} ${hi.notifications.unread})` : hi.notifications.bell;
 
   return (
@@ -18,6 +20,13 @@ export function AppBar() {
           <h1 className="text-2xl font-bold">{hi.appName}</h1>
           <p className="truncate text-base text-primary-100">{hi.appTagline}</p>
         </div>
+        <a
+          href={routes.account}
+          aria-label={user ? `${hi.account.open}: ${user.name}` : hi.account.login}
+          className="flex size-14 shrink-0 items-center justify-center rounded-full bg-primary-800 hover:bg-primary-900"
+        >
+          <LuUserRound aria-hidden="true" className="size-7" />
+        </a>
         <a
           href={routes.notifications}
           aria-label={bellLabel}

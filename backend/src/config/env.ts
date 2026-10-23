@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { COMMISSION_RULES, percentToBps } from './marketRules.js';
 
 /** Optional value; an empty line in .env (e.g. "DATA_GOV_API_KEY=") counts as not set. */
 function optional<T extends z.ZodType>(schema: T) {
@@ -26,6 +27,18 @@ const envSchema = z.object({
   VAPID_PRIVATE_KEY: optional(z.string().trim().min(1)),
   /** Contact for push services, e.g. mailto:you@example.com */
   VAPID_SUBJECT: optional(z.string().trim().regex(/^(mailto:|https:)/, 'must start with mailto: or https:')),
+  /**
+   * Signs login cookies for the marketplace (min 32 characters, e.g. `openssl rand -hex 32`).
+   * Without it (or without MONGO_URI) the marketplace is off and the advisor still works.
+   */
+  JWT_SECRET: optional(z.string().trim().min(32, 'JWT_SECRET must be at least 32 characters')),
+  /** Send the login cookie only over HTTPS. Defaults to on when NODE_ENV=production. */
+  COOKIE_SECURE: optional(z.enum(['true', 'false']).transform((value) => value === 'true')),
+  NODE_ENV: optional(z.string().trim()),
+  /** Our commission on completed orders, in percent (2–5). */
+  COMMISSION_PERCENT: optional(
+    z.coerce.number().min(COMMISSION_RULES.minPercent).max(COMMISSION_RULES.maxPercent),
+  ),
   CORS_ORIGIN: z
     .string()
     .min(1)
@@ -47,6 +60,23 @@ export function vapidConfig(env: Env): VapidConfig | null {
   return VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY && VAPID_SUBJECT
     ? { publicKey: VAPID_PUBLIC_KEY, privateKey: VAPID_PRIVATE_KEY, subject: VAPID_SUBJECT }
     : null;
+}
+
+export interface MarketConfig {
+  jwtSecret: string;
+  cookieSecure: boolean;
+  /** Commission rate in basis points (300 = 3%). */
+  commissionBps: number;
+}
+
+/** The marketplace needs accounts, so it is on only with MongoDB and a JWT secret. */
+export function marketConfig(env: Env): MarketConfig | null {
+  if (!env.MONGO_URI || !env.JWT_SECRET) return null;
+  return {
+    jwtSecret: env.JWT_SECRET,
+    cookieSecure: env.COOKIE_SECURE ?? env.NODE_ENV === 'production',
+    commissionBps: percentToBps(env.COMMISSION_PERCENT ?? COMMISSION_RULES.defaultPercent),
+  };
 }
 
 /** Reads and validates environment variables. Throws on startup if anything is missing. */

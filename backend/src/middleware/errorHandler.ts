@@ -22,6 +22,7 @@ function toAppError(error: unknown): AppError {
   if (error instanceof MulterError) {
     return error.code === 'LIMIT_FILE_SIZE' ? new AppError('FILE_TOO_LARGE') : new AppError('INVALID_INPUT');
   }
+  if (isStorageDown(error)) return new AppError('STORAGE_UNAVAILABLE', 'MongoDB is not reachable', { cause: error });
   // Malformed JSON or multipart bodies from body parsers carry a 4xx status.
   if (isClientError(error)) return new AppError('INVALID_INPUT');
   return new AppError('INTERNAL', 'Unexpected error', { cause: error });
@@ -31,4 +32,13 @@ function isClientError(error: unknown): boolean {
   if (typeof error !== 'object' || error === null || !('status' in error)) return false;
   const { status } = error;
   return typeof status === 'number' && status >= 400 && status < 500;
+}
+
+/** MongoDB unreachable (marketplace code uses mongoose directly, so its errors arrive here). */
+const STORAGE_DOWN_ERRORS = new Set(['MongoNetworkError', 'MongoServerSelectionError', 'MongoNotConnectedError']);
+
+function isStorageDown(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  // With bufferCommands off, mongoose throws "...before initial connection is complete" while disconnected.
+  return STORAGE_DOWN_ERRORS.has(error.name) || /initial connection|Client must be connected/i.test(error.message);
 }
