@@ -15,7 +15,9 @@ export type Route =
   | { name: 'register' }
   | { name: 'account' }
   | { name: 'sellerProfile' }
-  | { name: 'buyerProfile' };
+  | { name: 'buyerProfile' }
+  | { name: 'sell' }
+  | { name: 'sellNew' };
 
 export const routes = {
   home: '#/',
@@ -33,6 +35,8 @@ export const routes = {
   account: '#/account',
   sellerProfile: '#/account/seller',
   buyerProfile: '#/account/buyer',
+  sell: '#/sell',
+  sellNew: '#/sell/new',
 };
 
 /**
@@ -55,6 +59,8 @@ export function parseRoute(hash: string): Route {
   if (section === 'calendar') return { name: 'calendar' };
   if (section === 'notifications') return { name: 'notifications' };
   if (section === 'check') return { name: 'diagnose' };
+  if (section === 'sell' && id === 'new') return { name: 'sellNew' };
+  if (section === 'sell') return { name: 'sell' };
   if (section === 'login') return { name: 'login' };
   if (section === 'register') return { name: 'register' };
   if (section === 'account' && id === 'seller') return { name: 'sellerProfile' };

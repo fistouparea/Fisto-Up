@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { LuScanSearch, LuSprout } from 'react-icons/lu';
+import { LuScanSearch, LuSprout, LuWheat } from 'react-icons/lu';
 import type { Dashboard, FarmProfile, MandiPrice } from '../api/types';
 import { Greeting } from '../components/home/Greeting';
 import { MandiCard } from '../components/home/MandiCard';
@@ -47,6 +47,7 @@ export function HomePage() {
       <Button variant="accent" size="hero" icon={LuScanSearch} onClick={() => navigateTo(routes.diagnose)}>
         {hi.home.photoCheck}
       </Button>
+      <MarketButtons />
     </div>
   );
 }
@@ -86,6 +87,16 @@ function dashboardCards(
 /** Weather needs a location and the other cards need crops. */
 function needsFarmInfo(profile: FarmProfile | null | undefined): boolean {
   return !profile?.location || profile.crops.length === 0;
+}
+
+/** Marketplace entry: sell your produce (login asked on the next screen). */
+function MarketButtons() {
+  return (
+    <Button variant="primary" size="lg" icon={LuWheat} onClick={() => navigateTo(routes.sell)}>
+      {hi.sell.sellButton}
+      <span className="block text-base font-normal text-primary-100">{hi.sell.sellHint}</span>
+    </Button>
+  );
 }
 
 function DashboardSkeleton() {

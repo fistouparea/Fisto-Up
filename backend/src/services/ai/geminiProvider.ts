@@ -11,7 +11,10 @@ import type { z } from 'zod';
 import { AppError } from '../../errors/AppError.js';
 import { aiChatAnswerSchema } from '../../types/chat.js';
 import { aiDiagnosisSchema, type AiDiagnosis } from '../../types/diagnosis.js';
-import type { AiProvider, ChatInput, DiagnoseInput } from './aiProvider.js';
+import { CATEGORIES, PRODUCT_IDS, UNITS } from '../../config/marketCatalog.js';
+import { aiListingDraftSchema, type AiListingDraft } from '../../modules/listings/listing.types.js';
+import type { AiProvider, ChatInput, DiagnoseInput, ListingDraftInput } from './aiProvider.js';
+import { buildListingUserPrompt, LISTING_SYSTEM_PROMPT } from './marketPrompt.js';
 import { buildChatSystemPrompt, buildDiagnosisUserPrompt, DIAGNOSIS_SYSTEM_PROMPT } from './prompt.js';
 import { withRetry } from './retry.js';
 
@@ -59,6 +62,53 @@ const CHAT_RESPONSE_SCHEMA: Schema = {
   type: Type.OBJECT,
   properties: { answer: { type: Type.STRING } },
   required: ['answer'],
+};
+
+/** Mirrors aiListingDraftSchema. */
+const LISTING_RESPONSE_SCHEMA: Schema = {
+  type: Type.OBJECT,
+  properties: {
+    photo_matches_product: { type: Type.BOOLEAN },
+    photo_problem: { type: Type.STRING },
+    category: { type: Type.STRING, enum: [...CATEGORIES] },
+    product: { type: Type.STRING, enum: [...PRODUCT_IDS] },
+    quantity: { type: Type.NUMBER, nullable: true },
+    unit: { type: Type.STRING, enum: [...UNITS], nullable: true },
+    price_per_unit_rupees: { type: Type.NUMBER, nullable: true },
+    quality_notes: { type: Type.STRING },
+    title_hi: { type: Type.STRING },
+    title_en: { type: Type.STRING },
+    description_hi: { type: Type.STRING },
+    description_en: { type: Type.STRING },
+  },
+  required: [
+    'photo_matches_product',
+    'photo_problem',
+    'category',
+    'product',
+    'quantity',
+    'unit',
+    'price_per_unit_rupees',
+    'quality_notes',
+    'title_hi',
+    'title_en',
+    'description_hi',
+    'description_en',
+  ],
+  propertyOrdering: [
+    'photo_matches_product',
+    'photo_problem',
+    'category',
+    'product',
+    'quantity',
+    'unit',
+    'price_per_unit_rupees',
+    'quality_notes',
+    'title_hi',
+    'title_en',
+    'description_hi',
+    'description_en',
+  ],
 };
 
 type GenerateRequest = Pick<GenerateContentParameters, 'contents'> & {
@@ -128,6 +178,20 @@ export class GeminiProvider implements AiProvider {
       contents: toGeminiContents(messages),
     });
     return parseJson(rawText, aiChatAnswerSchema).answer;
+  }
+
+  async draftListing({ image, mimeType, sellerText }: ListingDraftInput): Promise<AiListingDraft> {
+    const rawText = await this.generateJson({
+      systemInstruction: LISTING_SYSTEM_PROMPT,
+      responseSchema: LISTING_RESPONSE_SCHEMA,
+      contents: [
+        {
+          role: 'user',
+          parts: [{ inlineData: { mimeType, data: image.toString('base64') } }, { text: buildListingUserPrompt(sellerText) }],
+        },
+      ],
+    });
+    return parseJson(rawText, aiListingDraftSchema);
   }
 
   /** Calls Gemini in JSON mode with retries on "busy" errors. Returns the raw JSON text. */

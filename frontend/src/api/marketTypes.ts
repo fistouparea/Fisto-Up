@@ -56,3 +56,91 @@ export interface BuyerProfileInput {
   village?: string;
   address?: string;
 }
+
+/** Mirrors backend/src/config/marketCatalog.ts. */
+export const CATEGORIES = ['crop', 'shg'] as const;
+export type Category = (typeof CATEGORIES)[number];
+
+export const UNITS = ['quintal', 'kg', 'piece', 'pack'] as const;
+export type Unit = (typeof UNITS)[number];
+
+export const PRODUCT_IDS = [
+  'bajra',
+  'guar',
+  'moong',
+  'moth',
+  'chana',
+  'sarson',
+  'jeera',
+  'gehun',
+  'til',
+  'other_crop',
+  'achar',
+  'papad',
+  'masala',
+  'ker_sangri',
+  'handicraft',
+  'other_shg',
+] as const;
+export type ProductId = (typeof PRODUCT_IDS)[number];
+
+export type ListingStatus = 'active' | 'paused' | 'sold_out';
+
+export interface Bilingual {
+  hi: string;
+  en: string;
+}
+
+export interface ListingDraft {
+  category: Category;
+  product: ProductId;
+  quantity: number | null;
+  unit: Unit | null;
+  pricePerUnitPaise: number | null;
+  qualityNotes: string;
+  title: Bilingual;
+  description: Bilingual;
+}
+
+export type DraftResponse = { status: 'ok'; photoId: string; draft: ListingDraft } | { status: 'retake'; reason: string };
+
+export interface NewListing {
+  category: Category;
+  product: ProductId;
+  title: Bilingual;
+  description: Bilingual;
+  qualityNotes: string;
+  unit: Unit;
+  quantity: number;
+  pricePerUnitPaise: number;
+  minOrderQty: number;
+  photoIds: string[];
+  fssaiNumber?: string;
+}
+
+export interface ListingChange {
+  pricePerUnitPaise?: number;
+  quantityAvailable?: number;
+  minOrderQty?: number;
+  status?: ListingStatus;
+}
+
+/** A listing as its seller sees it on "मेरी बिक्री". */
+export interface SellerListing {
+  id: string;
+  category: Category;
+  product: ProductId;
+  title: Bilingual;
+  description: Bilingual;
+  qualityNotes: string;
+  unit: Unit;
+  pricePerUnitPaise: number;
+  quantityAvailable: number;
+  minOrderQty: number;
+  photoUrls: string[];
+  fssaiNumber?: string;
+  status: ListingStatus;
+  hidden: boolean;
+  visible: boolean;
+  createdAt: string;
+}

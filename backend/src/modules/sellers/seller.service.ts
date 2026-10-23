@@ -2,6 +2,7 @@ import { isValidObjectId, Types } from 'mongoose';
 import { AppError } from '../../errors/AppError.js';
 import type { SellerStatus } from '../auth/auth.types.js';
 import { UserModel, type UserDocument } from '../auth/user.model.js';
+import { ListingModel } from '../listings/listing.model.js';
 import type { BuyerProfileBody, SellerProfileBody } from './seller.types.js';
 
 /**
@@ -23,6 +24,18 @@ export async function saveSellerProfile(userId: string, body: SellerProfileBody)
   user.seller.status = status;
   if (status === 'pending') user.seller.rejectReason = undefined;
   await user.save();
+
+  // Listings keep a copy of the pickup place (for "पास में") and of whether the seller is verified.
+  await ListingModel.updateMany(
+    { sellerId: user._id },
+    {
+      $set: {
+        sellerVerified: status === 'verified',
+        location: { type: 'Point', coordinates: [body.pickup.lon, body.pickup.lat] },
+        place: { district: body.pickup.district, tehsil: body.pickup.tehsil },
+      },
+    },
+  ).exec();
   return user;
 }
 
@@ -56,6 +69,7 @@ export async function setSellerStatus(
     user.seller.verifiedBy = new Types.ObjectId(coordinatorId);
   }
   await user.save();
+  await ListingModel.updateMany({ sellerId: user._id }, { $set: { sellerVerified: decision.status === 'verified' } }).exec();
   return user;
 }
 

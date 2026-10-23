@@ -25,13 +25,14 @@ export function TextField({ label, hint, error, prefix, trailing, inputClassName
       <div className="flex items-center gap-2">
         <div
           className={cn(
-            'flex min-h-14 flex-1 items-center rounded-2xl border-2 bg-surface focus-within:border-primary-700',
+            'flex min-h-14 min-w-0 flex-1 items-center rounded-2xl border-2 bg-surface focus-within:border-primary-700',
             error ? 'border-danger-600' : 'border-line',
           )}
         >
           {prefix && <span className="pl-4 text-xl font-bold text-ink-500">{prefix}</span>}
           <input
             id={id}
+            size={1}
             aria-invalid={error ? true : undefined}
             aria-describedby={describedBy}
             className={cn('min-w-0 flex-1 bg-transparent px-4 py-3 text-xl text-ink-900 outline-none placeholder:text-ink-300', inputClassName)}

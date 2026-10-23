@@ -3,6 +3,7 @@ import { createApp, type AppDependencies } from '../../src/app.js';
 import { AuthService } from '../../src/modules/auth/auth.service.js';
 import { PinCredentials } from '../../src/modules/auth/credentials.js';
 import type { MarketDependencies } from '../../src/modules/marketRouter.js';
+import { setSellerStatus } from '../../src/modules/sellers/seller.service.js';
 import { createFakeProvider } from '../helpers.js';
 
 /** Low bcrypt cost keeps the tests fast; production uses AUTH_RULES.bcryptCost. */
@@ -85,9 +86,13 @@ export async function readySeller(app: App, { verified = true }: { verified?: bo
   const saved = await seller.agent.put('/api/account/seller-profile').send(sellerProfile);
   if (saved.status !== 200) throw new Error(`seller profile failed: ${saved.status} ${JSON.stringify(saved.body)}`);
   if (verified) {
-    const coordinator = await loginCoordinator(app);
-    const res = await coordinator.agent.post(`/api/admin/sellers/${seller.user.id}/verify`).send({});
-    if (res.status !== 200) throw new Error(`verify failed: ${res.status}`);
+    const coordinator = await new AuthService(testCredentials).createAccount({
+      phone: nextPhone(),
+      pin: '7391',
+      name: 'संयोजक',
+      role: 'coordinator',
+    });
+    await setSellerStatus(seller.user.id, { status: 'verified' }, coordinator._id.toString());
   }
   return seller;
 }

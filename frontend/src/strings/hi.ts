@@ -1,5 +1,5 @@
 import type { CropId, ErrorCode } from '../api/types';
-import type { Role, SellerStatus } from '../api/marketTypes';
+import type { ListingStatus, ProductId, Role, SellerStatus, Unit } from '../api/marketTypes';
 
 /** All Hindi text shown in the app lives here. */
 export const hi = {
@@ -304,6 +304,81 @@ export const hi = {
     address: 'पूरा पता (डिलीवरी के लिए)',
   },
 
+  sell: {
+    sellButton: 'बेचें',
+    sellHint: 'फोटो लें और बोलकर बताएँ',
+    mySales: 'मेरी बिक्री',
+    newListing: 'नया सामान बेचें',
+    steps: { label: 'बेचने के कदम', photo: 'फोटो', speak: 'बोलें', confirm: 'पक्का करें' },
+    photoTitle: 'जो बेचना है उसकी फोटो लें',
+    photoHint: 'बोरी, ढेर या पैकेट की पास से और रोशनी में फोटो लें।',
+    speakTitle: 'बोलकर बताएँ: क्या, कितना और किस भाव में?',
+    speakExample: 'जैसे: "मेरे पास दस क्विंटल बाजरा है, पच्चीस सौ रुपये क्विंटल"',
+    typeInstead: 'या यहाँ लिखें...',
+    heard: 'आपने कहा',
+    next: 'आगे',
+    thinking: 'जानकारी भर रहे हैं...',
+    thinkingHint: 'फोटो और आपकी बात देखी जा रही है',
+    retake: 'दूसरी फोटो लें',
+    retakeDefault: 'फोटो में सामान ठीक से नहीं दिखा। सामान की पास से साफ फोटो लें।',
+    aiFailed: 'अपने-आप जानकारी नहीं भर पाए। नीचे खुद भर दें।',
+    confirmTitle: 'जानकारी देखें और पक्का करें',
+    product: 'सामान',
+    quantity: 'मात्रा',
+    price: 'भाव',
+    per: 'प्रति',
+    total: 'कुल कीमत',
+    change: 'बदलें',
+    chooseProduct: 'कौन सा सामान है?',
+    crops: 'अनाज / दाल',
+    shgProducts: 'स्वयं सहायता समूह का सामान',
+    chooseUnit: 'किसमें बेचेंगे?',
+    priceIn: 'एक के भाव (₹ में)',
+    minOrder: 'थोक: कम से कम कितना खरीदें?',
+    minOrderHint: 'दुकान/होटल के लिए। कोई भी थोड़ा ले सके तो 1 रखें।',
+    fssai: 'FSSAI नंबर (अगर है)',
+    fssaiInvalid: 'FSSAI नंबर में 14 अंक होते हैं',
+    titleHi: 'सामान का नाम (हिंदी)',
+    titleEn: 'नाम English में (खरीदारों के लिए)',
+    descriptionHi: 'और जानकारी',
+    qualityNotes: 'क्वालिटी',
+    moreDetails: 'नाम और जानकारी',
+    confirm: 'पक्का करें, बेचें',
+    saving: 'सेव हो रहा है...',
+    doneTitle: 'आपका सामान बिक्री में डाल दिया!',
+    donePending: 'संयोजक की जाँच के बाद यह खरीदारों को दिखेगा।',
+    doneVisible: 'अब खरीदार इसे बाज़ार में देख सकते हैं।',
+    sellAnother: 'और सामान बेचें',
+    goToMySales: 'मेरी बिक्री देखें',
+    missing: {
+      product: 'सामान चुनें',
+      quantity: 'मात्रा भरें',
+      unit: 'किलो / क्विंटल चुनें',
+      price: 'भाव भरें',
+      title: 'नाम लिखें',
+      minOrder: 'थोक मात्रा कुल मात्रा से ज़्यादा नहीं हो सकती',
+    },
+    less: 'कम करें',
+    more: 'ज़्यादा करें',
+    empty: 'अभी आपका कोई सामान बिक्री में नहीं है। "बेचें" दबाकर पहला सामान डालें।',
+    available: 'बचा है',
+    minOrderShort: 'कम से कम',
+    actions: {
+      editPrice: 'भाव बदलें',
+      editQuantity: 'मात्रा बदलें',
+      pause: 'रोकें',
+      resume: 'फिर से चालू करें',
+      soldOut: 'बिक गया',
+      save: 'सेव करें',
+      cancel: 'रहने दें',
+    },
+    hiddenByCoordinator: 'संयोजक ने इसे छिपाया है। संयोजक से बात करें।',
+    waitingVerification: 'जाँच के बाद खरीदारों को दिखेगा',
+    saved: 'बदलाव सेव हो गया',
+    offline: 'बेचने के लिए इंटरनेट चाहिए। इंटरनेट आने पर कोशिश करें।',
+    loadFailed: 'आपका सामान अभी नहीं दिख रहा।',
+  },
+
   unclearPhoto: 'फोटो साफ नहीं है, कृपया पास से और रोशनी में दोबारा फोटो लें।',
   tryAgain: 'फिर से कोशिश करें',
 } as const;
@@ -318,6 +393,39 @@ export const cropLabels: Record<CropId, { hindi: string; english: string; emoji:
   jeera: { hindi: 'जीरा', english: 'Jeera', emoji: '🌿' },
   gehun: { hindi: 'गेहूं', english: 'Wheat', emoji: '🌾' },
   other: { hindi: 'अन्य', english: 'Other', emoji: '🌱' },
+};
+
+/** Product names in Hindi and English (buyers can switch to English). */
+export const productLabels: Record<ProductId, { hi: string; en: string }> = {
+  bajra: { hi: 'बाजरा', en: 'Bajra' },
+  guar: { hi: 'ग्वार', en: 'Guar' },
+  moong: { hi: 'मूंग', en: 'Moong' },
+  moth: { hi: 'मोठ', en: 'Moth bean' },
+  chana: { hi: 'चना', en: 'Chana' },
+  sarson: { hi: 'सरसों', en: 'Mustard' },
+  jeera: { hi: 'जीरा', en: 'Cumin' },
+  gehun: { hi: 'गेहूं', en: 'Wheat' },
+  til: { hi: 'तिल', en: 'Sesame' },
+  other_crop: { hi: 'दूसरा अनाज / दाल', en: 'Other grain' },
+  achar: { hi: 'अचार', en: 'Pickle' },
+  papad: { hi: 'पापड़', en: 'Papad' },
+  masala: { hi: 'मसाले', en: 'Spices' },
+  ker_sangri: { hi: 'केर-सांगरी', en: 'Ker Sangri' },
+  handicraft: { hi: 'हस्तशिल्प', en: 'Handicraft' },
+  other_shg: { hi: 'दूसरा सामान', en: 'Other product' },
+};
+
+export const unitLabels: Record<Unit, { hi: string; en: string }> = {
+  quintal: { hi: 'क्विंटल', en: 'quintal' },
+  kg: { hi: 'किलो', en: 'kg' },
+  piece: { hi: 'नग', en: 'piece' },
+  pack: { hi: 'पैकेट', en: 'pack' },
+};
+
+export const listingStatusLabels: Record<ListingStatus, string> = {
+  active: 'बिक्री में',
+  paused: 'रुका हुआ',
+  sold_out: 'सारा बिक गया',
 };
 
 export const roleLabels: Record<Role, string> = {

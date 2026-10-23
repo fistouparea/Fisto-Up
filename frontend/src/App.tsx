@@ -25,6 +25,8 @@ import { BuyerProfilePage } from './pages/market/BuyerProfilePage';
 import { LoginPage } from './pages/market/LoginPage';
 import { RegisterPage } from './pages/market/RegisterPage';
 import { SellerProfilePage } from './pages/market/SellerProfilePage';
+import { MySalesPage } from './pages/market/MySalesPage';
+import { SnapListPage } from './pages/market/SnapListPage';
 import { RequireRole } from './components/market/RequireRole';
 import { useAuth } from './hooks/useAuth';
 import type { Account } from './api/marketTypes';
@@ -134,6 +136,10 @@ function Page({ route, diagnoseKey }: { route: Route; diagnoseKey: number }) {
       return <AccountPage />;
     case 'sellerProfile':
       return <RequireRole roles={['seller']}>{(user) => <SellerProfilePage user={user} onSaved={savedProfile} />}</RequireRole>;
+    case 'sell':
+      return <RequireRole roles={['seller']}>{(user) => <MySalesPage user={user} />}</RequireRole>;
+    case 'sellNew':
+      return <RequireRole roles={['seller']}>{() => <SnapListPage />}</RequireRole>;
     case 'buyerProfile':
       return <RequireRole roles={['buyer']}>{(user) => <BuyerProfilePage user={user} onSaved={savedProfile} />}</RequireRole>;
   }
