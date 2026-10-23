@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { LuCamera, LuHistory, LuHouse, LuSprout } from 'react-icons/lu';
+import { LuCamera, LuHistory, LuHouse, LuShoppingBasket, LuSprout } from 'react-icons/lu';
 import { AppBar } from './components/AppBar';
 import { OfflineBanner } from './components/OfflineBanner';
 import { AppToaster } from './components/ui/AppToaster';
 import { BottomNav } from './components/ui/BottomNav';
 import { PageTransition } from './components/ui/PageTransition';
 import { AuthProvider } from './context/AuthProvider';
+import { LangProvider } from './context/LangProvider';
 import { FarmProfileProvider } from './context/FarmProfileProvider';
 import { NotificationsProvider } from './context/NotificationsProvider';
 import { useFarmProfile } from './hooks/useFarmProfile';
@@ -27,6 +28,9 @@ import { RegisterPage } from './pages/market/RegisterPage';
 import { SellerProfilePage } from './pages/market/SellerProfilePage';
 import { MySalesPage } from './pages/market/MySalesPage';
 import { SnapListPage } from './pages/market/SnapListPage';
+import { MarketPage } from './pages/market/MarketPage';
+import { ListingDetailPage } from './pages/market/ListingDetailPage';
+import { cn } from './utils/cn';
 import { RequireRole } from './components/market/RequireRole';
 import { useAuth } from './hooks/useAuth';
 import type { Account } from './api/marketTypes';
@@ -40,11 +44,13 @@ const ONBOARDING_FLAG = 'onboardingDone';
 export function App() {
   return (
     <AuthProvider>
-      <FarmProfileProvider>
-        <NotificationsProvider>
-          <AppShell />
-        </NotificationsProvider>
-      </FarmProfileProvider>
+      <LangProvider>
+        <FarmProfileProvider>
+          <NotificationsProvider>
+            <AppShell />
+          </NotificationsProvider>
+        </FarmProfileProvider>
+      </LangProvider>
     </AuthProvider>
   );
 }
@@ -52,6 +58,7 @@ export function App() {
 function AppShell() {
   const route = useHashRoute();
   const { profile } = useFarmProfile();
+  const { user } = useAuth();
   // Changing the key remounts DiagnosePage, i.e. starts a fresh check.
   const [diagnoseKey, setDiagnoseKey] = useState(0);
   const [onboardingDone, setOnboardingDone] = useState(() => readFlag(ONBOARDING_FLAG));
@@ -71,7 +78,8 @@ function AppShell() {
       <OfflineBanner />
       <AppToaster />
       {/* Bottom padding keeps content clear of the fixed bottom navigation. */}
-      <main className="mx-auto max-w-lg px-4 pt-4 pb-32">
+      {/* Shopping screens use the width of a tablet/desktop; farmer screens stay phone-narrow. */}
+      <main className={cn('mx-auto px-4 pt-4 pb-32', WIDE_ROUTES.has(route.name) ? 'max-w-5xl' : 'max-w-lg')}>
         <PageTransition pageKey={showOnboarding ? 'onboarding' : pageKey(route, diagnoseKey)}>
           {showOnboarding ? <FarmSetupPage onDone={finishOnboarding} /> : <Page route={route} diagnoseKey={diagnoseKey} />}
         </PageTransition>
@@ -88,6 +96,12 @@ function AppShell() {
             onClick: () => setDiagnoseKey((key) => key + 1),
           },
           {
+            href: user?.role === 'seller' ? routes.sell : routes.market,
+            label: hi.nav.market,
+            icon: LuShoppingBasket,
+            active: MARKET_ROUTES.has(route.name),
+          },
+          {
             href: routes.history,
             label: hi.nav.history,
             icon: LuHistory,
@@ -99,6 +113,9 @@ function AppShell() {
     </div>
   );
 }
+
+const WIDE_ROUTES: ReadonlySet<Route['name']> = new Set(['market', 'listing']);
+const MARKET_ROUTES: ReadonlySet<Route['name']> = new Set(['market', 'listing', 'sell', 'sellNew']);
 
 function Page({ route, diagnoseKey }: { route: Route; diagnoseKey: number }) {
   const { setUser } = useAuth();
@@ -140,6 +157,10 @@ function Page({ route, diagnoseKey }: { route: Route; diagnoseKey: number }) {
       return <RequireRole roles={['seller']}>{(user) => <MySalesPage user={user} />}</RequireRole>;
     case 'sellNew':
       return <RequireRole roles={['seller']}>{() => <SnapListPage />}</RequireRole>;
+    case 'market':
+      return <MarketPage />;
+    case 'listing':
+      return <ListingDetailPage id={route.id} />;
     case 'buyerProfile':
       return <RequireRole roles={['buyer']}>{(user) => <BuyerProfilePage user={user} onSaved={savedProfile} />}</RequireRole>;
   }
@@ -149,5 +170,6 @@ function Page({ route, diagnoseKey }: { route: Route; diagnoseKey: number }) {
 function pageKey(route: Route, diagnoseKey: number): string {
   if (route.name === 'diagnose') return `diagnose-${diagnoseKey}`;
   if (route.name === 'historyItem') return `history-${route.id}`;
+  if (route.name === 'listing') return `listing-${route.id}`;
   return route.name;
 }

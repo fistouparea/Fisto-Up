@@ -17,7 +17,9 @@ export type Route =
   | { name: 'sellerProfile' }
   | { name: 'buyerProfile' }
   | { name: 'sell' }
-  | { name: 'sellNew' };
+  | { name: 'sellNew' }
+  | { name: 'market' }
+  | { name: 'listing'; id: string };
 
 export const routes = {
   home: '#/',
@@ -37,6 +39,8 @@ export const routes = {
   buyerProfile: '#/account/buyer',
   sell: '#/sell',
   sellNew: '#/sell/new',
+  market: '#/market',
+  listing: (id: string) => `#/market/listing/${encodeURIComponent(id)}`,
 };
 
 /**
@@ -49,7 +53,9 @@ export function useHashRoute(): Route {
 }
 
 export function parseRoute(hash: string): Route {
-  const [, section, id] = hash.replace(/^#/, '').split('/');
+  const [, section, id, sub] = hash.replace(/^#/, '').split('/');
+  if (section === 'market' && id === 'listing' && sub) return { name: 'listing', id: decodeURIComponent(sub) };
+  if (section === 'market') return { name: 'market' };
   if (section === 'history' && id) return { name: 'historyItem', id: decodeURIComponent(id) };
   if (section === 'history') return { name: 'history' };
   if (section === 'farm' && id === 'setup') return { name: 'farmSetup' };

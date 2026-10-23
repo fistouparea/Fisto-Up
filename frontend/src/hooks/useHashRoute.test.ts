@@ -22,6 +22,8 @@ describe('parseRoute', () => {
     ['#/account/buyer', { name: 'buyerProfile' }],
     ['#/sell', { name: 'sell' }],
     ['#/sell/new', { name: 'sellNew' }],
+    ['#/market', { name: 'market' }],
+    ['#/market/listing/abc', { name: 'listing', id: 'abc' }],
   ])('parses "%s"', (hash, expected) => {
     expect(parseRoute(hash)).toEqual(expected);
   });

@@ -23,7 +23,7 @@ export function afterLoginTarget(role: Role): string {
 
 /** The screen each role starts on. */
 export function roleHome(role: Role): string {
-  const homes: Record<Role, string> = { seller: routes.sell, buyer: routes.account, coordinator: routes.account };
+  const homes: Record<Role, string> = { seller: routes.sell, buyer: routes.market, coordinator: routes.account };
   return homes[role];
 }
 

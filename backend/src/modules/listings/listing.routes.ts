@@ -16,11 +16,13 @@ import {
   updateListing,
   type UploadedPhoto,
 } from './listing.service.js';
+import { findPublicListing, searchListings, searchQuerySchema, type SearchPage } from './listing.search.js';
 import {
   createListingBodySchema,
   draftBodySchema,
   updateListingBodySchema,
   type DraftResponse,
+  type PublicListingView,
   type SellerListingView,
 } from './listing.types.js';
 
@@ -65,6 +67,17 @@ export function createListingRouter({ ai, aiRateLimit }: ListingRouterDeps): Rou
       .set('Cache-Control', photo.attached ? 'public, max-age=604800, immutable' : 'private, no-store')
       .set('Cross-Origin-Resource-Policy', 'cross-origin')
       .send(photo.data);
+  });
+
+  // Public (no login): browse and open listings. Never includes phone numbers or UPI IDs.
+  router.get('/market/listings', async (req, res: Response<SearchPage>) => {
+    res.json(await searchListings(parseOrThrow(searchQuerySchema, req.query)));
+  });
+
+  router.get('/market/listings/:id', async (req, res: Response<{ listing: PublicListingView }>) => {
+    const listing = await findPublicListing(String(req.params.id), req.user);
+    if (!listing) throw new AppError('NOT_FOUND');
+    res.json({ listing });
   });
 
   router.post('/market/listings', requireRole('seller'), json, async (req, res: Response<{ listing: SellerListingView }>) => {

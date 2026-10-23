@@ -163,3 +163,52 @@ export type PriceSuggestion =
   | (FairRange & { source: 'platform'; sampleSize: number })
   | (FairRange & { source: 'ai' })
   | { source: null };
+
+export interface PublicSeller {
+  id: string;
+  name: string;
+  village: string;
+  shgName?: string;
+  verified: boolean;
+  rating: { average: number | null; count: number };
+}
+
+/** What buyers see. Never contains the seller's phone or UPI ID. */
+export interface PublicListing {
+  id: string;
+  category: Category;
+  product: ProductId;
+  title: Bilingual;
+  description: Bilingual;
+  qualityNotes: string;
+  unit: Unit;
+  pricePerUnitPaise: number;
+  quantityAvailable: number;
+  minOrderQty: number;
+  photoUrls: string[];
+  fssaiNumber?: string;
+  seller: PublicSeller;
+  place: { district?: string; tehsil?: string };
+  distanceKm?: number;
+  createdAt: string;
+}
+
+export type SortOrder = 'newest' | 'price_asc' | 'price_desc';
+
+export interface SearchFilters {
+  category?: Category;
+  product?: ProductId;
+  q?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  minQty?: number;
+  bulk?: boolean;
+  near?: { lat: number; lon: number; label: string; radiusKm?: number };
+  sort: SortOrder;
+}
+
+export interface SearchPage {
+  items: PublicListing[];
+  page: number;
+  hasMore: boolean;
+}

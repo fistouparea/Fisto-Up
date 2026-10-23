@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { LuScanSearch, LuSprout, LuWheat } from 'react-icons/lu';
+import { LuScanSearch, LuShoppingBasket, LuSprout, LuWheat } from 'react-icons/lu';
 import type { Dashboard, FarmProfile, MandiPrice } from '../api/types';
 import { Greeting } from '../components/home/Greeting';
 import { MandiCard } from '../components/home/MandiCard';
@@ -89,13 +89,19 @@ function needsFarmInfo(profile: FarmProfile | null | undefined): boolean {
   return !profile?.location || profile.crops.length === 0;
 }
 
-/** Marketplace entry: sell your produce (login asked on the next screen). */
+/** Marketplace entry: sell your produce (login asked on the next screen) or browse and buy. */
 function MarketButtons() {
   return (
-    <Button variant="primary" size="lg" icon={LuWheat} onClick={() => navigateTo(routes.sell)}>
-      {hi.sell.sellButton}
-      <span className="block text-base font-normal text-primary-100">{hi.sell.sellHint}</span>
-    </Button>
+    <div className="grid grid-cols-2 gap-3">
+      <Button variant="primary" size="lg" icon={LuWheat} onClick={() => navigateTo(routes.sell)} className="flex-col gap-1 py-3">
+        {hi.sell.sellButton}
+        <span className="block text-sm font-normal text-primary-100">{hi.sell.sellHint}</span>
+      </Button>
+      <Button variant="secondary" size="lg" icon={LuShoppingBasket} onClick={() => navigateTo(routes.market)} className="flex-col gap-1 py-3">
+        {hi.sell.buyButton}
+        <span className="block text-sm font-normal text-ink-500">{hi.sell.buyHint}</span>
+      </Button>
+    </div>
   );
 }
 

@@ -11,6 +11,8 @@ export interface BottomNavItem {
 
 /** Fixed bottom tab bar: big icon + label, active tab in a highlighted pill. */
 export function BottomNav({ items, label }: { items: BottomNavItem[]; label: string }) {
+  // Five tabs still fit a 360px phone with slightly smaller labels.
+  const compact = items.length > 4;
   return (
     <nav
       aria-label={label}
@@ -27,13 +29,16 @@ export function BottomNav({ items, label }: { items: BottomNavItem[]; label: str
             >
               <span
                 className={cn(
-                  'flex h-9 w-16 items-center justify-center rounded-full transition-colors',
+                  'flex h-9 items-center justify-center rounded-full transition-colors',
+                  compact ? 'w-14' : 'w-16',
                   active ? 'bg-accent-400 text-ink-900' : 'text-ink-500',
                 )}
               >
                 <Icon aria-hidden="true" className="size-6" />
               </span>
-              <span className={cn('text-base', active ? 'font-bold text-ink-900' : 'text-ink-500')}>{itemLabel}</span>
+              <span className={cn('whitespace-nowrap', compact ? 'text-sm' : 'text-base', active ? 'font-bold text-ink-900' : 'text-ink-500')}>
+                {itemLabel}
+              </span>
             </a>
           </li>
         ))}

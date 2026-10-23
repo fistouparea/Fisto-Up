@@ -14,7 +14,7 @@ export function Chip({ label, selected, onClick }: ChipProps) {
       onClick={onClick}
       aria-pressed={selected}
       className={cn(
-        'min-h-14 rounded-full border-2 px-4 text-lg font-bold transition-colors',
+        'min-h-14 shrink-0 whitespace-nowrap rounded-full border-2 px-4 text-lg font-bold transition-colors',
         selected ? 'border-primary-700 bg-primary-700 text-white' : 'border-line bg-surface text-ink-700 hover:border-primary-300',
       )}
     >
