@@ -14,6 +14,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/dist ./dist
+# Demo photos for "npm run seed" / node dist/scripts/seed.js
+COPY seed-assets ./seed-assets
 USER node
 EXPOSE 4000
 CMD ["node", "dist/server.js"]

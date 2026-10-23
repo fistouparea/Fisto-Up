@@ -385,3 +385,17 @@ describe('notifications and reports', () => {
     expect((await buyer.agent.get(`/api/market/orders/${id}`)).body.order.seller.name).toBe('सुनीता देवी');
   });
 });
+
+describe('abuse limits', () => {
+  it('one account can place at most 30 orders an hour', async () => {
+    const app = createMarketTestApp();
+    const { buyer, listingId } = await setup(app);
+    for (let i = 0; i < 30; i++) {
+      expect((await order(buyer.agent, listingId, { quantity: 1 })).status).toBe(201);
+    }
+    const limited = await order(buyer.agent, listingId, { quantity: 1 });
+    expect(limited.status).toBe(429);
+    expect(limited.body.error.code).toBe('RATE_LIMITED');
+    expect((await order((await registerAs(app, 'buyer')).agent, listingId, { quantity: 1 })).status).toBe(201);
+  });
+});

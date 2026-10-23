@@ -13,7 +13,8 @@
     "test": "vitest run",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "create-coordinator": "tsx --env-file-if-exists=.env src/scripts/createCoordinator.ts"
+    "create-coordinator": "tsx --env-file-if-exists=.env src/scripts/createCoordinator.ts",
+    "seed": "tsx --env-file-if-exists=.env src/scripts/seed.ts"
   },
   "dependencies": {
     "@google/genai": "^2.30.0",

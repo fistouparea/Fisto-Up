@@ -1,5 +1,7 @@
 import express, { Router, type Response } from 'express';
 import { parseOrThrow } from '../../utils/validation.js';
+import { ORDER_RULES } from '../../config/marketRules.js';
+import { createUserRateLimit } from '../../middleware/userRateLimit.js';
 import { currentUser, requireRole, requireUser } from '../auth/auth.middleware.js';
 import type { OrderService } from './order.service.js';
 import { toOrderView } from './order.service.js';
@@ -11,7 +13,7 @@ export function createOrderRouter(orders: OrderService): Router {
   const router = Router();
   const json = express.json({ limit: '8kb' });
 
-  router.post('/market/orders', requireRole('buyer'), json, async (req, res: OrderResponse) => {
+  router.post('/market/orders', requireRole('buyer'), createUserRateLimit(ORDER_RULES.placeRateLimit), json, async (req, res: OrderResponse) => {
     const user = currentUser(req);
     const order = await orders.placeOrder(user, parseOrThrow(createOrderBodySchema, req.body));
     res.status(201).json({ order: await toOrderView(order, user) });

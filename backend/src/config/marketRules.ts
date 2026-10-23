@@ -66,6 +66,9 @@ export const ORDER_RULES = {
   /** A price request may not go below this share of the listed price (stops ₹1 offers). */
   minOfferShare: 0.5,
   ratingCommentMax: 300,
+  /** Per account: stops one account from flooding sellers with requests. */
+  placeRateLimit: { windowMs: 60 * 60_000, limit: 30 },
+  reportRateLimit: { windowMs: 60 * 60_000, limit: 10 },
 } as const;
 
 export const NOTIFICATION_RULES = {
