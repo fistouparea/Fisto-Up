@@ -59,7 +59,8 @@ describe('Snap & List draft', () => {
     const { agent } = await readySeller(app);
 
     const res = await postDraft(agent, 'दस क्विंटल बाजरा');
-    expect(res.body).toEqual({ status: 'retake', reason: 'बाजरे की बोरी की फोटो लें।' });
+    expect(res.body).toMatchObject({ status: 'retake', reason: 'बाजरे की बोरी की फोटो लें।', draft: { product: 'bajra', quantity: 10 } });
+    expect(res.body).not.toHaveProperty('photoId');
     expect(await ListingPhotoModel.countDocuments()).toBe(0);
   });
 

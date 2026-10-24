@@ -46,8 +46,11 @@ export interface ListingDraft {
 
 export type DraftResponse =
   | { status: 'ok'; photoId: string; draft: ListingDraft }
-  /** The photo does not show the product: ask the seller to take another one. */
-  | { status: 'retake'; reason: string };
+  /**
+   * The photo does not seem to show the product: ask for another one. The draft from the seller's words comes
+   * along, so the seller can still go on with this photo ("फिर भी आगे बढ़ें") without retyping.
+   */
+  | { status: 'retake'; reason: string; draft: ListingDraft };
 
 export const draftBodySchema = z.object({
   /** What the seller said (speech-to-text) or typed. May be empty: then only the photo is used. */

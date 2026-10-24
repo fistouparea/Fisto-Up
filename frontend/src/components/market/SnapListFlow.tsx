@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { LuArrowRight, LuCamera, LuCameraOff, LuCircleCheckBig, LuMic, LuPlus, LuRefreshCw, LuStore, LuWifiOff } from 'react-icons/lu';
 import { ApiError } from '../../api/client';
 import { draftListing, uploadListingPhoto } from '../../api/listings';
-import type { NewListing, SellerListing } from '../../api/marketTypes';
+import type { ListingDraft, NewListing, SellerListing } from '../../api/marketTypes';
 import type { ErrorCode } from '../../api/types';
 import { useConnectivity } from '../../hooks/useConnectivity';
 import { hi, marketErrorMessage } from '../../strings/hi';
@@ -26,7 +26,7 @@ type State =
   | { step: 'photo'; preparing: boolean }
   | { step: 'describe'; photo: Blob; text: string }
   | { step: 'thinking'; photo: Blob }
-  | { step: 'retake'; reason: string }
+  | { step: 'retake'; reason: string; photo: Blob; draft: ListingDraft | null }
   | { step: 'confirm'; photo: Blob; photoId: string; form: ListingForm; aiFailed: boolean }
   | { step: 'saving'; photo: Blob; photoId: string; form: ListingForm }
   | { step: 'done'; listing: SellerListing }
@@ -73,7 +73,7 @@ export function SnapListFlow({ submit, header, onFinished, finishLabel }: SnapLi
     try {
       const result = await draftListing(photo, text.trim());
       if (result.status === 'retake') {
-        setState({ step: 'retake', reason: result.reason || hi.sell.retakeDefault });
+        setState({ step: 'retake', reason: result.reason || hi.sell.retakeDefault, photo, draft: result.draft ?? null });
         return;
       }
       setState({ step: 'confirm', photo, photoId: result.photoId, form: formFromDraft(result.draft), aiFailed: false });
@@ -88,13 +88,14 @@ export function SnapListFlow({ submit, header, onFinished, finishLabel }: SnapLi
     }
   };
 
-  const uploadWithoutAi = async (photo: Blob) => {
+  /** No AI help (it failed), or the seller keeps a photo the AI doubted: save the photo alone, go to the form. */
+  const uploadWithoutAi = async (photo: Blob, draft: ListingDraft | null = null) => {
     try {
       const photoId = await uploadListingPhoto(photo);
-      setState({ step: 'confirm', photo, photoId, form: formFromDraft(null), aiFailed: true });
+      setState({ step: 'confirm', photo, photoId, form: formFromDraft(draft), aiFailed: draft === null });
     } catch (error) {
       const code = error instanceof ApiError ? error.code : 'UNKNOWN';
-      setState({ step: 'error', code, retry: () => void uploadWithoutAi(photo) });
+      setState({ step: 'error', code, retry: () => void uploadWithoutAi(photo, draft) });
     }
   };
 
@@ -154,6 +155,10 @@ export function SnapListFlow({ submit, header, onFinished, finishLabel }: SnapLi
           <EmptyState icon={LuCameraOff} tone="warning" message={state.reason}>
             <Button variant="accent" icon={LuCamera} onClick={restart}>
               {hi.sell.retake}
+            </Button>
+            {/* The AI can be wrong about a photo; never block the seller. */}
+            <Button variant="secondary" icon={LuArrowRight} onClick={() => void uploadWithoutAi(state.photo, state.draft)}>
+              {hi.sell.useThisPhoto}
             </Button>
           </EmptyState>
         )}

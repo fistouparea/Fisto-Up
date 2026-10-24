@@ -145,6 +145,11 @@ const THINKING_LEVELS: Record<Exclude<GeminiThinkingLevel, 'off'>, ThinkingLevel
 export interface GeminiProviderOptions {
   apiKey: string;
   model: string;
+  /**
+   * Tried in order when the main model is busy, times out or returns unusable JSON (e.g. Google's
+   * "model is experiencing high demand"). Empty = only the main model.
+   */
+  fallbackModels?: string[];
   /** Defaults to "low": fast enough for farmers on slow phones. "off" = don't send the setting. */
   thinkingLevel?: GeminiThinkingLevel;
   attemptTimeoutMs?: number;
@@ -157,7 +162,7 @@ export interface GeminiProviderOptions {
 
 export class GeminiProvider implements AiProvider {
   private readonly client: Pick<GoogleGenAI, 'models'>;
-  private readonly model: string;
+  private readonly models: string[];
   private readonly thinkingLevel: GeminiThinkingLevel;
   private readonly attemptTimeoutMs: number;
   private readonly maxAttempts: number;
@@ -166,7 +171,7 @@ export class GeminiProvider implements AiProvider {
 
   constructor(options: GeminiProviderOptions) {
     this.client = options.client ?? new GoogleGenAI({ apiKey: options.apiKey });
-    this.model = options.model;
+    this.models = [options.model, ...(options.fallbackModels ?? []).filter((model) => model !== options.model)];
     this.thinkingLevel = options.thinkingLevel ?? 'low';
     // Newer models take ~20 s for a photo even with low thinking; the phone waits up to 90 s in total.
     this.attemptTimeoutMs = options.attemptTimeoutMs ?? 45_000;
@@ -176,7 +181,7 @@ export class GeminiProvider implements AiProvider {
   }
 
   async diagnose({ image, mimeType, cropName }: DiagnoseInput): Promise<AiDiagnosis> {
-    const rawText = await this.generateJson({
+    return this.generateValidated({
       systemInstruction: DIAGNOSIS_SYSTEM_PROMPT,
       responseSchema: DIAGNOSIS_RESPONSE_SCHEMA,
       contents: [
@@ -185,21 +190,20 @@ export class GeminiProvider implements AiProvider {
           parts: [{ inlineData: { mimeType, data: image.toString('base64') } }, { text: buildDiagnosisUserPrompt(cropName) }],
         },
       ],
-    });
-    return parseJson(rawText, aiDiagnosisSchema);
+    }, aiDiagnosisSchema);
   }
 
   async chat({ cropName, diagnosis, messages }: ChatInput): Promise<string> {
-    const rawText = await this.generateJson({
+    const result = await this.generateValidated({
       systemInstruction: buildChatSystemPrompt(cropName, diagnosis),
       responseSchema: CHAT_RESPONSE_SCHEMA,
       contents: toGeminiContents(messages),
-    });
-    return parseJson(rawText, aiChatAnswerSchema).answer;
+    }, aiChatAnswerSchema);
+    return result.answer;
   }
 
   async draftListing({ image, mimeType, sellerText }: ListingDraftInput): Promise<AiListingDraft> {
-    const rawText = await this.generateJson({
+    return this.generateValidated({
       systemInstruction: LISTING_SYSTEM_PROMPT,
       responseSchema: LISTING_RESPONSE_SCHEMA,
       contents: [
@@ -208,36 +212,45 @@ export class GeminiProvider implements AiProvider {
           parts: [{ inlineData: { mimeType, data: image.toString('base64') } }, { text: buildListingUserPrompt(sellerText) }],
         },
       ],
-    });
-    return parseJson(rawText, aiListingDraftSchema);
+    }, aiListingDraftSchema);
   }
 
   async estimatePrice({ productName, unit }: { productName: string; unit: Unit }): Promise<AiPriceEstimate> {
-    const rawText = await this.generateJson({
+    return this.generateValidated({
       systemInstruction: PRICE_ESTIMATE_SYSTEM_PROMPT,
       responseSchema: PRICE_RESPONSE_SCHEMA,
       contents: [{ role: 'user', parts: [{ text: buildPriceEstimatePrompt(productName, UNIT_NAMES[unit].en) }] }],
-    });
-    return parseJson(rawText, aiPriceEstimateSchema);
+    }, aiPriceEstimateSchema);
   }
 
-  /** Calls Gemini in JSON mode with retries on "busy" errors. Returns the raw JSON text. */
-  private async generateJson(request: GenerateRequest): Promise<string> {
-    try {
-      return await withRetry(() => this.generateOnce(request), {
-        maxAttempts: this.maxAttempts,
-        baseDelayMs: this.baseDelayMs,
-        isRetryable: isBusyError,
-        sleep: this.sleep,
-      });
-    } catch (error) {
-      throw toAppError(error);
+  /**
+   * Calls Gemini in JSON mode and validates the answer with `schema`. Busy errors are retried with backoff;
+   * if a model stays busy, times out or answers with unusable JSON, the next fallback model is tried.
+   */
+  private async generateValidated<T>(request: GenerateRequest, schema: z.ZodType<T>): Promise<T> {
+    let lastError: AppError | null = null;
+    for (const model of this.models) {
+      try {
+        const rawText = await withRetry(() => this.generateOnce(request, model), {
+          maxAttempts: this.maxAttempts,
+          baseDelayMs: this.baseDelayMs,
+          isRetryable: isBusyError,
+          sleep: this.sleep,
+        });
+        return parseJson(rawText, schema);
+      } catch (error) {
+        lastError = toAppError(error);
+        if (model !== this.models.at(-1)) {
+          console.warn(`Gemini model ${model} failed (${lastError.code}), trying the next model`);
+        }
+      }
     }
+    throw lastError ?? new AppError('AI_ERROR', 'No Gemini model configured');
   }
 
-  private async generateOnce({ contents, systemInstruction, responseSchema }: GenerateRequest): Promise<string> {
+  private async generateOnce({ contents, systemInstruction, responseSchema }: GenerateRequest, model: string): Promise<string> {
     const response = await this.client.models.generateContent({
-      model: this.model,
+      model,
       contents,
       config: {
         systemInstruction,

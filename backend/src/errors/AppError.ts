@@ -20,6 +20,7 @@ export type ErrorCode =
   | 'OUT_OF_STOCK'
   | 'INVALID_TRANSITION'
   | 'CONFLICT'
+  | 'NEEDS_REPLICA_SET'
   | 'INTERNAL';
 
 const HTTP_STATUS: Record<ErrorCode, number> = {
@@ -47,6 +48,8 @@ const HTTP_STATUS: Record<ErrorCode, number> = {
   /** The order is not in a state where this step is allowed (or someone else changed it first). */
   INVALID_TRANSITION: 409,
   CONFLICT: 409,
+  /** Server setup: orders need MongoDB as a replica set (transactions). See README. */
+  NEEDS_REPLICA_SET: 503,
   INTERNAL: 500,
 };
 

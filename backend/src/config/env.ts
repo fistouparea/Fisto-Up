@@ -14,6 +14,16 @@ const envSchema = z.object({
    * How much the model "thinks" before answering. Newer Gemini models think a lot by default
    * (a photo check took ~90 s); "low" answers in a few seconds. "off" sends no setting (older models).
    */
+  /**
+   * Comma-separated models tried when GEMINI_MODEL is busy ("high demand"), slow or gives bad JSON,
+   * e.g. "gemini-3.5-flash,gemini-3.1-flash-lite". Empty = no fallback.
+   */
+  GEMINI_FALLBACK_MODELS: z
+    .string()
+    .optional()
+    .transform((value) => (value ?? '').split(',').map((model) => model.trim()).filter(Boolean)),
+  /** Seconds one model may take before the next attempt / fallback model. Lower = faster fallback when busy. */
+  GEMINI_ATTEMPT_TIMEOUT_SECONDS: optional(z.coerce.number().int().min(5).max(120)),
   GEMINI_THINKING_LEVEL: z.enum(['low', 'medium', 'high', 'off']).default('low'),
   PORT: z.coerce.number().int().positive().default(4000),
   /** Number of reverse proxies in front of the app (1 behind nginx in Docker), so rate limits see real client IPs. */

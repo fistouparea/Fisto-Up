@@ -104,6 +104,8 @@ docker compose up --build               # open http://localhost:8080
 | ---------------- | -------- | ----------------------- | ------------------------------------------------------------------- |
 | `GEMINI_API_KEY` | yes      | –                       | Your Gemini API key                                                 |
 | `GEMINI_MODEL`   | yes      | –                       | e.g. `gemini-3.8-flash`                                             |
+| `GEMINI_FALLBACK_MODELS` | no | – (none)             | Comma-separated models tried when `GEMINI_MODEL` is busy ("high demand"), slow or gives bad JSON, e.g. `gemini-3.5-flash,gemini-3.1-flash-lite` |
+| `GEMINI_ATTEMPT_TIMEOUT_SECONDS` | no | `45`        | Seconds one model may take before the next attempt/fallback (5–120). 25 = faster fallback when busy |
 | `AI_PROVIDER`    | no       | `gemini`                | Which AI provider to use                                            |
 | `GEMINI_THINKING_LEVEL` | no | `low`                | `low` / `medium` / `high`, or `off` for older models                |
 | `PORT`           | no       | `4000`                  | Backend port                                                        |
@@ -263,7 +265,8 @@ docker exec agriai-mongo mongosh --quiet --eval "rs.initiate({_id:'rs0',members:
 MONGO_URI=mongodb://localhost:27018/agriai?directConnection=true
 ```
 
-Without a replica set the backend logs a warning at startup; browsing and listing work, accepting orders fails.
+Without a replica set the backend logs a warning at startup. Signing up, listing products and browsing still
+work; placing or accepting an order answers `NEEDS_REPLICA_SET` (503) and the app shows a clear message.
 
 ### Business rules (edit here, not in code)
 

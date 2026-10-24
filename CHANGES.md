@@ -722,3 +722,38 @@ d34e003 Task 5: Orders with a tested state machine
 7. कमीशन → mahine ka total → kisi seller par "वसूल किया" (rakam confirm ho). "CSV डाउनलोड करें" ko Excel mein
    kholein: Hindi naam sahi dikhein.
 8. Laptop par bhi `#/admin` kholkar dekhein (chauda layout).
+
+## 5. Seller test ke baad fixes (24 अक्टूबर)
+
+Aapne seller banke check kiya to do problem aayi. Dono ki asli wajah dhoondhkar theek kiya:
+
+**1. AI apne-aap jaankari nahi bhar raha tha**
+- **Wajah:** hamara code nahi tha. Google ka `gemini-3.8-flash` model us waqt overloaded tha ("This model is
+  currently experiencing high demand", HTTP 503). Ek shabd ka sawaal bhi fail ho raha tha ya 45 second mein
+  timeout ho raha tha. Isliye app "खुद भर दें" wala form dikha raha tha.
+- **Fix:** naya setting `GEMINI_FALLBACK_MODELS` (aapke `.env` mein `gemini-3.5-flash,gemini-3.1-flash-lite`
+  daal diya hai). Main model busy ho, timeout ho, ya galat JSON de, to agla model apne-aap try hota hai. Isse photo
+  jaanch aur chat ko bhi fayda hai.
+- `GEMINI_ATTEMPT_TIMEOUT_SECONDS=25` bhi daala hai: busy model par 45 second ki jagah 25 second ke baad
+  fallback chalta hai.
+- **Aapke setup par check kiya:** asli AI ke saath bajra (10 क्विंटल, ₹2500) aur achar (20 किलो, ₹150) sahi bhare gaye.
+- Agar 3.8-flash baar-baar busy rahe to `GEMINI_MODEL=gemini-3.5-flash` rakh sakte hain. Test mein usne ~3 second
+  mein sahi jawab diya.
+
+**2. Product add nahi ho raha tha**
+- **Wajah:** aapka local MongoDB (`localhost:27017`) replica set nahi hai, aur listing save karne mein transaction
+  use hota tha, jo replica set ke bina fail hota hai.
+- **Fix:** listing save karne ke liye ab transaction ki zaroorat nahi:
+  - Photo atomic tareeke se listing se judti hai.
+  - Kuch fail ho to photo wapas chhoot jaati hai, aur aadha-adhoora save nahi hota.
+  - Bina replica set wale MongoDB par iska test bhi hai.
+- **Order accept ke liye abhi bhi replica set chahiye** (stock sahi rakhne ke liye; ye zaroori hai).
+  - Bina replica set ke ab saaf error aata hai: `NEEDS_REPLICA_SET`, aur app mein Hindi message.
+  - Server log mein bhi likha aata hai ki kya karna hai.
+
+**3. Ek aur sudhaar:** AI kabhi photo par galat shak kar sakta hai ("दूसरी फोटो लें").
+- Ab us screen par "फिर भी यही फोटो रखें" button bhi hai.
+- Seller ki boli hui matra aur bhav form mein pehle se bhare aate hain. Seller kabhi atakta nahi.
+
+**Meri galti jo maine pakdi:** Task 6 ke commit mein ek test file mein lint error tha. Mere lint check output ki
+sirf aakhri line dekh rahe the, isliye woh chhup gaya. Ab theek hai, aur ab main exit code se check karta hoon.

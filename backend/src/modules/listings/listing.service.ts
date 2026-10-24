@@ -1,4 +1,4 @@
-import mongoose, { isValidObjectId, Types } from 'mongoose';
+import { isValidObjectId, Types } from 'mongoose';
 import { productInfo, PRODUCTS, UNIT_NAMES, type Unit } from '../../config/marketCatalog.js';
 import { LISTING_RULES, PRICING_RULES } from '../../config/marketRules.js';
 import { AppError } from '../../errors/AppError.js';
@@ -36,7 +36,7 @@ export interface AssistedConsent {
 export async function draftListing(ai: AiProvider, user: AuthUser, photo: UploadedPhoto, sellerText: string): Promise<DraftResponse> {
   const result = await ai.draftListing({ image: photo.buffer, mimeType: photo.mimeType, sellerText: redactPersonalData(sellerText) });
   if (!result.photo_matches_product) {
-    return { status: 'retake', reason: result.photo_problem };
+    return { status: 'retake', reason: result.photo_problem, draft: toDraft(result) };
   }
   const photoId = await storePhoto(user.id, photo);
   return { status: 'ok', photoId, draft: toDraft(result) };
@@ -113,50 +113,55 @@ export async function createListing(
   const listingId = new Types.ObjectId();
   const photoIds = [...new Set(body.photoIds)].map((id) => new Types.ObjectId(id));
 
-  return mongoose.connection.transaction(async (session) => {
-    if (photoIds.length > 0) {
-      const attached = await ListingPhotoModel.updateMany(
-        { _id: { $in: photoIds }, ownerId: options.uploaderId, attached: false },
-        { $set: { attached: true, listingId } },
-        { session },
-      ).exec();
-      if (attached.modifiedCount !== photoIds.length) throw new AppError('INVALID_INPUT', 'Photo missing, expired or not yours');
+  // No transaction needed (works on any MongoDB): claim the photos atomically, then save the listing.
+  // If either step fails, exactly the photos claimed for this listing are released again.
+  if (photoIds.length > 0) {
+    const claimed = await ListingPhotoModel.updateMany(
+      { _id: { $in: photoIds }, ownerId: options.uploaderId, attached: false },
+      { $set: { attached: true, listingId } },
+    ).exec();
+    if (claimed.modifiedCount !== photoIds.length) {
+      await releasePhotos(listingId);
+      throw new AppError('INVALID_INPUT', 'Photo missing, expired or not yours');
     }
+  }
 
-    const [listing] = await ListingModel.create(
-      [
-        {
-          _id: listingId,
-          sellerId: seller._id,
-          sellerVerified: seller.seller?.status === 'verified',
-          category: body.category,
-          product: body.product,
-          title: body.title,
-          description: body.description,
-          qualityNotes: body.qualityNotes,
-          unit: body.unit,
-          pricePerUnitPaise: body.pricePerUnitPaise,
-          quantityAvailable: body.quantity,
-          minOrderQty: body.minOrderQty,
-          photoIds,
-          ...(product.food && body.fssaiNumber && { fssaiNumber: body.fssaiNumber }),
-          location: { type: 'Point', coordinates: [pickup.lon, pickup.lat] },
-          place: { district: pickup.district, tehsil: pickup.tehsil },
-          ...(options.assisted && {
-            assisted: {
-              coordinatorId: options.assisted.coordinatorId,
-              consentMethod: options.assisted.method,
-              consentNote: options.assisted.note,
-              recordedAt: new Date(),
-            },
-          }),
+  try {
+    return await ListingModel.create({
+      _id: listingId,
+      sellerId: seller._id,
+      sellerVerified: seller.seller?.status === 'verified',
+      category: body.category,
+      product: body.product,
+      title: body.title,
+      description: body.description,
+      qualityNotes: body.qualityNotes,
+      unit: body.unit,
+      pricePerUnitPaise: body.pricePerUnitPaise,
+      quantityAvailable: body.quantity,
+      minOrderQty: body.minOrderQty,
+      photoIds,
+      ...(product.food && body.fssaiNumber && { fssaiNumber: body.fssaiNumber }),
+      location: { type: 'Point', coordinates: [pickup.lon, pickup.lat] },
+      place: { district: pickup.district, tehsil: pickup.tehsil },
+      ...(options.assisted && {
+        assisted: {
+          coordinatorId: options.assisted.coordinatorId,
+          consentMethod: options.assisted.method,
+          consentNote: options.assisted.note,
+          recordedAt: new Date(),
         },
-      ],
-      { session },
-    );
-    if (!listing) throw new AppError('INTERNAL', 'Listing was not created');
-    return listing;
-  });
+      }),
+    });
+  } catch (error) {
+    await releasePhotos(listingId);
+    throw error;
+  }
+}
+
+/** Gives photos claimed for a listing that was not saved back to their uploader (they expire later). */
+async function releasePhotos(listingId: Types.ObjectId): Promise<void> {
+  await ListingPhotoModel.updateMany({ listingId }, { $set: { attached: false }, $unset: { listingId: 1 } }).exec();
 }
 
 /**

@@ -239,7 +239,7 @@ describe('commission ledger', () => {
     const res = await coordinator.agent.get('/api/admin/commission/export.csv').query({ month: '2026-11' });
     expect(res.headers['content-type']).toContain('text/csv');
     expect(res.headers['content-disposition']).toContain('agriai-commission-2026-11.csv');
-    const lines = res.text.replace(/^﻿/, '').trim().split('\r\n');
+    const lines = res.text.replace(/^\uFEFF/, '').trim().split('\r\n');
     expect(lines[0]).toBe('month,completed_at,order_ref,seller,village,seller_phone,order_total_inr,rate_percent,commission_inr,status,collected_at');
     expect(lines[1]).toContain(',सुनीता देवी,घांघू,');
     expect(lines[1]).toContain(',10000.00,3.00,300.00,due,');

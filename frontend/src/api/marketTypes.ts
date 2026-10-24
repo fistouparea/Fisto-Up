@@ -102,7 +102,10 @@ export interface ListingDraft {
   description: Bilingual;
 }
 
-export type DraftResponse = { status: 'ok'; photoId: string; draft: ListingDraft } | { status: 'retake'; reason: string };
+export type DraftResponse =
+  | { status: 'ok'; photoId: string; draft: ListingDraft }
+  /** Photo did not seem to match; `draft` still has what the seller said. */
+  | { status: 'retake'; reason: string; draft?: ListingDraft };
 
 export interface NewListing {
   category: Category;
