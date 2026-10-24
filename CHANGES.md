@@ -757,3 +757,13 @@ Aapne seller banke check kiya to do problem aayi. Dono ki asli wajah dhoondhkar 
 
 **Meri galti jo maine pakdi:** Task 6 ke commit mein ek test file mein lint error tha. Mere lint check output ki
 sirf aakhri line dekh rahe the, isliye woh chhup gaya. Ab theek hai, aur ab main exit code se check karta hoon.
+
+**4. Aapke computer par order chalane ke liye (aapke kehne par kiya):**
+- AgriAI ke liye alag MongoDB (replica set) Docker mein chalu kiya:
+  - container `agriai-mongo`, port `127.0.0.1:27018`, volume `agriai-mongo-data`
+  - computer restart par apne-aap chalta hai
+- Purana `agriai` data (khaate, khet, photos) 27017 se sirf padhkar copy kiya. Dono jagah ginti same hai.
+  `FistoUp`, `DM-platform`, `sportDB` ko haath nahi lagaya.
+- `backend/.env` mein `MONGO_URI=mongodb://localhost:27018/agriai?directConnection=true` (purani line comment mein hai).
+- **Check kiya:** order स्वीकार → stock 10 se 6, poora order → commission ₹300 (3%).
+- Wapas purane par jaana ho to `.env` ki purani line wapas kar dein. Container band karna ho to `docker stop agriai-mongo`.
