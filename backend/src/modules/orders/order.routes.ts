@@ -1,5 +1,6 @@
 import express, { Router, type Response } from 'express';
 import { parseOrThrow } from '../../utils/validation.js';
+import { audit } from '../audit/audit.service.js';
 import { ORDER_RULES } from '../../config/marketRules.js';
 import { createUserRateLimit } from '../../middleware/userRateLimit.js';
 import { currentUser, requireRole, requireUser } from '../auth/auth.middleware.js';
@@ -34,7 +35,9 @@ export function createOrderRouter(orders: OrderService): Router {
   router.post('/market/orders/:id/status', requireUser, json, async (req, res: OrderResponse) => {
     const user = currentUser(req);
     const { to, paidVia } = parseOrThrow(transitionBodySchema, req.body);
-    res.json({ order: await toOrderView(await orders.transition(user, String(req.params.id), to, paidVia), user) });
+    const order = await orders.transition(user, String(req.params.id), to, paidVia);
+    if (user.role === 'coordinator') await audit(req, 'order.transition', { type: 'order', id: order._id.toString() }, { ref: order.ref, to, paidVia });
+    res.json({ order: await toOrderView(order, user) });
   });
 
   router.post('/market/orders/:id/rating', requireRole('buyer'), json, async (req, res: OrderResponse) => {

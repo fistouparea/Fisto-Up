@@ -11,7 +11,7 @@ describe('marketplace config', () => {
   });
 
   it('defaults to 3% commission and a secure cookie in production', () => {
-    const config = marketConfig(loadEnv({ ...base, MONGO_URI: 'mongodb://x', JWT_SECRET: secret, NODE_ENV: 'production' }));
+    const config = marketConfig(loadEnv({ ...base, MONGO_URI: 'mongodb://x', JWT_SECRET: secret, NODE_ENV: 'production', CORS_ORIGIN: 'https://agriai.example.com' }));
     expect(config).toEqual({ jwtSecret: secret, cookieSecure: true, commissionBps: 300 });
   });
 

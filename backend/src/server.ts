@@ -1,5 +1,5 @@
 import { createApp } from './app.js';
-import { loadEnv, marketConfig, vapidConfig } from './config/env.js';
+import { loadEnv, marketConfig, vapidConfig, type Env } from './config/env.js';
 import { connectMongo } from './db/mongo.js';
 import { startNotificationScheduler } from './jobs/scheduler.js';
 import { createAiProvider } from './services/ai/createAiProvider.js';
@@ -10,7 +10,7 @@ import { MongoPushSubscriptionRepository } from './services/push/mongoPushSubscr
 import { WebPushSender } from './services/push/pushSender.js';
 import { OpenMeteoProvider } from './services/weather/openMeteoProvider.js';
 
-const env = loadEnv();
+const env = loadEnvOrExit();
 const vapid = vapidConfig(env);
 const market = marketConfig(env);
 
@@ -50,3 +50,13 @@ if (!market) {
 app.listen(env.PORT, () => {
   console.log(`AgriAI backend running on http://localhost:${env.PORT}`);
 });
+
+/** Refuses to start with missing or invalid settings: prints what is wrong (never the values) and exits. */
+function loadEnvOrExit(): Env {
+  try {
+    return loadEnv();
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  }
+}

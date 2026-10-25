@@ -1,18 +1,7 @@
 import express, { Router } from 'express';
-import { rateLimit } from 'express-rate-limit';
 import { AUTH_RULES } from '../../config/marketRules.js';
-import { AppError } from '../../errors/AppError.js';
+import { createIpRateLimit as limiter } from '../../middleware/rateLimit.js';
 import { createAuthController, type AuthControllerDeps } from './auth.controller.js';
-
-function limiter({ windowMs, limit }: { windowMs: number; limit: number }) {
-  return rateLimit({
-    windowMs,
-    limit,
-    standardHeaders: 'draft-8',
-    legacyHeaders: false,
-    handler: (_req, _res, next) => next(new AppError('RATE_LIMITED')),
-  });
-}
 
 export function createAuthRouter(deps: AuthControllerDeps): Router {
   const router = Router();

@@ -1,6 +1,7 @@
 import express, { Router, type Response } from 'express';
 import { z } from 'zod';
 import { parseOrThrow } from '../../utils/validation.js';
+import { audit, auditQuerySchema, listAudit, type AuditEntryView } from '../audit/audit.service.js';
 import { currentUser, requireRole } from '../auth/auth.middleware.js';
 import type { AuthService } from '../auth/auth.service.js';
 import { ledgerCsv, markCollected, monthlyTotals, sellerDues, type MonthTotal, type SellerDues } from '../commission/ledger.service.js';
@@ -53,14 +54,20 @@ export function createAdminRouter({ auth, orders, commissionBps }: { auth: AuthS
   });
   router.post('/admin/sellers', json, async (req, res: Response<{ seller: AdminSellerView }>) => {
     const body = parseOrThrow(createSellerBodySchema, req.body);
-    res.status(201).json({ seller: await createSellerForSomeone(auth, body, currentUser(req).id) });
+    const seller = await createSellerForSomeone(auth, body, currentUser(req).id);
+    await audit(req, 'seller.create', { type: 'user', id: seller.id }, { status: seller.status });
+    res.status(201).json({ seller });
   });
   router.post('/admin/sellers/:id/verify', json, async (req, res: Response<{ seller: AdminSellerView }>) => {
-    res.json({ seller: toAdminSeller(await setSellerStatus(id(req.params.id), { status: 'verified' }, currentUser(req).id)) });
+    const seller = toAdminSeller(await setSellerStatus(id(req.params.id), { status: 'verified' }, currentUser(req).id));
+    await audit(req, 'seller.verify', { type: 'user', id: seller.id });
+    res.json({ seller });
   });
   router.post('/admin/sellers/:id/reject', json, async (req, res: Response<{ seller: AdminSellerView }>) => {
     const { reason } = parseOrThrow(rejectBodySchema, req.body);
-    res.json({ seller: toAdminSeller(await setSellerStatus(id(req.params.id), { status: 'rejected', reason }, currentUser(req).id)) });
+    const seller = toAdminSeller(await setSellerStatus(id(req.params.id), { status: 'rejected', reason }, currentUser(req).id));
+    await audit(req, 'seller.reject', { type: 'user', id: seller.id }, { reason });
+    res.json({ seller });
   });
 
   // --- Reports and listing moderation ---
@@ -70,15 +77,18 @@ export function createAdminRouter({ auth, orders, commissionBps }: { auth: AuthS
   router.post('/admin/reports/:id/resolve', json, async (req, res: Response<{ ok: true }>) => {
     const { resolution } = parseOrThrow(resolveBodySchema, req.body ?? {});
     await resolveReport(id(req.params.id), currentUser(req).id, resolution);
+    await audit(req, 'report.resolve', { type: 'report', id: id(req.params.id) }, { resolution });
     res.json({ ok: true });
   });
   router.post('/admin/listings/:id/hide', json, async (req, res: Response<{ ok: true }>) => {
     const { reason } = parseOrThrow(hideBodySchema, req.body);
     await setListingHidden(id(req.params.id), true, reason);
+    await audit(req, 'listing.hide', { type: 'listing', id: id(req.params.id) }, { reason });
     res.json({ ok: true });
   });
   router.post('/admin/listings/:id/unhide', async (req, res: Response<{ ok: true }>) => {
     await setListingHidden(id(req.params.id), false);
+    await audit(req, 'listing.unhide', { type: 'listing', id: id(req.params.id) });
     res.json({ ok: true });
   });
   router.get('/admin/listings/hidden', async (_req, res: Response<{ items: SellerListingView[] }>) => {
@@ -91,6 +101,7 @@ export function createAdminRouter({ auth, orders, commissionBps }: { auth: AuthS
     const { sellerId, consent, ...listing } = parseOrThrow(assistedListingBodySchema, req.body);
     const coordinatorId = currentUser(req).id;
     const created = await createListing(sellerId, listing, { uploaderId: coordinatorId, assisted: { coordinatorId, ...consent } });
+    await audit(req, 'listing.createAssisted', { type: 'listing', id: created._id.toString() }, { sellerId, consentMethod: consent.method });
     res.status(201).json({ listing: toSellerListingView(created) });
   });
 
@@ -103,7 +114,10 @@ export function createAdminRouter({ auth, orders, commissionBps }: { auth: AuthS
   });
   router.put('/admin/orders/:id/delivery', json, async (req, res: Response<{ order: OrderView }>) => {
     const person = parseOrThrow(deliveryPersonBodySchema, req.body);
-    res.json({ order: await toOrderView(await orders.assignDeliveryPerson(id(req.params.id), person), currentUser(req)) });
+    const order = await orders.assignDeliveryPerson(id(req.params.id), person);
+    // The delivery person's phone stays out of the log (it is on the order itself).
+    await audit(req, 'order.assignDelivery', { type: 'order', id: order._id.toString() }, { ref: order.ref });
+    res.json({ order: await toOrderView(order, currentUser(req)) });
   });
 
   // --- Commission ledger ---
@@ -116,15 +130,24 @@ export function createAdminRouter({ auth, orders, commissionBps }: { auth: AuthS
   });
   router.post('/admin/commission/collect', json, async (req, res: Response<{ entries: number; amountPaise: number }>) => {
     const { sellerId, month } = parseOrThrow(collectBodySchema, req.body);
-    res.json(await markCollected(sellerId, currentUser(req).id, month));
+    const collected = await markCollected(sellerId, currentUser(req).id, month);
+    await audit(req, 'commission.collect', { type: 'user', id: sellerId }, { month: month ?? 'all', ...collected });
+    res.json(collected);
   });
   router.get('/admin/commission/export.csv', async (req, res) => {
     const { month } = parseOrThrow(monthQuerySchema, req.query);
+    const csv = await ledgerCsv(month);
+    await audit(req, 'commission.export', { type: 'commission', id: month ?? 'all' });
     res
       .type('text/csv; charset=utf-8')
       .set('Content-Disposition', `attachment; filename="agriai-commission-${month ?? 'all'}.csv"`)
       .set('Cache-Control', 'no-store')
-      .send(await ledgerCsv(month));
+      .send(csv);
+  });
+
+  // --- Audit log (read-only) ---
+  router.get('/admin/audit', async (req, res: Response<{ items: AuditEntryView[]; hasMore: boolean }>) => {
+    res.json(await listAudit(parseOrThrow(auditQuerySchema, req.query)));
   });
 
   return router;

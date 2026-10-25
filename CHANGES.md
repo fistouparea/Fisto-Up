@@ -767,3 +767,45 @@ sirf aakhri line dekh rahe the, isliye woh chhup gaya. Ab theek hai, aur ab main
 - `backend/.env` mein `MONGO_URI=mongodb://localhost:27018/agriai?directConnection=true` (purani line comment mein hai).
 - **Check kiya:** order स्वीकार → stock 10 se 6, poora order → commission ₹300 (3%).
 - Wapas purane par jaana ho to `.env` ki purani line wapas kar dein. Container band karna ho to `docker stop agriai-mongo`.
+
+# Phase 4 – Production + Pilot
+
+(Ye section har task ke saath bhar raha hai. Poora saaransh, manual steps aur pilot checklist sabse neeche hai.)
+
+## Task 1 – Security hardening
+
+**Kya bana:**
+- **helmet + CSP:** API par sabse sakht CSP (`default-src 'none'`, `frame-ancestors 'none'`), kyunki API sirf JSON,
+  CSV aur photo deta hai. Farmer app (nginx) ka apna CSP `frontend/nginx/security-headers.conf` mein hai:
+  sirf hamari scripts (koi inline script ya eval nahi), photos sirf API/Cloudinary/phone preview se, aur
+  Sentry ke liye connect. Saath mein `X-Frame-Options`, `Permissions-Policy` (camera/mic/GPS sirf hamari site) wagairah.
+- **CORS:** sirf `CORS_ORIGIN` wale origin. Har entry ek saaf origin honi chahiye (`https://app.example.com`, bina
+  path ke, `*` mana). Production mein `CORS_ORIGIN` dena zaroori hai.
+- **Cookie:** pehle se httpOnly + SameSite=Strict + production mein Secure tha. Wahi rakha.
+- **Request size:** har route ki apni JSON limit pehle se thi (4–32 KB), photo 5 MB. Test joda.
+- **Rate limits (`config/securityRules.ts`):** per IP: saari API 300/min, likhne wali requests 120/min, AI 30/min.
+  Login/registration aur per-account order/report limit pehle se the. PIN lockout (5 galat → 15 min) pehle se tha.
+- **Env check:** `NODE_ENV` sirf `development/production/test`. Production mein `CORS_ORIGIN`, `MONGO_URI`,
+  `JWT_SECRET` zaroori. Galat config par server saaf message (value nahi) dikhakar band ho jaata hai.
+- **Audit log** (`modules/audit/`, collection `audit_log`): coordinator ka har kaam (seller banaya/verify/reject,
+  listing chhupayi/dikhayi/badli, assisted listing, report band, order step, delivery wala, commission vasool,
+  CSV export) — kisne, kya, kab, kis record par. Phone number aur PIN kabhi nahi. Model update/delete mana karta hai
+  (append-only). `GET /api/admin/audit` (sirf coordinator).
+- **Access control tests:** `tests/market/accessControl.api.test.ts` har protected route par check karta hai:
+  guest → 401, galat role → 403. Saath mein: buyer doosre buyer ka order na dekh sake na badal sake, seller doosre
+  seller ka order/listing nahi, notifications sirf apne, public listing mein phone/UPI kabhi nahi, koi khud
+  coordinator nahi ban sakta.
+
+**npm audit:** backend 0. Frontend mein 2 (fast-uri moderate, serialize-javascript low; dono sirf build tools mein)
+→ `npm audit fix` se theek, ab 0.
+
+**Secret scan:** poori git history (`git log --all -p`) mein Gemini key, private key, Mongo password wala URI,
+JWT/VAPID secret, AWS/GitHub token ke patterns dhoondhe. **Kuch nahi mila.** `backend/.env` kabhi commit nahi hua
+(`.gitignore` mein hai). Aapke computer ki `backend/.env` mein asli keys hain; production ke liye **nayi keys**
+banayein (local wali dobara use na karein).
+
+**Decisions:**
+- Rate limit memory mein hai (ek backend instance ke liye sahi). 2+ instance chalane ho to Redis store chahiye (DEPLOY.md).
+- Audit likhna fail ho to coordinator ka kaam undo nahi hota; error log hota hai (Sentry tak jaata hai).
+- Seller ka apna edit ya buyer ka order audit mein nahi jaata (woh coordinator ka kaam nahi). Order ki apni `history` pehle se hai.
+- Purane test `marketConfig.test.ts` mein production config ke saath `CORS_ORIGIN` joda (naya niyam); test kamzor nahi kiya.

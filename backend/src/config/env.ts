@@ -44,19 +44,48 @@ const envSchema = z.object({
   JWT_SECRET: optional(z.string().trim().min(32, 'JWT_SECRET must be at least 32 characters')),
   /** Send the login cookie only over HTTPS. Defaults to on when NODE_ENV=production. */
   COOKIE_SECURE: optional(z.enum(['true', 'false']).transform((value) => value === 'true')),
-  NODE_ENV: optional(z.string().trim()),
+  NODE_ENV: optional(z.enum(['development', 'production', 'test'])).default('development'),
   /** Our commission on completed orders, in percent (2–5). */
   COMMISSION_PERCENT: optional(
     z.coerce.number().min(COMMISSION_RULES.minPercent).max(COMMISSION_RULES.maxPercent),
   ),
-  CORS_ORIGIN: z
-    .string()
-    .min(1)
-    .default('http://localhost:5173')
-    .transform((value) => value.split(',').map((origin) => origin.trim())),
+  /**
+   * Frontend URL(s) allowed by CORS, comma-separated. Each must be a plain origin (`https://app.example.com`,
+   * no path, no `*`). Required in production; development defaults to the Vite dev server.
+   */
+  CORS_ORIGIN: optional(
+    z
+      .string()
+      .transform((value) => value.split(',').map((origin) => origin.trim()).filter(Boolean))
+      .pipe(z.array(z.string().refine(isPlainOrigin, 'each entry must be an origin like https://app.example.com')).min(1)),
+  ),
 });
 
-export type Env = z.infer<typeof envSchema>;
+const DEV_CORS_ORIGIN = 'http://localhost:5173';
+
+function isPlainOrigin(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return (url.protocol === 'https:' || url.protocol === 'http:') && url.origin === value;
+  } catch {
+    return false;
+  }
+}
+
+/** Settings that are optional in development but must be explicit in production. */
+const productionChecks = envSchema.superRefine((env, ctx) => {
+  if (env.NODE_ENV !== 'production') return;
+  const require = (key: keyof typeof env, why: string) => {
+    if (env[key] === undefined) ctx.addIssue({ code: 'custom', path: [key], message: `required in production (${why})` });
+  };
+  require('CORS_ORIGIN', 'the frontend URL, e.g. https://agriai.example.com');
+  require('MONGO_URI', 'history, farm profiles, marketplace and consent need the database');
+  require('JWT_SECRET', 'the marketplace and pilot logins need it');
+});
+
+const envWithDefaults = productionChecks.transform((env) => ({ ...env, CORS_ORIGIN: env.CORS_ORIGIN ?? [DEV_CORS_ORIGIN] }));
+
+export type Env = z.infer<typeof envWithDefaults>;
 
 export interface VapidConfig {
   publicKey: string;
@@ -91,7 +120,7 @@ export function marketConfig(env: Env): MarketConfig | null {
 
 /** Reads and validates environment variables. Throws on startup if anything is missing. */
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
-  const result = envSchema.safeParse(source);
+  const result = envWithDefaults.safeParse(source);
   if (!result.success) {
     const problems = result.error.issues.map((issue) => `  - ${issue.path.join('.')}: ${issue.message}`);
     throw new Error(`Invalid environment configuration:\n${problems.join('\n')}`);

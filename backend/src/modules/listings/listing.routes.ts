@@ -5,6 +5,7 @@ import { detectImageType } from '../../middleware/validateImage.js';
 import type { AiProvider } from '../../services/ai/aiProvider.js';
 import { MAX_IMAGE_BYTES } from '../../types/diagnosis.js';
 import { parseOrThrow } from '../../utils/validation.js';
+import { audit } from '../audit/audit.service.js';
 import { currentUser, requireRole } from '../auth/auth.middleware.js';
 import {
   createListing,
@@ -89,7 +90,10 @@ export function createListingRouter({ ai, aiRateLimit }: ListingRouterDeps): Rou
 
   router.patch('/market/listings/:id', canList, json, async (req, res: Response<{ listing: SellerListingView }>) => {
     const body = parseOrThrow(updateListingBodySchema, req.body);
-    res.json({ listing: toSellerListingView(await updateListing(currentUser(req), String(req.params.id), body)) });
+    const user = currentUser(req);
+    const listing = await updateListing(user, String(req.params.id), body);
+    if (user.role === 'coordinator') await audit(req, 'listing.update', { type: 'listing', id: listing._id.toString() }, { ...body });
+    res.json({ listing: toSellerListingView(listing) });
   });
 
   router.get('/market/my/listings', requireRole('seller'), async (req, res: Response<{ items: SellerListingView[] }>) => {

@@ -2,7 +2,8 @@ import cors from 'cors';
 import express, { type Express } from 'express';
 import helmet from 'helmet';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
-import { createAiRateLimit } from './middleware/rateLimit.js';
+import { createAiRateLimit, createApiRateLimits } from './middleware/rateLimit.js';
+import { API_CSP_DIRECTIVES } from './config/securityRules.js';
 import { createChatRouter } from './routes/chat.routes.js';
 import { createDiagnoseRouter } from './routes/diagnose.routes.js';
 import { createHistoryRouter } from './routes/history.routes.js';
@@ -50,9 +51,11 @@ export function createApp({
 
   app.disable('x-powered-by');
   app.set('trust proxy', trustProxyHops);
-  app.use(helmet());
-  // credentials: the marketplace login cookie, when the API runs on another domain (VITE_API_BASE_URL).
-  app.use(cors({ origin: corsOrigins, methods: ['GET', 'POST', 'PUT', 'PATCH'], credentials: true }));
+  app.use(helmet({ contentSecurityPolicy: { useDefaults: false, directives: API_CSP_DIRECTIVES } }));
+  // Only our own frontend origin(s) from CORS_ORIGIN. credentials: the login cookie, when the API runs on
+  // another domain (VITE_API_BASE_URL). Other origins get no CORS headers, so browsers block their reads.
+  app.use(cors({ origin: corsOrigins, methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'], credentials: true, maxAge: 600 }));
+  app.use('/api', createApiRateLimits());
 
   app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok' });
