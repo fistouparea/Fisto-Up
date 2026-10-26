@@ -22,6 +22,8 @@ export const FEATURE_FLAGS = {
   equipment: { default: 'pilot', description: 'किराए पर मशीन (ट्रैक्टर, थ्रेशर, ...)' },
   labour: { default: 'pilot', description: 'मज़दूर: काम चाहिए / मज़दूर चाहिए' },
   livestock: { default: 'pilot', description: 'पशु (गाय, बकरी, ऊँट): संयोजक की मंज़ूरी के बाद' },
+  mandiPool: { default: 'pilot', description: 'साथ में मंडी चलें (एक गाड़ी में मंडी)' },
+  deliveryTracking: { default: 'pilot', description: 'डिलीवरी ट्रैकिंग: डिलीवरी वाले का लिंक, खरीदार-विक्रेता को टाइमलाइन' },
   aiKit: { default: 'pilot', description: 'जाँच के बाद "ज़रूरी सामान" और खाद-बीज-दवाई की साझेदार दुकानें' },
 } as const satisfies Record<string, { default: FlagState; description: string }>;
 

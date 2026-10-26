@@ -13,6 +13,9 @@ import type { CreateListingBody } from '../modules/listings/listing.types.js';
 import { MarketNotifier } from '../modules/notifications/notifier.js';
 import { OrderService } from '../modules/orders/order.service.js';
 import { setSellerStatus } from '../modules/sellers/seller.service.js';
+import { ServiceBookingModel, ServiceDayLockModel, ServiceListingModel } from '../modules/services/service.model.js';
+import { ServiceEngine } from '../modules/services/service.service.js';
+import { addDays, todayInIndia } from '../utils/dates.js';
 
 export interface SeedContext {
   auth: AuthService;
@@ -34,6 +37,63 @@ const DEALER_LISTINGS: Omit<CreateListingBody, 'photoIds' | 'minOrderQty' | 'des
 
 export async function seedPhase5(ctx: SeedContext): Promise<void> {
   await seedInputDealer(ctx);
+  await seedEquipment(ctx);
+  await seedLabour(ctx);
+  await seedLivestock(ctx);
+}
+
+/** Removes Phase 5 demo records of the demo accounts (called before seeding again). */
+export async function removePhase5Demo(userIds: Types.ObjectId[]): Promise<void> {
+  const listings = await ServiceListingModel.find({ ownerId: { $in: userIds } }, { _id: 1 }).lean().exec();
+  await Promise.all([
+    ServiceDayLockModel.deleteMany({ listingId: { $in: listings.map((listing) => listing._id) } }).exec(),
+    ServiceBookingModel.deleteMany({ $or: [{ ownerId: { $in: userIds } }, { requesterId: { $in: userIds } }] }).exec(),
+    ServiceListingModel.deleteMany({ ownerId: { $in: userIds } }).exec(),
+  ]);
+}
+
+const engine = new ServiceEngine();
+const asUser = (id: Types.ObjectId, name: string): AuthUser => ({ id: id.toString(), role: 'seller', name });
+/** The next `count` days from `offset` days after today (India), for demo calendars. */
+const nextDays = (offset: number, count: number) => Array.from({ length: count }, (_, index) => addDays(todayInIndia(), offset + index));
+const CHURU = { district: 'चूरू', tehsil: 'चूरू', lat: 28.3, lon: 74.95 };
+
+/** Task 6: two machines of रमेश, one booking accepted (days locked) and one waiting for an answer. */
+async function seedEquipment({ sellers, family, hotel }: SeedContext): Promise<void> {
+  const rameshId = sellers.get('ramesh');
+  if (!rameshId) return;
+  const ramesh = asUser(rameshId, 'रमेश जाट');
+  const tractor = await engine.create(ramesh, {
+    kind: 'equipment',
+    side: 'offer',
+    typeId: 'tractor',
+    title: 'महिंद्रा 575 ट्रैक्टर, ड्राइवर के साथ',
+    description: 'जुताई और ट्रॉली के लिए। डीज़ल अलग।',
+    photoIds: [],
+    village: 'घांघू',
+    place: CHURU,
+    pricePaise: 800_00,
+    priceUnit: 'hour',
+    availableDates: nextDays(1, 10),
+    details: { withOperator: true, horsePower: 45 },
+  });
+  await engine.create(ramesh, {
+    kind: 'equipment',
+    side: 'offer',
+    typeId: 'thresher',
+    title: 'बाजरा-ग्वार थ्रेशर',
+    description: '',
+    photoIds: [],
+    village: 'घांघू',
+    place: CHURU,
+    pricePaise: 1500_00,
+    priceUnit: 'bigha',
+    availableDates: nextDays(2, 6),
+    details: { withOperator: true },
+  });
+  const accepted = await engine.request(family, tractor._id.toString(), { dates: nextDays(1, 1), note: 'दो घंटे जुताई (डेमो)' });
+  await engine.transition(ramesh, accepted._id.toString(), 'accepted');
+  await engine.request(hotel, tractor._id.toString(), { dates: nextDays(3, 2) });
 }
 
 /** Task 1: a licensed input dealer (licence checked by the coordinator) and a completed kit referral order. */
@@ -70,4 +130,74 @@ async function seedInputDealer({ auth, pin, coordinator, family }: SeedContext):
   await orders.transition(family, order._id.toString(), 'delivered');
   await orders.transition(dealerUser, order._id.toString(), 'paid');
   await orders.transition(family, order._id.toString(), 'completed');
+}
+
+/** Task 7: a worker (18+ confirmed) and a farmer's work need that match on कटाई and the same days. */
+async function seedLabour({ auth, pin, family }: SeedContext): Promise<void> {
+  const worker = await auth.createAccount({ phone: '9000000203', pin, name: 'भंवरलाल (डेमो मज़दूर)', role: 'buyer' });
+  const workerUser: AuthUser = { id: worker._id.toString(), role: 'buyer', name: worker.name };
+  await engine.create(workerUser, {
+    kind: 'labour',
+    side: 'offer',
+    skills: ['katai', 'nirai', 'thresher_kaam'],
+    title: 'कटाई, निराई और थ्रेशर का काम',
+    description: '10 साल का अनुभव। अपने गाँव से 20 किमी तक आ सकता हूँ।',
+    photoIds: [],
+    village: 'बीनासर',
+    place: { district: 'चूरू', tehsil: 'सरदारशहर', lat: 28.44, lon: 74.49 },
+    pricePaise: 500_00,
+    priceUnit: 'day',
+    availableDates: nextDays(1, 14),
+    details: { ageConfirmed18: true },
+  });
+  await engine.create(family, {
+    kind: 'labour',
+    side: 'need',
+    skills: ['katai'],
+    title: 'बाजरे की कटाई के लिए 3 मज़दूर',
+    description: '5 बीघा खेत, खाना हमारी तरफ़ से।',
+    photoIds: [],
+    village: 'रतनगढ़',
+    place: { district: 'चूरू', tehsil: 'रतनगढ़', lat: 28.08, lon: 74.62 },
+    pricePaise: 550_00,
+    priceUnit: 'day',
+    availableDates: nextDays(4, 3),
+    details: { workersNeeded: 3 },
+  });
+}
+
+/** Task 8: one animal approved by the coordinator (public) and one waiting for approval. */
+async function seedLivestock({ sellers, coordinator }: SeedContext): Promise<void> {
+  const mohanId = sellers.get('mohan');
+  const kamlaId = sellers.get('kamla');
+  if (!mohanId || !kamlaId) return;
+  const cow = await engine.create(asUser(mohanId, 'मोहन लाल'), {
+    kind: 'livestock',
+    side: 'offer',
+    typeId: 'cow',
+    title: 'राठी गाय, रोज़ 8 लीटर दूध',
+    description: 'दूसरा ब्यांत, शांत स्वभाव।',
+    photoIds: [],
+    village: 'लोहा',
+    place: { district: 'चूरू', tehsil: 'रतनगढ़', lat: 28.08, lon: 74.62 },
+    pricePaise: 45_000_00,
+    priceUnit: 'animal',
+    availableDates: [],
+    details: { breed: 'राठी', ageYears: 5, milkLitresPerDay: 8, vaccinations: 'खुरपका-मुंहपका (FMD), गलघोंटू – डेमो', purpose: 'dairy', count: 1 },
+  });
+  await engine.review(cow._id.toString(), { approve: true }, coordinator.id);
+  await engine.create(asUser(kamlaId, 'कमला मेघवाल'), {
+    kind: 'livestock',
+    side: 'offer',
+    typeId: 'goat',
+    title: 'सिरोही बकरियाँ (2)',
+    description: '',
+    photoIds: [],
+    village: 'छापर',
+    place: { district: 'चूरू', tehsil: 'सुजानगढ़', lat: 27.7, lon: 74.47 },
+    pricePaise: 9_000_00,
+    priceUnit: 'animal',
+    availableDates: [],
+    details: { breed: 'सिरोही', ageYears: 1.5, vaccinations: 'PPR – डेमो', purpose: 'breeding', count: 2 },
+  });
 }

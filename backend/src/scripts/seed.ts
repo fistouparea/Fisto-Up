@@ -28,7 +28,7 @@ import type { OrderStatus } from '../modules/orders/orderStateMachine.js';
 import { ReportModel } from '../modules/reports/report.model.js';
 import { setSellerStatus } from '../modules/sellers/seller.service.js';
 import { connectFromEnv } from './cli.js';
-import { seedPhase5 } from './seedPhase5.js';
+import { removePhase5Demo, seedPhase5 } from './seedPhase5.js';
 
 const DEMO_PIN = '2580';
 const ASSETS = path.resolve(process.cwd(), 'seed-assets');
@@ -90,7 +90,7 @@ async function main(): Promise<void> {
     await removeOldDemo();
     await createDemoData();
     console.log('Demo data created. Every demo PIN is 2580.');
-    console.log('  Coordinator: 9000000001 · Sellers: 9000000101–105 (105 is pending), 9000000106 input dealer · Buyers: 9000000201 (hotel), 9000000202 (household)');
+    console.log('  Coordinator: 9000000001 · Sellers: 9000000101–105 (105 is pending), 9000000106 input dealer · Buyers: 9000000201 (hotel), 9000000202 (household), 9000000203 (worker)');
   } finally {
     await mongoose.disconnect();
   }
@@ -202,6 +202,7 @@ async function removeOldDemo(): Promise<void> {
     CommissionEntryModel.deleteMany({ demo: true }).exec(),
     ReportModel.deleteMany({ demo: true }).exec(),
     MarketNotificationModel.deleteMany({ userId: { $in: ids } }).exec(),
+    removePhase5Demo(ids),
   ]);
   await UserModel.deleteMany({ _id: { $in: ids } }).exec();
 }

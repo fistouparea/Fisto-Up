@@ -26,6 +26,7 @@ import { createVoiceRouter } from './voice/voice.routes.js';
 import { createSchemeRouter } from './schemes/scheme.routes.js';
 import { createServiceRouter } from './services/service.routes.js';
 import { serviceDeviceData } from './services/service.privacy.js';
+import { createMandiTripRouter } from './mandiPool/mandiTrip.routes.js';
 import { helpDeviceData } from './help/help.service.js';
 import { feedbackDeviceData } from './feedback/feedback.service.js';
 import { eventDeviceData } from './metrics/events.js';
@@ -45,7 +46,7 @@ export interface MarketDependencies {
 }
 
 /** Path prefixes that belong to the marketplace (accounts, listings, orders, admin). */
-export const MARKET_PATHS = ['/auth', '/account', '/market', '/admin', '/voice', '/schemes', '/services'];
+export const MARKET_PATHS = ['/auth', '/account', '/market', '/admin', '/voice', '/schemes', '/services', '/mandi-trips'];
 
 /** Everything behind login: auth, profiles, listings, orders, coordinator panel. */
 /** Shared with the advisor: the app's AI provider and its per-IP AI rate limit. */
@@ -75,6 +76,7 @@ export function createMarketRouter(
   router.use(createVoiceRouter({ ai, aiRateLimit, flags }));
   router.use(createSchemeRouter(flags));
   router.use(createServiceRouter({ flags, photos: photoStorage, now }));
+  router.use(createMandiTripRouter({ flags, now }));
 
   const orders = new OrderService({ notifier: new MarketNotifier(pushSender), commissionBps: config.commissionBps, now });
   router.use(createOrderRouter(orders));

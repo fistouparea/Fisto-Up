@@ -24,10 +24,13 @@ export const AUDIT_ACTIONS = [
   'service.approve',
   'service.reject',
   'service.booking',
+  'mandiTrip.create',
+  'mandiTrip.status',
+  'order.deliveryLink',
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
 
-export const AUDIT_TARGETS = ['user', 'listing', 'report', 'order', 'commission', 'invite', 'flag', 'help', 'metrics', 'scheme', 'service'] as const;
+export const AUDIT_TARGETS = ['user', 'listing', 'report', 'order', 'commission', 'invite', 'flag', 'help', 'metrics', 'scheme', 'service', 'mandiTrip'] as const;
 export type AuditTarget = (typeof AUDIT_TARGETS)[number];
 
 /**
