@@ -4,6 +4,7 @@ import type { HistoryRepository } from '../../services/history/historyRepository
 import { deviceIdSchema } from '../../types/history.js';
 import type { DeviceDataSource } from '../privacy/privacy.service.js';
 import { DiagnosisFeedbackModel } from './feedback.model.js';
+import { track } from '../metrics/events.js';
 
 export const FEEDBACK_COMMENT_MAX = 500;
 
@@ -32,6 +33,7 @@ export async function saveFeedback(history: HistoryRepository, diagnosisId: stri
     },
     { upsert: true },
   ).exec();
+  track('feedback_given', { deviceId: body.deviceId, props: { crop: record.crop, helpful: body.helpful } });
 }
 
 /** For "मेरा डेटा": feedback belongs to the phone and goes with it. */

@@ -7,6 +7,7 @@ import { phoneSchema } from '../auth/auth.types.js';
 import { UserModel } from '../auth/user.model.js';
 import type { DeviceDataSource } from '../privacy/privacy.service.js';
 import { HELP_CATEGORIES, HelpRequestModel, type HelpCategory } from './help.model.js';
+import { track } from '../metrics/events.js';
 
 export const HELP_RULES = {
   messageMax: 1000,
@@ -23,6 +24,7 @@ export const helpBodySchema = z.object({
 
 export async function createHelpRequest(body: z.infer<typeof helpBodySchema>, user: AuthUser | undefined): Promise<string> {
   const saved = await HelpRequestModel.create({ ...body, userId: user?.id, userRole: user?.role });
+  track('help_request', { props: { category: body.category } });
   return saved._id.toString();
 }
 

@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
-import { csvCell } from '../../src/modules/commission/ledger.service.js';
+import { csvCell } from '../../src/utils/csv.js';
 import { CommissionEntryModel } from '../../src/modules/commission/commission.model.js';
 import { ListingModel, ListingPhotoModel } from '../../src/modules/listings/listing.model.js';
 import { JPEG_BYTES } from '../helpers.js';

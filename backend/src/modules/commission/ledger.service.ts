@@ -2,6 +2,7 @@ import mongoose, { Types } from 'mongoose';
 import { AppError } from '../../errors/AppError.js';
 import { UserModel } from '../auth/user.model.js';
 import { CommissionEntryModel } from './commission.model.js';
+import { toCsv } from '../../utils/csv.js';
 
 export interface MonthTotal {
   month: string;
@@ -118,11 +119,5 @@ export async function ledgerCsv(month?: string): Promise<string> {
       entry.collectedAt?.toISOString() ?? '',
     ];
   });
-  // BOM so Excel reads Hindi names correctly.
-  return `\uFEFF${[header, ...lines].map((cells) => cells.map(csvCell).join(',')).join('\r\n')}\r\n`;
-}
-
-export function csvCell(value: string): string {
-  const safe = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
-  return /[",\r\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
+  return toCsv(header, lines);
 }

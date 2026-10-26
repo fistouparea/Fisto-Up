@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
-export const ADMIN_TABS = ['overview', 'sellers', 'orders', 'reports', 'help', 'ledger', 'newListing', 'invites', 'flags', 'audit'] as const;
+export const ADMIN_TABS = ['overview', 'pilot', 'sellers', 'orders', 'reports', 'help', 'ledger', 'newListing', 'invites', 'flags', 'audit'] as const;
 export type AdminTab = (typeof ADMIN_TABS)[number];
 
 export type Route =

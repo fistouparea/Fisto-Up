@@ -40,6 +40,8 @@ const diagnosisRecordSchema = new Schema(
 );
 
 diagnosisRecordSchema.index({ deviceId: 1, createdAt: -1 });
+// Pilot dashboard: follow-up answers given in the chosen weeks.
+diagnosisRecordSchema.index({ 'followUp.answeredAt': 1 }, { partialFilterExpression: { followUp: { $exists: true } } });
 
 export type DiagnosisRecordDocument = InferSchemaType<typeof diagnosisRecordSchema>;
 

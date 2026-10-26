@@ -7,6 +7,8 @@ import type { HistoryRepository } from '../services/history/historyRepository.js
 import type { WeatherProvider } from '../services/weather/weatherProvider.js';
 import { profileQuerySchema } from '../types/farm.js';
 import { parseOrThrow, requireRepository } from '../utils/validation.js';
+import { track } from '../modules/metrics/events.js';
+import type { EventName } from '../config/metrics.js';
 
 export interface FarmAdviceDeps {
   farmProfiles: FarmProfileRepository | null;
@@ -15,9 +17,10 @@ export interface FarmAdviceDeps {
 }
 
 /** Wraps a handler that only needs the farm snapshot of the requesting device. */
-function snapshotHandler<T>(deps: FarmAdviceDeps, respond: (snapshot: FarmSnapshot) => T): RequestHandler {
+function snapshotHandler<T>(deps: FarmAdviceDeps, respond: (snapshot: FarmSnapshot) => T, event?: EventName): RequestHandler {
   return async (req, res: Response<T>) => {
     const { deviceId } = parseOrThrow(profileQuerySchema, req.query);
+    if (event) track(event, { deviceId });
     const snapshotDeps: FarmSnapshotDeps = { ...deps, farmProfiles: requireRepository(deps.farmProfiles) };
     res.json(respond(await buildFarmSnapshot(snapshotDeps, deviceId)));
   };
@@ -56,7 +59,7 @@ export const createDashboardController = (deps: FarmAdviceDeps) =>
       .slice(0, DASHBOARD_TASK_LIMIT),
     water,
     followUps: notifications.filter((item) => item.type === 'followup'),
-  }));
+  }), 'dashboard_view');
 
 /** GET /api/notifications — alerts, tasks and follow-ups as notifications. */
 export const createNotificationsController = (deps: FarmAdviceDeps) =>

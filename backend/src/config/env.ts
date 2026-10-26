@@ -59,6 +59,8 @@ const envSchema = z.object({
   CLOUDINARY_FOLDER: optional(z.string().trim().regex(/^[\w/-]{1,100}$/)).default('agriai/listings'),
   /** Pilot: only sign-ups with an invite code (default for the inviteOnly flag; coordinators can change it). */
   INVITE_ONLY: optional(z.enum(['true', 'false']).transform((value) => value === 'true')),
+  /** Key for the weekly pseudonyms in usage events (min 16 characters). Defaults to JWT_SECRET. */
+  METRICS_SALT: optional(z.string().trim().min(16)),
   /** Log detail: info (default), warn, error, debug ... Tests default to silent. */
   LOG_LEVEL: optional(z.enum(LOG_LEVELS)),
   /** Sentry error tracking (optional, free tier): the backend project's DSN. Empty = off. */

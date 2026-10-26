@@ -15,6 +15,7 @@ import { createPushRouter } from './routes/push.routes.js';
 import { createConsentRouter } from './modules/privacy/privacy.routes.js';
 import { FeatureFlags } from './modules/flags/flag.service.js';
 import { createFeedbackRouter } from './modules/feedback/feedback.routes.js';
+import { createEventsRouter } from './modules/metrics/events.routes.js';
 import { flagDefaults } from './config/featureFlags.js';
 import { createMarketRouter, createMarketUnavailableRouter, type MarketDependencies } from './modules/marketRouter.js';
 import type { AiProvider } from './services/ai/aiProvider.js';
@@ -94,6 +95,7 @@ export function createApp({
   app.use('/api', createFarmAdviceRouter({ farmProfiles, history: historyRepository, weather }, mandi));
   app.use('/api', createPushRouter(push.publicKey, push.subscriptions));
   app.use('/api', createConsentRouter(consentStorage));
+  app.use('/api', createEventsRouter());
   app.use('/api', market ? createMarketRouter(market, { ai: aiProvider, aiRateLimit, mandi, flags }) : createMarketUnavailableRouter());
 
   app.use(notFoundHandler);

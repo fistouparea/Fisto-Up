@@ -23,6 +23,7 @@ import { createFlagRouter } from './flags/flag.routes.js';
 import { createHelpRouter } from './help/help.routes.js';
 import { helpDeviceData } from './help/help.service.js';
 import { feedbackDeviceData } from './feedback/feedback.service.js';
+import { eventDeviceData } from './metrics/events.js';
 import type { FeatureFlags } from './flags/flag.service.js';
 import type { PushSender } from '../services/push/pushSender.js';
 import { DatabasePhotoStorage, type PhotoStorage } from '../services/storage/photoStorage.js';
@@ -70,9 +71,9 @@ export function createMarketRouter(
   router.use(createOrderRouter(orders));
   router.use(createReportRouter());
   router.use(createNotificationRouter(pushSender !== null));
-  router.use(createAdminRouter({ auth, orders, commissionBps: config.commissionBps, flags }));
+  router.use(createAdminRouter({ auth, orders, commissionBps: config.commissionBps, flags, mandi }));
   router.use(createHelpRouter(flags));
-  router.use(createMyDataRouter({ photos: photoStorage, cookieSecure: config.cookieSecure, deviceData: [feedbackDeviceData, helpDeviceData] }));
+  router.use(createMyDataRouter({ photos: photoStorage, cookieSecure: config.cookieSecure, deviceData: [feedbackDeviceData, helpDeviceData, eventDeviceData] }));
   return router;
 }
 

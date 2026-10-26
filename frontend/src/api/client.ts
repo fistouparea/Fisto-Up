@@ -73,6 +73,18 @@ export function getJson<T>(path: string, isValid: (body: unknown) => body is T):
   return requestApi(path, { method: 'GET' }, isValid);
 }
 
+/** A file download (CSV) through fetch, so the login cookie and app header go along; saved by the caller. */
+export async function downloadFile(path: string): Promise<Blob> {
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, { credentials: 'include', headers: { 'X-Requested-With': 'agriai' }, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+  } catch {
+    throw new ApiError('NETWORK');
+  }
+  if (!response.ok) throw new ApiError(readErrorCode(await response.json().catch(() => null)));
+  return response.blob();
+}
+
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }

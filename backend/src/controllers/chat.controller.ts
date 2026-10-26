@@ -3,6 +3,7 @@ import { AppError } from '../errors/AppError.js';
 import type { AiProvider } from '../services/ai/aiProvider.js';
 import { chatRequestSchema, type ChatResponse } from '../types/chat.js';
 import { CROPS } from '../types/diagnosis.js';
+import { track } from '../modules/metrics/events.js';
 
 export function createChatController(provider: AiProvider): RequestHandler {
   return async (req, res: Response<ChatResponse>) => {
@@ -13,6 +14,7 @@ export function createChatController(provider: AiProvider): RequestHandler {
 
     const { crop, diagnosis, messages } = body.data;
     const answer = await provider.chat({ cropName: CROPS[crop], diagnosis, messages });
+    track('chat_question', { props: { crop } });
     res.json({ answer });
   };
 }

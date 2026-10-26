@@ -17,6 +17,7 @@ const diagnosisFeedbackSchema = new Schema(
   },
   { timestamps: true, versionKey: false },
 );
-diagnosisFeedbackSchema.index({ createdAt: -1 });
+// Pilot dashboard ("👍 by crop" in the chosen weeks) and the comments export.
+diagnosisFeedbackSchema.index({ updatedAt: -1 });
 
 export const DiagnosisFeedbackModel = model('DiagnosisFeedback', diagnosisFeedbackSchema, 'diagnosis_feedback');

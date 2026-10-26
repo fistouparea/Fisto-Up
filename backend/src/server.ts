@@ -10,6 +10,7 @@ import { createPhotoStorage } from './services/storage/createPhotoStorage.js';
 import { createReadinessCheck } from './observability/health.js';
 import { flagDefaults } from './config/featureFlags.js';
 import { FeatureFlags } from './modules/flags/flag.service.js';
+import { configureEvents } from './modules/metrics/events.js';
 import { logger } from './observability/logger.js';
 import { flushSentry, initSentry } from './observability/sentry.js';
 import { createAiProvider } from './services/ai/createAiProvider.js';
@@ -24,6 +25,8 @@ import { OpenMeteoProvider } from './services/weather/openMeteoProvider.js';
 const SHUTDOWN_TIMEOUT_MS = 10_000;
 
 const env = loadEnvOrExit();
+const metricsSalt = env.METRICS_SALT ?? env.JWT_SECRET;
+if (metricsSalt) configureEvents({ salt: metricsSalt });
 initSentry({ dsn: env.SENTRY_DSN, environment: env.SENTRY_ENVIRONMENT ?? env.NODE_ENV, release: env.RENDER_GIT_COMMIT });
 const vapid = vapidConfig(env);
 const market = marketConfig(env);

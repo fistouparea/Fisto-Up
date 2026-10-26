@@ -1,6 +1,7 @@
 import type { RequestHandler, Response } from 'express';
 import { AppError } from '../errors/AppError.js';
 import type { HistoryRepository } from '../services/history/historyRepository.js';
+import { track } from '../modules/metrics/events.js';
 import {
   followUpBodySchema,
   historyItemParamsSchema,
@@ -51,6 +52,7 @@ export function createFollowUpController(history: HistoryRepository | null): Req
     if (!saved) {
       throw new AppError('NOT_FOUND', 'History item not found');
     }
+    track('followup_answered', { deviceId: body.data.deviceId, props: { answer: body.data.answer } });
     res.json({ ok: true });
   };
 }

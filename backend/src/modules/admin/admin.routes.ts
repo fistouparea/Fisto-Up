@@ -1,4 +1,15 @@
-import express, { Router, type Response } from 'express';
+import express, { Router, type RequestHandler, type Response } from 'express';
+import { AppError } from '../../errors/AppError.js';
+import type { MandiProvider } from '../../services/mandi/agmarknetProvider.js';
+import { lastWeeks, weekStartInstant } from '../../utils/weeks.js';
+import {
+  DASHBOARD_EXPORT_NAMES,
+  DASHBOARD_EXPORTS,
+  dashboardQuerySchema,
+  feedbackCommentsCsv,
+  pilotDashboard,
+  type PilotDashboard,
+} from '../metrics/pilotDashboard.js';
 import { z } from 'zod';
 import { parseOrThrow } from '../../utils/validation.js';
 import { audit, auditQuerySchema, listAudit, type AuditEntryView } from '../audit/audit.service.js';
@@ -41,6 +52,10 @@ const monthQuerySchema = z.object({ month: monthSchema.optional() });
 const collectBodySchema = z.object({ sellerId: z.string().min(1), month: monthSchema.optional() });
 const reportQuerySchema = z.object({ status: z.enum(['open', 'resolved']).default('open') });
 const id = (value: unknown) => String(value);
+
+function sendCsv(res: Response, filename: string, csv: string): void {
+  res.type('text/csv; charset=utf-8').set('Content-Disposition', `attachment; filename="${filename}"`).set('Cache-Control', 'no-store').send(csv);
+}
 const setFlagSchema = z.object({ key: z.enum(FLAG_KEYS), state: z.enum(FLAG_STATES) });
 
 /** Coordinator panel. Every route checks the coordinator role on the server. */
@@ -49,9 +64,11 @@ export interface AdminRouterDeps {
   orders: OrderService;
   commissionBps: number;
   flags: FeatureFlags;
+  /** Mandi prices for "farmer price vs mandi" (optional). */
+  mandi: MandiProvider | null;
 }
 
-export function createAdminRouter({ auth, orders, commissionBps, flags }: AdminRouterDeps): Router {
+export function createAdminRouter({ auth, orders, commissionBps, flags, mandi }: AdminRouterDeps): Router {
   const router = Router();
   const json = express.json({ limit: '16kb' });
   router.use('/admin', requireRole('coordinator'));
@@ -150,11 +167,7 @@ export function createAdminRouter({ auth, orders, commissionBps, flags }: AdminR
     const { month } = parseOrThrow(monthQuerySchema, req.query);
     const csv = await ledgerCsv(month);
     await audit(req, 'commission.export', { type: 'commission', id: month ?? 'all' });
-    res
-      .type('text/csv; charset=utf-8')
-      .set('Content-Disposition', `attachment; filename="agriai-commission-${month ?? 'all'}.csv"`)
-      .set('Cache-Control', 'no-store')
-      .send(csv);
+    sendCsv(res, `agriai-commission-${month ?? 'all'}.csv`, csv);
   });
 
   // --- Pilot: invite codes ---
@@ -192,6 +205,29 @@ export function createAdminRouter({ auth, orders, commissionBps, flags }: AdminR
     await resolveHelpRequest(id(req.params.id), currentUser(req).id, resolution);
     await audit(req, 'help.resolve', { type: 'help', id: id(req.params.id) }, { resolution });
     res.json({ ok: true });
+  });
+
+  // --- Pilot dashboard (anonymous numbers) + CSV per metric ---
+  const requireDashboard: RequestHandler = async (req, _res, next) => {
+    if (!(await flags.isOn('pilotDashboard', req.user))) throw new AppError('FORBIDDEN', 'Feature off');
+    next();
+  };
+  router.get('/admin/pilot', requireDashboard, async (req, res: Response<PilotDashboard>) => {
+    const { weeks } = parseOrThrow(dashboardQuerySchema, req.query);
+    res.set('Cache-Control', 'no-store').json(await pilotDashboard(weeks, mandi));
+  });
+  router.get('/admin/pilot/export/:name.csv', requireDashboard, async (req, res) => {
+    const name = parseOrThrow(z.enum(DASHBOARD_EXPORT_NAMES), req.params.name);
+    const { weeks } = parseOrThrow(dashboardQuerySchema, req.query);
+    const csv = DASHBOARD_EXPORTS[name](await pilotDashboard(weeks, mandi));
+    await audit(req, 'metrics.export', { type: 'metrics', id: name }, { weeks });
+    sendCsv(res, `agriai-${name}.csv`, csv);
+  });
+  router.get('/admin/pilot/feedback-comments.csv', requireDashboard, async (req, res) => {
+    const { weeks } = parseOrThrow(dashboardQuerySchema, req.query);
+    const csv = await feedbackCommentsCsv(weekStartInstant(lastWeeks(weeks)[0] ?? ''));
+    await audit(req, 'metrics.export', { type: 'metrics', id: 'feedback-comments' }, { weeks });
+    sendCsv(res, 'agriai-ai-feedback-comments.csv', csv);
   });
 
   // --- Audit log (read-only) ---

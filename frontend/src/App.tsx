@@ -34,6 +34,7 @@ import { MyDataPage } from './pages/MyDataPage';
 import { HelpPage } from './pages/HelpPage';
 import { FlagsProvider } from './context/FlagsProvider';
 import { sendConsent } from './api/privacy';
+import { reportAppOpen } from './utils/appOpen';
 import { hasConsented, isConsentPending, markConsentSent, rememberConsent } from './utils/consentState';
 import { AccountPage } from './pages/market/AccountPage';
 import { BuyerProfilePage } from './pages/market/BuyerProfilePage';
@@ -91,6 +92,8 @@ function AppShell() {
   // A consent given offline is sent to the server once the phone is online again.
   useEffect(() => {
     if (consented && isConsentPending()) sendConsent(lang).then(() => markConsentSent(), () => undefined);
+    // Anonymous "active today" for the pilot dashboard, only after consent.
+    if (consented) reportAppOpen();
   }, [consented, lang]);
 
   const agree = () => {

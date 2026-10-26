@@ -1,4 +1,4 @@
-import { getJson, isRecord, sendJson } from './client';
+import { downloadFile, getJson, isRecord, sendJson } from './client';
 import type { NewListing, Order, OrderStatus, Place, ReportReason, SellerListing, SellerStatus } from './marketTypes';
 import { isOrder } from './orders';
 import { isSellerListing } from './listings';
@@ -139,13 +139,4 @@ export const markCollected = (sellerId: string, month?: string) =>
     isRecord(body) && typeof body.amountPaise === 'number',
   );
 
-/** CSV download goes through fetch (cookie + app header), then saved as a file. */
-export async function downloadLedgerCsv(month?: string): Promise<Blob> {
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
-  const response = await fetch(`${API_BASE_URL}/api/admin/commission/export.csv${month ? `?month=${month}` : ''}`, {
-    credentials: 'include',
-    headers: { 'X-Requested-With': 'agriai' },
-  });
-  if (!response.ok) throw new Error(`CSV ${response.status}`);
-  return response.blob();
-}
+export const downloadLedgerCsv = (month?: string) => downloadFile(`/api/admin/commission/export.csv${month ? `?month=${month}` : ''}`);

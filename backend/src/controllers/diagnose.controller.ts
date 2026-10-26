@@ -8,6 +8,7 @@ import type { HistoryRepository } from '../services/history/historyRepository.js
 import { recordDiagnosis } from '../services/history/recordDiagnosis.js';
 import { CROPS, cropIdSchema, type DiagnoseResponse } from '../types/diagnosis.js';
 import { deviceIdSchema } from '../types/history.js';
+import { track } from '../modules/metrics/events.js';
 
 const bodySchema = z.object({
   crop: cropIdSchema,
@@ -34,6 +35,10 @@ export function createDiagnoseController(provider: AiProvider, history: HistoryR
     const result = await diagnosePhoto(provider, { image: req.file.buffer, mimeType, cropName: CROPS[crop] });
 
     // Only confident results are worth keeping; the photo itself is never saved.
+    track(result.status === 'ok' ? 'diagnosis_ok' : 'diagnosis_unclear', {
+      deviceId,
+      props: { crop, ...(result.status === 'ok' && result.diagnosis.severity && { severity: result.diagnosis.severity }) },
+    });
     const historyId = result.status === 'ok' && deviceId ? await recordDiagnosis(history, { deviceId, crop, diagnosis: result.diagnosis }) : null;
     res.json(historyId && result.status === 'ok' ? { ...result, historyId } : result);
   };

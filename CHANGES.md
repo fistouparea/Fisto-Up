@@ -972,3 +972,38 @@ banayein (local wali dobara use na karein).
 - Pilot membership khaate par hai. Bina khaate wale kisan sirf `all` wale features dekhte hain.
 - App bar ke gol button 56px se 48px kiye, taaki 360px par teen button (मदद, खाता, सूचना) aa sakein (48px abhi bhi bade ungli ke liye theek hai).
 - AdminReports ka "run" helper ab sab tabs ke saath `adminAction.ts` mein share hai (dohrav hataya).
+
+## Task 6 – Metrics dashboard (privacy-first)
+
+**Kya bana:**
+- **Apna event tracking** (`modules/metrics/`, collection `events`). Koi third-party analytics nahi.
+  - Event mein sirf: naam, samay, hafta, aur fixed values (fasal, result, category). Naam, phone, device id, jagah,
+    photo ya likha hua text kabhi nahi.
+  - Phone ki pehchaan ki jagah ek **weekly pseudonym** hai: `HMAC(server key, device id + hafta)`. Isse "is hafte kitne
+    alag phone" gine ja sakte hain, par ek hi phone ko agle hafte se joda nahi ja sakta, aur bina server key ke wapas
+    device id nahi banta. Key `METRICS_SALT` hai (na ho to `JWT_SECRET`).
+  - Events 400 din baad apne-aap mit jaate hain (TTL). "मेरा डेटा मिटाएँ" par us phone ke saare hafton ke events bhi mitte hain.
+  - Server khud record karta hai: jaanch (ok/unclear), chat sawaal, home dashboard, 👍/👎, follow-up, madad.
+    App sirf `app_open` bhejta hai (din mein ek baar, sahmati ke baad).
+  - Event likhna request ko kabhi dheema ya fail nahi karta (background mein; database na ho to chhod deta hai).
+- **Pilot Dashboard** (संयोजक पैनल → **पायलट डैशबोर्ड**, flag `pilotDashboard`). 4/8/12/26 hafte chun sakte hain.
+  - Upar tiles: is hafte sakriya kisan, chalu listings, poore orders, kul bikri, commission.
+  - Har hafte: sakriya kisan (weekly active farmers), jaanchein (जवाब मिला / फोटो साफ़ नहीं), naye orders,
+    poore orders, nayi listings, bikri.
+  - AI 👍 dar fasal ke hisaab se (bar + %).
+  - Follow-up nateeje: ठीक हुई / वैसी ही / खराब हुई.
+  - **Kisan ka bhav vs mandi bhav** (prati quintal): listing ka ausat, sach mein bika (poore orders) ka ausat, aur
+    aaj ka mandi modal (paas ki mandiyon ka median; `DATA_GOV_API_KEY` chahiye).
+  - Har chart ke saath "टेबल में देखें" (screen reader/print ke liye) aur tap/hover par us hafte ka number.
+- **CSV export** har hisse ka (`/api/admin/pilot/export/<naam>.csv`): weekly-active-farmers, diagnoses,
+  ai-feedback-by-crop, follow-ups, market, price-vs-mandi.
+  - Saath mein **किसानों की बातें** CSV (fasal, samasya, 👍/👎, comment, tareekh; device id nahi), KVK expert ke liye.
+  - Har export audit log mein jaata hai. Excel-safe (formula injection se bachav, Hindi BOM).
+
+**Decisions:**
+- Listings, orders, bikri aur commission events se nahi, seedhe asli records (orders, commission ledger) se gine jaate
+  hain: ye hamesha sahi rehte hain aur dohra hisaab nahi hota.
+- "Weekly active farmer" = is hafte advisor ka koi bhi kaam karne wala alag phone. Ek kisan do phone par ho to do gina jaata hai.
+- Chart ke rang dataviz validator se check kiye (primary-500 + accent-500: CVD ΔE 16.9 pass). Contrast warning ki wajah se
+  legend aur table hamesha saath hain.
+- CSV download ka code ab `api/client.ts` (`downloadFile`) mein ek jagah hai; commission CSV bhi wahi use karta hai.
