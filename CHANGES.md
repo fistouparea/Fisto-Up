@@ -1198,3 +1198,128 @@ ce1b1eb Screenshots + fixes found while reviewing them
 **Pilot ke baad (aage ke liye)**
 - [ ] Render Starter plan (sone wali dikkat khatm), Atlas backup ya bada plan.
 - [ ] Phone OTP + PIN reset; Redis rate limit agar 2+ instance.
+
+---
+
+# Phase 5 – Baaki product features (pitch ke hisaab se)
+
+Aap 2 ghante bahar the, isliye maine bina approval ke kaam kiya (aapne yahi kaha tha). Har task ka commit alag hai:
+
+```
+dc4f65c Task 1: Diagnosis → AI-Kit loop
+5b2fb28 Task 2: बोलकर चलाएँ + पढ़कर सुनाएँ
+06c097c Task 3: Bhasha (react-i18next) – हिंदी, English, राजस्थानी (draft)
+69afa97 Task 4: सरकारी योजनाएँ
+482a1c2 Task 5: Services engine (+ Task 6/7/8 ki screens, ek hi code)
+7bf4ee5 Task 6-9: demo seed + साथ में मंडी चलें (sirf backend)
+```
+
+**Status (aakhri run):** backend **528 tests pass** (pehle 469), frontend **139 pass** (pehle 124); lint + typecheck
+dono apps mein clean; frontend build pass; `npm audit` (frontend, i18next install ke baad): 0 vulnerabilities.
+
+## Har task mein kya bana
+
+### Task 1 – जाँच → ज़रूरी सामान (AI-Kit, kamai ka zariya)
+- Naya seller type **input dealer** (खाद-बीज-दवाई दुकान). Profile mein licence number zaroori. Sanyojak "मैंने लाइसेंस
+  नंबर असली कागज़ से मिलाकर देख लिया है" tick kiye bina verify nahi kar sakta (`LICENCE_CHECK_REQUIRED`). Licence ke bina
+  dealer list nahi kar sakta (`LICENCE_NOT_VERIFIED`). Licence number badla → wapas "जाँच बाकी".
+- Nayi category **खाद-बीज-दवाई** (`input`): फफूंदनाशक, कीटनाशक, खाद, बीज, जैविक, दूसरा. Dawai/khaad ke liye **generic naam**
+  chunna zaroori (`backend/src/data/inputGenerics.ts`), brand se kabhi match nahi hota.
+- Jaanch ke result ke neeche **"ज़रूरी सामान"**: generic naam + 50 km ke andar verified dealers ke products (sabse paas
+  pehle), har product par **"साझेदार दुकान"** label + note ki AgriAI ko commission milta hai. Packet-dose warning aur KVK line saath mein.
+- **Blocklist** `backend/src/config/inputRules.ts` = purani banned/red-label list (dawaiSafety) + restricted (glyphosate,
+  chlorpyrifos, fipronil, atrazine – ⚠️ verify). Aisa saaman na list hota hai, na kit mein dikhta hai, na market mein.
+- Kit se aaya order `referral: ai_kit` ke saath; poora hone par ledger entry ka **type `partner_referral`**. Sanyojak
+  "कमीशन" tab mein alag "साझेदार रेफ़रल कमीशन" dekhta hai (`GET /api/admin/commission/referrals`), CSV mein `type` column.
+
+### Task 2 – बोलकर चलाएँ
+- Har kisan screen par bada peela 🎤 (admin par nahi). "मौसम बताओ", "बाजरा बेचना है", "फसल की जाँच करनी है" → screen khulti hai.
+- Intents + example phrases + keywords: `backend/src/config/voiceIntents.ts`. Pehle keyword (free, turant), na mile to
+  AI (prompt `intent-v4`). Samajh na aaye → bolkar maafi + icon wale bade options. AI fail ho to bhi error nahi.
+- **सेटिंग** (`#/settings`, मेरा खेत / खाता se link): "पढ़कर सुनाएँ" – har nayi screen ki mukhya baat apne-aap bolti hai.
+- Tests: har example phrase sahi intent par; mocked AI; phone number AI ko nahi jaata.
+
+### Task 3 – Bhasha + राजस्थानी
+- react-i18next lagaya (`frontend/src/i18n/i18n.ts`). Resources: hi (source/fallback), en (`strings/enApp.ts` + purana
+  market/orders), raj (`strings/raj.ts`, **"needs review by a local speaker"**). Jo text translate nahi hai, Hindi dikhta hai.
+- Decision: 100+ components ko `t('key')` mein badalne ki jagah `hi.*` typed objects rakhe; `strings/live.ts` unhe chuni
+  hui bhasha mein jawab dilata hai. Isse type-safety bani rahi aur sab screens ek saath badal gayi.
+- Language picker: akshar + apna naam (हिंदी / English / राजस्थानी) + 🔊, koi jhanda nahi.
+- **Dialect glossary** `backend/src/data/dialectGlossary.ts` (~45 shabd) chat aur voice prompts mein. "जवाब राजस्थानी में"
+  (सेटिंग) → chat ka jawab Marwari mein; dawai ke saare safety rules wahi (test). Prompt `chat-v2`.
+
+### Task 4 – सरकारी योजनाएँ (`#/schemes`)
+- `backend/src/data/schemes.ts`: PM-KISAN, PMFBY, KCC, Soil Health Card, सोलर पंप, तारबंदी, खेत तलाई/डिग्गी,
+  फव्वारा/ड्रिप, पाइपलाइन. Har ek mein summary, kaun apply kare, kaagaz, official link, helpline, `source_url`, `last_verified`.
+- **Sach:** 26 Oct ko sirf pmkisan.gov.in (₹6,000/saal, 3 kisht) aur rajkisan.rajasthan.gov.in (services ki list) padh paaya.
+  pmfby / soilhealth sites ka text nahi khula. Isliye PM-KISAN ke alawa sab **"verify"** hain: unme koi rakam, shart, kaagaz
+  ya helpline nahi likhi (test isko enforce karta hai). Helpline numbers yaad se nahi daale.
+- "मेरे लिए योजनाएँ": farm profile se ishaara (fasal bhari → PM-KISAN ho sakti hai; tubewell → pipeline/drip/solar),
+  hamesha "पक्का करने के लिए आधिकारिक साइट/ई-मित्र पर जाँचें". Har card par 🔊.
+- Sanyojak panel → "योजनाएँ" tab se data sudhaar sakte hain (audited). "जाँची गई" ke liye source + date zaroori.
+
+### Task 5 – Ek Services engine (`backend/src/modules/services`)
+- Ek hi model/engine teeno ke liye: listing (kind, offer/need, owner, jagah, bhav + unit, calendar, approval, rating),
+  booking, aur `service_day_locks` (listing+din unique → **double booking namumkin**, do accept ek saath aaye tab bhi – test).
+- `bookingStateMachine.ts` (order wale pattern par): requested → accepted / rejected / cancelled → completed.
+  Accept par din lock, cancel par wapas. **Phone number sirf dono ke "हाँ" ke baad.** Paisa app mein nahi.
+- Kind ke rules config mein: `backend/src/config/serviceKinds.ts`. Har kind ka alag flag.
+- Frontend: ek hi set screens (`pages/services/*`), kind ke fields `components/services/kinds/*` se judte hain.
+
+### Task 6 – किराए पर मशीन
+- Tractor, thresher, rotavator, sprayer, seed drill, harvester, trolley, cultivator. Photo (camera/gallery, phone par chhoti,
+  GPS hata kar), bolkar description, bhav ghanta/din/bigha, gaanv + tehsil, khaali din (din tiles).
+- Kisan paas ki machine dhoondhta hai (din filter), din chunkar maangta hai; malik bade **"हाँ, मंज़ूर" / "ना"** button dabata hai.
+- Decision: machine ke liye AI "Snap & List" draft nahi banaya (photo + bolkar likhna hai); AI prompt badhane se bacha.
+
+### Task 7 – मज़दूर
+- Majdoor: kaam (बुवाई, कटाई, निराई...), gaanv, dihaadi, khaali din, **18+ ki pushti zaroori** (server bhi check karta hai).
+- Kisan: kaam ki zarurat (kitne majdoor). Listing ke andar **"आपके लिए मिलान"**: kaam + din + doori se score. Number sirf dono ke haan ke baad.
+
+### Task 8 – पशु
+- Gaay, bhains, bakri, bhed, oont: nasl, umar, doodh, teeke, kaam, ginti, photo. **Har listing sanyojak ki manzoori ke baad**
+  hi dikhti hai (panel tab "मशीन/पशु मंज़ूरी", audited, malik ko suchna). Pashu screens par kanoon wala notice
+  (**"needs legal review"** – `hi.services.livestock.legal`).
+
+### Task 9 – Mandi + delivery (**aadha hua**)
+- **साथ में मंडी चलें – sirf backend + tests:** sanyojak trip banata hai (mandi, date, gaadi, kshamta), kisan judte/hatte hain,
+  kshamta atomic (do log ek saath judein to overfill nahi), phone sirf panel mein. API: `GET /api/mandi-trips`,
+  `POST /api/mandi-trips/:id/join|leave`, `/api/admin/mandi-trips`. **Frontend screen nahi bani.**
+- **Delivery tracking (bina login link, photo proof, timeline): nahi bana.** Flag `deliveryTracking` aur rules
+  (`config/logisticsRules.ts`) taiyaar hain.
+
+### Task 10 – शिकायत और विवाद: **nahi bana** (samay khatam). Abhi purana "समस्या बताएँ" + मदद/शिकायत chal raha hai.
+
+## Decisions (khud liye)
+- Saari nayi suvidhaayein flag par, default **`pilot`** (sirf pilot accounts + sanyojak). Bina account wale kisan ko tab
+  dikhegi jab sanyojak `#/admin/flags` mein "सबके लिए" karega. Flags: aiKit, voiceMode, languages, schemes, equipment,
+  labour, livestock, mandiPool, deliveryTracking.
+- Kit public hai (bina login), sirf dawai ke naam + khet ki round location jaati hai.
+- Ledger ke purane "months" response ko nahi badla (test exact shape check karta hai); referral ke liye alag endpoint.
+- Chat: `answerLanguage` sirf raj hone par AI ko jaata hai, taaki purana privacy test (exact keys) sahi rahe.
+- Admin CSV header mein `type` column joda; us test ki expected line update ki (column badhaya, check kamzor nahi kiya).
+- Services: koi bhi login wala (seller/buyer) machine/kaam/pashu daal sakta hai; naya role nahi banaya.
+- Seed: `seedPhase5.ts` (input dealer 9000000106, majdoor 9000000203, machines, pashu, bookings). PIN 2580.
+
+## Insaan ki jaanch zaroori
+- **Rajasthani text** (`frontend/src/strings/raj.ts`, voice keywords, `dialectGlossary.ts`) – local speaker se.
+- **Yojana data** (`data/schemes.ts`) – har "verify" yojana official site se poori karein (panel se).
+- **Kanoon:** pashu notice; input dealer licence prakriya; referral commission ki shart dealers ke saath.
+- **Blocklist** (`config/inputRules.ts`) + generic list (`data/inputGenerics.ts`) – KVK / krishi vibhag se.
+
+## Kya test/verify nahi hua (sach)
+- **360px screenshots Phase 5 ke nahi liye** (samay khatam) – `docs/screenshots` mein naye nahi hain. Layout review baaki.
+- **Seed script asli database par nahi chalaya:** in-memory test run time-out ho gaya. Code typecheck/lint pass hai,
+  par `npm run seed` ek baar khud chala kar dekhein.
+- Mic/voice headless mein nahi chalta – phone par test karein. Asli Gemini se intent/Rajasthani jawab test nahi hua (mock).
+- README mein sirf chhota Phase 5 section joda.
+
+## Phone par test (pilot account ya sanyojak se login karke)
+1. **AI-Kit:** 9000000106 (dealer) se login → सामान डालें (फफूंदनाशक + मैंकोजेब). Kisan: "मेरा खेत" mein Churu → फोटो जाँच
+   (dawai wala jawab) → neeche "ज़रूरी सामान" → साझेदार दुकान → order → poora → sanyojak "कमीशन" mein referral line.
+2. **Voice:** neeche-daayein 🎤 → "मौसम बताओ" → मौसम screen. "नमस्ते" → maafi + options. सेटिंग → पढ़कर सुनाएँ ON → screen badlein.
+3. **Bhasha:** सेटिंग → राजस्थानी → nav "घर", "म्हारी जाँच". English bhi dekhein. "जवाब राजस्थानी में" ON → और पूछें.
+4. **Yojana:** होम → और सुविधाएँ → सरकारी योजनाएँ → 🔊, official link. Sanyojak → योजनाएँ tab → badal kar save.
+5. **Machine:** होम → किराए पर मशीन → tractor → din chunein → बुकिंग माँगें; 9000000101 (रमेश) se → हाँ → dono ko number.
+6. **Majdoor:** 9000000203 se apni listing kholein → "आपके लिए मिलान". 18+ tick ke bina listing nahi banti.
+7. **Pashu:** pashu daalein → "मंज़ूरी बाकी" → sanyojak "मशीन/पशु मंज़ूरी" → मंज़ूर → sabko dikhta hai.

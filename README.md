@@ -331,6 +331,20 @@ Details, decisions and numbers: CHANGES.md → "Phase 4". Deployment: [DEPLOY.md
 - **Performance:** screens load on demand (main JS 96 KB gzip), Lighthouse mobile 91 / 100 / 96,
   load test `npm run loadtest` (results in `backend/loadtest/results/`).
 
+## Phase 5 (pilot features)
+
+Details, decisions and what is not finished: CHANGES.md → "Phase 5". Every feature has a flag (default `pilot`).
+
+| Feature | Screen | Rules / content |
+| --- | --- | --- |
+| ज़रूरी सामान (AI-Kit) | under every diagnosis | `config/inputRules.ts` (blocklist, radius), `data/inputGenerics.ts` (generic names) |
+| Input dealers (खाद-बीज-दवाई) | seller profile, admin → विक्रेता (licence check) | ledger type `partner_referral` |
+| बोलकर चलाएँ + पढ़कर सुनाएँ | 🎤 on every farmer screen, `#/settings` | `config/voiceIntents.ts` |
+| हिंदी / English / राजस्थानी | `#/settings` | `frontend/src/strings/{hi,enApp,en,raj}.ts`, `data/dialectGlossary.ts` |
+| सरकारी योजनाएँ | `#/schemes`, admin → योजनाएँ | `data/schemes.ts` (only verified facts; rest "verify") |
+| Machines / workers / animals | `#/services/<equipment|labour|livestock>`, `#/services/my` | `config/serviceKinds.ts`, `modules/services/bookingStateMachine.ts` |
+| साथ में मंडी चलें (API only) | `/api/mandi-trips`, `/api/admin/mandi-trips` | `config/logisticsRules.ts` |
+
 ## Rules an expert can edit (⚠️ verify with KVK)
 
 All farming rules are data, not code. A KVK expert can change numbers and Hindi texts here without touching logic:
