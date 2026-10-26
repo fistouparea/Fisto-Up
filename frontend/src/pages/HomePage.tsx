@@ -3,6 +3,7 @@ import { LuScanSearch, LuShoppingBasket, LuSprout, LuWheat } from 'react-icons/l
 import type { Dashboard, FarmProfile, MandiPrice } from '../api/types';
 import { Greeting } from '../components/home/Greeting';
 import { MandiCard } from '../components/home/MandiCard';
+import { MoreServices } from '../components/home/MoreServices';
 import { SeeAllLink } from '../components/home/SeeAllLink';
 import { TodayWorkCard } from '../components/home/TodayWorkCard';
 import { WaterSummaryCard } from '../components/home/WaterSummaryCard';
@@ -48,6 +49,7 @@ export function HomePage() {
         {hi.home.photoCheck}
       </Button>
       <MarketButtons />
+      <MoreServices />
     </div>
   );
 }

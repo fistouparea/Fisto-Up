@@ -69,6 +69,11 @@ export const VOICE_INTENTS = {
     examples: ['भाषा बदलो', 'राजस्थानी में', 'पढ़कर सुनाओ चालू करो'],
     keywords: ['भाषा', 'सेटिंग', 'पढ़कर सुना', 'राजस्थानी', 'अंग्रेज़ी', 'english'],
   },
+  schemes: {
+    description: 'government schemes for farmers (PM-KISAN, crop insurance, KCC, subsidies)',
+    examples: ['सरकारी योजना बताओ', 'फसल बीमा कैसे करें', 'किसान सम्मान निधि'],
+    keywords: ['योजना', 'सरकारी', 'बीमा', 'सम्मान निधि', 'सब्सिडी', 'अनुदान', 'किसान क्रेडिट'],
+  },
   home: {
     description: 'home screen',
     examples: ['होम पर चलो', 'शुरू की स्क्रीन'],

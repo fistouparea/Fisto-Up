@@ -23,6 +23,7 @@ import { createFlagRouter } from './flags/flag.routes.js';
 import { createHelpRouter } from './help/help.routes.js';
 import { createInputKitRouter } from './inputs/inputKit.routes.js';
 import { createVoiceRouter } from './voice/voice.routes.js';
+import { createSchemeRouter } from './schemes/scheme.routes.js';
 import { helpDeviceData } from './help/help.service.js';
 import { feedbackDeviceData } from './feedback/feedback.service.js';
 import { eventDeviceData } from './metrics/events.js';
@@ -42,7 +43,7 @@ export interface MarketDependencies {
 }
 
 /** Path prefixes that belong to the marketplace (accounts, listings, orders, admin). */
-export const MARKET_PATHS = ['/auth', '/account', '/market', '/admin', '/voice'];
+export const MARKET_PATHS = ['/auth', '/account', '/market', '/admin', '/voice', '/schemes'];
 
 /** Everything behind login: auth, profiles, listings, orders, coordinator panel. */
 /** Shared with the advisor: the app's AI provider and its per-IP AI rate limit. */
@@ -70,6 +71,7 @@ export function createMarketRouter(
   router.use(createPricingRouter({ ai, mandi }, aiRateLimit));
   router.use(createInputKitRouter(flags));
   router.use(createVoiceRouter({ ai, aiRateLimit, flags }));
+  router.use(createSchemeRouter(flags));
 
   const orders = new OrderService({ notifier: new MarketNotifier(pushSender), commissionBps: config.commissionBps, now });
   router.use(createOrderRouter(orders));

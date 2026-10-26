@@ -51,6 +51,7 @@ const LegalPage = lazyNamed(() => import('./pages/LegalPage'), 'LegalPage');
 const MyDataPage = lazyNamed(() => import('./pages/MyDataPage'), 'MyDataPage');
 const HelpPage = lazyNamed(() => import('./pages/HelpPage'), 'HelpPage');
 const SettingsPage = lazyNamed(() => import('./pages/SettingsPage'), 'SettingsPage');
+const SchemesPage = lazyNamed(() => import('./pages/SchemesPage'), 'SchemesPage');
 const AccountPage = lazyNamed(() => import('./pages/market/AccountPage'), 'AccountPage');
 const BuyerProfilePage = lazyNamed(() => import('./pages/market/BuyerProfilePage'), 'BuyerProfilePage');
 const LoginPage = lazyNamed(() => import('./pages/market/LoginPage'), 'LoginPage');
@@ -241,6 +242,8 @@ function Page({ route, diagnoseKey }: { route: Route; diagnoseKey: number }) {
       return <HelpPage />;
     case 'settings':
       return <SettingsPage />;
+    case 'schemes':
+      return <SchemesPage />;
     case 'buyerProfile':
       return <RequireRole roles={['buyer']}>{(user) => <BuyerProfilePage user={user} onSaved={savedProfile} />}</RequireRole>;
   }

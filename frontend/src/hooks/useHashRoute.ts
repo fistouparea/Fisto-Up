@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
-export const ADMIN_TABS = ['overview', 'pilot', 'sellers', 'orders', 'reports', 'help', 'ledger', 'newListing', 'invites', 'flags', 'audit'] as const;
+export const ADMIN_TABS = ['overview', 'pilot', 'sellers', 'orders', 'reports', 'help', 'ledger', 'newListing', 'invites', 'flags', 'audit', 'schemes'] as const;
 export type AdminTab = (typeof ADMIN_TABS)[number];
 
 export type Route =
@@ -30,7 +30,8 @@ export type Route =
   | { name: 'terms' }
   | { name: 'myData' }
   | { name: 'help' }
-  | { name: 'settings' };
+  | { name: 'settings' }
+  | { name: 'schemes' };
 
 export const routes = {
   home: '#/',
@@ -59,6 +60,7 @@ export const routes = {
   myData: '#/my-data',
   help: '#/help',
   settings: '#/settings',
+  schemes: '#/schemes',
   admin: (tab: AdminTab = 'overview') => (tab === 'overview' ? '#/admin' : `#/admin/${tab}`),
 };
 
@@ -92,6 +94,7 @@ export function parseRoute(hash: string): Route {
   if (section === 'my-data') return { name: 'myData' };
   if (section === 'help') return { name: 'help' };
   if (section === 'settings') return { name: 'settings' };
+  if (section === 'schemes') return { name: 'schemes' };
   if (section === 'sell' && id === 'new') return { name: 'sellNew' };
   if (section === 'sell') return { name: 'sell' };
   if (section === 'login') return { name: 'login' };

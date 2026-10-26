@@ -20,10 +20,11 @@ export const AUDIT_ACTIONS = [
   'flag.set',
   'help.resolve',
   'metrics.export',
+  'scheme.update',
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
 
-export const AUDIT_TARGETS = ['user', 'listing', 'report', 'order', 'commission', 'invite', 'flag', 'help', 'metrics'] as const;
+export const AUDIT_TARGETS = ['user', 'listing', 'report', 'order', 'commission', 'invite', 'flag', 'help', 'metrics', 'scheme'] as const;
 export type AuditTarget = (typeof AUDIT_TARGETS)[number];
 
 /**
