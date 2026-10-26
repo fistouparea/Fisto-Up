@@ -1,0 +1,18 @@
+{
+  "diagnosis": {
+    "version": "diagnosis-v1",
+    "fingerprint": "35c3e4ef12ab"
+  },
+  "chat": {
+    "version": "chat-v1",
+    "fingerprint": "802ffe6f173f"
+  },
+  "listing": {
+    "version": "listing-v1",
+    "fingerprint": "662e7ac39d60"
+  },
+  "priceEstimate": {
+    "version": "price-v1",
+    "fingerprint": "6572c0e44831"
+  }
+}

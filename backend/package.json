@@ -15,7 +15,9 @@
     "typecheck": "tsc --noEmit",
     "create-coordinator": "tsx --env-file-if-exists=.env src/scripts/createCoordinator.ts",
     "seed": "tsx --env-file-if-exists=.env src/scripts/seed.ts",
-    "check-indexes": "tsx --env-file-if-exists=.env src/scripts/checkIndexes.ts"
+    "check-indexes": "tsx --env-file-if-exists=.env src/scripts/checkIndexes.ts",
+    "prompts:snapshot": "tsx src/scripts/snapshotPrompts.ts",
+    "eval": "tsx --env-file-if-exists=.env src/scripts/evalAi.ts"
   },
   "dependencies": {
     "@google/genai": "^2.30.0",

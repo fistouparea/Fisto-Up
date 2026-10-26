@@ -1007,3 +1007,30 @@ banayein (local wali dobara use na karein).
 - Chart ke rang dataviz validator se check kiye (primary-500 + accent-500: CVD ΔE 16.9 pass). Contrast warning ki wajah se
   legend aur table hamesha saath hain.
 - CSV download ka code ab `api/client.ts` (`downloadFile`) mein ek jagah hai; commission CSV bhi wahi use karta hai.
+
+## Task 7 – AI quality evaluation
+
+**Kya bana:**
+- **`eval/photos/`**: yahan KVK expert ki label ki hui photos + `labels.csv` (filename, crop, expected_problem,
+  expected_status, keywords, labelled_by, notes). Namuna: `labels.example.csv`. Photos git mein nahi jaati.
+- **`npm run eval`** (`backend/src/scripts/evalAi.ts`): har photo asli AI provider se jaanchta hai, bilkul app ki tarah
+  (sirf photo + fasal ka naam). Phir `eval/reports/<samay>_<prompt version>.md` + `.json` banata hai:
+  - accuracy (kul aur har fasal ki), low-confidence rate,
+  - "unclear" photos (paudha nahi / dhundhli) par jawab na dena: **guess hua to ⚠️**,
+  - galat jawab (expert vs AI) ki list,
+  - dawai jo review chahiye: ⛔ banned/red-label naam, exact matra, packet note nahi,
+  - pichhli report se har number ka badlav (`82% (+4)`).
+- **Medicine review list** `services/dawaiSafety.ts` mein (`BANNED_OR_RED_LABEL_PESTICIDES`, Hindi + English naam,
+  ⚠️ KVK se pakka karein). Dawai ke niyam ab bhi ek hi jagah hain.
+- **Prompt versions** (`services/ai/promptVersions.ts`): diagnosis, chat, listing, price prompts ke naam + version +
+  fingerprint. Har version ka poora text `eval/prompts/<version>.txt` mein hai (`npm run prompts:snapshot`).
+  Text badla par version nahi badla to `npm test` fail hota hai. Report mein version + fingerprint hota hai.
+- `eval/README.md` mein poora tareeka (Hinglish).
+
+**Decisions:**
+- Sahi/galat ka faisla: expert ka `expected_problem` AI ke problem name mein ho (thode alag likhne par bhi: space,
+  nukta, chandrabindu ka fark nahi), ya koi `keywords` mile. Phir bhi galat-jawab list expert ko dekhni chahiye,
+  kyunki shabd milna = sahi bimari hona zaroori nahi.
+- Free tier ki wajah se default ek photo ek baar mein (`--concurrency 1`).
+- **Asli photos aur asli Gemini se eval abhi nahi chala** (labelled photos nahi hain). Logic fake AI ke saath test hai.
+- Bug pakda aur theek kiya: CSV mein khaali `expected_status` ab "ok" maana jaata hai (pehle line reject ho jaati).

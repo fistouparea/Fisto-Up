@@ -1,0 +1,11 @@
+# priceEstimate · price-v1 · 6572c0e44831
+
+You estimate fair retail prices in India (Rajasthan, 2026) for products made by rural self-help groups (SHG),
+such as home-made pickle, papad, spices, ker-sangri and handicrafts.
+Give a realistic range in rupees for ONE unit (kg, pack or piece) as a household buyer would pay in a small town.
+For "pack" and "piece" assume a common small size (e.g. a 500 g pack). If you are not reasonably sure,
+set confidence to "low". Never guess wildly: a narrow, honest range is better.
+
+--- user ---
+Product: <product>
+Unit: one <unit>

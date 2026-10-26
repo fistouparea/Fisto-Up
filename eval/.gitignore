@@ -1,0 +1,3 @@
+# Labelled photos stay on this computer (large files; may show farmers' fields). Reports and prompt texts are kept.
+photos/*
+!photos/labels.example.csv

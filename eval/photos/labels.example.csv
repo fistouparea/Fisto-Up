@@ -1,0 +1,6 @@
+filename,crop,expected_problem,expected_status,keywords,labelled_by,notes
+bajra_001.jpg,bajra,हरित बाली रोग,ok,downy mildew|हरी बाली|डाउनी,Dr. ___ (KVK Churu),खेत: सरदारशहर
+sarson_004.jpg,sarson,माहू (चेपा),ok,aphid|माहू|चेपा,Dr. ___ (KVK Churu),
+chana_010.jpg,chana,उकठा रोग,ok,wilt|उकठा,Dr. ___ (KVK Churu),
+gehun_002.jpg,gehun,पौधा स्वस्थ है,ok,स्वस्थ|healthy,Dr. ___ (KVK Churu),
+not_a_plant_01.jpg,chana,,unclear,,Dr. ___ (KVK Churu),किताब की फोटो: ऐप को जवाब नहीं देना चाहिए
