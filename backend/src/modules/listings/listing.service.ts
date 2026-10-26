@@ -5,10 +5,12 @@ import { AppError } from '../../errors/AppError.js';
 import type { AiProvider } from '../../services/ai/aiProvider.js';
 import { redactPersonalData } from '../../services/ai/marketPrompt.js';
 import type { ImageMimeType } from '../../types/diagnosis.js';
+import type { PhotoContent, PhotoStorage } from '../../services/storage/photoStorage.js';
+import { logger } from '../../observability/logger.js';
 import { isSellerProfileComplete } from '../auth/accountView.js';
 import type { AuthUser } from '../auth/auth.types.js';
 import { UserModel } from '../auth/user.model.js';
-import { ListingModel, ListingPhotoModel, type ListingDocument } from './listing.model.js';
+import { ListingModel, ListingPhotoModel, type ListingDocument, type ListingPhotoDocument } from './listing.model.js';
 import type {
   AiListingDraft,
   CreateListingBody,
@@ -33,19 +35,38 @@ export interface AssistedConsent {
  * "Snap & List": the AI reads the photo and the seller's words. A photo that does not show the product is
  * not stored; the seller is asked for another one. A good photo is stored and its id comes back with the draft.
  */
-export async function draftListing(ai: AiProvider, user: AuthUser, photo: UploadedPhoto, sellerText: string): Promise<DraftResponse> {
+export async function draftListing(
+  ai: AiProvider,
+  storage: PhotoStorage,
+  user: AuthUser,
+  photo: UploadedPhoto,
+  sellerText: string,
+): Promise<DraftResponse> {
   const result = await ai.draftListing({ image: photo.buffer, mimeType: photo.mimeType, sellerText: redactPersonalData(sellerText) });
   if (!result.photo_matches_product) {
     return { status: 'retake', reason: result.photo_problem, draft: toDraft(result) };
   }
-  const photoId = await storePhoto(user.id, photo);
+  const photoId = await storePhoto(storage, user.id, photo);
   return { status: 'ok', photoId, draft: toDraft(result) };
 }
 
-/** Stores a photo for a listing that is not saved yet. */
-export async function storePhoto(ownerId: string, photo: UploadedPhoto): Promise<string> {
-  const saved = await ListingPhotoModel.create({ ownerId, data: photo.buffer, mimeType: photo.mimeType });
-  return saved._id.toString();
+/** Stores a photo for a listing that is not saved yet: the file at the provider, its record in MongoDB. */
+export async function storePhoto(storage: PhotoStorage, ownerId: string, photo: UploadedPhoto): Promise<string> {
+  const ref = await storage.save(photo);
+  try {
+    const saved = await ListingPhotoModel.create({ ownerId, ...ref, storage: storage.name, mimeType: photo.mimeType });
+    return saved._id.toString();
+  } catch (error) {
+    // No record means nobody could ever use or clean up the file: remove it again.
+    if ('storageKey' in ref) await storage.remove(ref.storageKey).catch((removeError: unknown) => logger.error({ err: removeError }, 'orphan photo not removed'));
+    throw error;
+  }
+}
+
+/** What GET /api/market/photos/:id sends: bytes kept in MongoDB, or a redirect to the provider's CDN. */
+export async function photoContent(photo: ListingPhotoDocument, storage: PhotoStorage): Promise<PhotoContent | null> {
+  if (photo.data) return { kind: 'bytes', data: photo.data, mimeType: photo.mimeType };
+  return photo.storageKey ? storage.open(photo.storageKey) : null;
 }
 
 /** Cleans up what the AI said into whole units, paise, and a unit the product allows. */

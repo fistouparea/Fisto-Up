@@ -31,6 +31,7 @@ export function connectMongo(uri: string): void {
   void tryConnect();
 }
 
+const SETUP_COMMANDS = new Set(['create', 'createIndexes', 'drop', 'dropIndexes', 'listIndexes']);
 let watching = false;
 
 /** Logs every database command that took longer than SLOW_QUERY_MS, with its collection (never its filter values). */
@@ -48,7 +49,8 @@ function watchSlowQueries(): void {
   client.on('commandSucceeded', (event) => {
     const collection = collections.get(event.requestId);
     collections.delete(event.requestId);
-    if (event.duration >= SLOW_QUERY_MS) {
+    // Building collections and indexes at startup is slow by nature, and not a query.
+    if (event.duration >= SLOW_QUERY_MS && !SETUP_COMMANDS.has(event.commandName)) {
       logger.warn({ command: event.commandName, collection, durationMs: Math.round(event.duration) }, 'slow database query');
     }
   });

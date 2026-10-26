@@ -19,6 +19,7 @@ import { createOrderRouter } from './orders/order.routes.js';
 import { createReportRouter } from './reports/report.routes.js';
 import { createAdminRouter } from './admin/admin.routes.js';
 import type { PushSender } from '../services/push/pushSender.js';
+import { DatabasePhotoStorage, type PhotoStorage } from '../services/storage/photoStorage.js';
 
 export interface MarketDependencies {
   config: MarketConfig;
@@ -26,6 +27,8 @@ export interface MarketDependencies {
   credentials?: CredentialMethod;
   /** Web push for order notifications (null = in-app only). */
   pushSender?: PushSender | null;
+  /** Where listing photos are stored (default: in MongoDB). */
+  photoStorage?: PhotoStorage;
   now?: () => Date;
 }
 
@@ -42,7 +45,7 @@ export interface MarketSharedDeps {
 }
 
 export function createMarketRouter(
-  { config, credentials = new PinCredentials(), pushSender = null, now }: MarketDependencies,
+  { config, credentials = new PinCredentials(), pushSender = null, photoStorage = new DatabasePhotoStorage(), now }: MarketDependencies,
   { ai, aiRateLimit, mandi }: MarketSharedDeps,
 ): Router {
   const auth = new AuthService(credentials, now);
@@ -52,7 +55,7 @@ export function createMarketRouter(
   router.use(MARKET_PATHS, cookieParser(), requireAppHeader, createSessionMiddleware(auth, tokens));
   router.use(createAuthRouter({ auth, tokens, cookieSecure: config.cookieSecure }));
   router.use(createAccountRouter());
-  router.use(createListingRouter({ ai, aiRateLimit }));
+  router.use(createListingRouter({ ai, aiRateLimit, photos: photoStorage }));
   router.use(createPricingRouter({ ai, mandi }, aiRateLimit));
 
   const orders = new OrderService({ notifier: new MarketNotifier(pushSender), commissionBps: config.commissionBps, now });

@@ -1,6 +1,6 @@
 import { model, Schema } from 'mongoose';
 import { CATEGORIES, PRODUCT_IDS, UNITS } from '../../config/marketCatalog.js';
-import { LISTING_RULES } from '../../config/marketRules.js';
+import { STORAGE_PROVIDERS } from '../../services/storage/photoStorage.js';
 import { LISTING_STATUSES } from './listing.types.js';
 
 const bilingualSchema = new Schema({ hi: { type: String, default: '' }, en: { type: String, default: '' } }, { _id: false });
@@ -66,7 +66,11 @@ export type ListingDocument = InstanceType<typeof ListingModel>;
 const listingPhotoSchema = new Schema(
   {
     ownerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    data: { type: Buffer, required: true },
+    /** The bytes, when STORAGE_PROVIDER=database (and for every photo saved before Phase 4). */
+    data: Buffer,
+    /** Key of the file at the storage provider (Cloudinary public_id), when not in the database. */
+    storageKey: String,
+    storage: { type: String, enum: STORAGE_PROVIDERS, default: 'database' },
     mimeType: { type: String, required: true },
     attached: { type: Boolean, required: true, default: false },
     listingId: { type: Schema.Types.ObjectId, ref: 'Listing' },
@@ -74,9 +78,9 @@ const listingPhotoSchema = new Schema(
   { timestamps: { createdAt: true, updatedAt: false }, versionKey: false },
 );
 
-listingPhotoSchema.index(
-  { createdAt: 1 },
-  { expireAfterSeconds: LISTING_RULES.unattachedPhotoHours * 3600, partialFilterExpression: { attached: false } },
-);
+// Unused uploads are removed by jobs/photoCleanup.ts (not a TTL index: a file at Cloudinary must go too).
+listingPhotoSchema.index({ attached: 1, createdAt: 1 });
+listingPhotoSchema.index({ listingId: 1 });
 
 export const ListingPhotoModel = model('ListingPhoto', listingPhotoSchema, 'listing_photos');
+export type ListingPhotoDocument = InstanceType<typeof ListingPhotoModel>;

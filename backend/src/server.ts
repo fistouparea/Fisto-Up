@@ -4,7 +4,9 @@ import type { ScheduledTask } from 'node-cron';
 import { createApp } from './app.js';
 import { loadEnv, marketConfig, vapidConfig, type Env } from './config/env.js';
 import { connectMongo } from './db/mongo.js';
+import { startPhotoCleanup } from './jobs/photoCleanup.js';
 import { startNotificationScheduler } from './jobs/scheduler.js';
+import { createPhotoStorage } from './services/storage/createPhotoStorage.js';
 import { createReadinessCheck } from './observability/health.js';
 import { logger } from './observability/logger.js';
 import { flushSentry, initSentry } from './observability/sentry.js';
@@ -23,6 +25,7 @@ const env = loadEnvOrExit();
 initSentry({ dsn: env.SENTRY_DSN, environment: env.SENTRY_ENVIRONMENT ?? env.NODE_ENV, release: env.RENDER_GIT_COMMIT });
 const vapid = vapidConfig(env);
 const market = marketConfig(env);
+const photoStorage = createPhotoStorage(env);
 
 if (env.MONGO_URI) {
   connectMongo(env.MONGO_URI);
@@ -43,19 +46,23 @@ const app = createApp({
   weather,
   mandi: env.DATA_GOV_API_KEY ? new AgmarknetProvider({ apiKey: env.DATA_GOV_API_KEY }) : null,
   push: { publicKey: vapid?.publicKey ?? null, subscriptions },
-  market: market ? { config: market, pushSender: vapid ? new WebPushSender(vapid) : null } : null,
+  market: market ? { config: market, pushSender: vapid ? new WebPushSender(vapid) : null, photoStorage } : null,
   corsOrigins: env.CORS_ORIGIN,
   trustProxyHops: env.TRUST_PROXY,
   readiness: createReadinessCheck({ mongoConfigured: Boolean(env.MONGO_URI), isShuttingDown: () => shuttingDown }),
 });
 
-let scheduler: ScheduledTask | null = null;
+const jobs: ScheduledTask[] = [];
+if (market) jobs.push(startPhotoCleanup(photoStorage));
 if (vapid && farmProfiles && subscriptions) {
-  scheduler = startNotificationScheduler({ farmProfiles, history: historyRepository, weather, subscriptions, sender: new WebPushSender(vapid) });
+  jobs.push(startNotificationScheduler({ farmProfiles, history: historyRepository, weather, subscriptions, sender: new WebPushSender(vapid) }));
 } else {
   logger.warn('Web push is off (needs MONGO_URI and VAPID_* in .env). In-app notifications still work.');
 }
 
+if (env.NODE_ENV === 'production' && photoStorage.name === 'database') {
+  logger.warn('Listing photos are stored in MongoDB. On Atlas free tier (512 MB) use STORAGE_PROVIDER=cloudinary.');
+}
 if (!market) {
   logger.warn('Marketplace is off (needs MONGO_URI and JWT_SECRET in .env). The advisor still works.');
 }
@@ -94,7 +101,7 @@ async function shutdown(signal: string, httpServer: Server, exitCode = 0): Promi
     process.exit(1);
   }, SHUTDOWN_TIMEOUT_MS).unref();
 
-  await scheduler?.stop();
+  await Promise.all(jobs.map((job) => job.stop()));
   await new Promise<void>((resolve) => {
     httpServer.close(() => resolve());
     httpServer.closeIdleConnections();

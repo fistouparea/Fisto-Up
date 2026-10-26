@@ -3,6 +3,7 @@ import multer from 'multer';
 import { AppError } from '../../errors/AppError.js';
 import { detectImageType } from '../../middleware/validateImage.js';
 import type { AiProvider } from '../../services/ai/aiProvider.js';
+import type { PhotoStorage } from '../../services/storage/photoStorage.js';
 import { MAX_IMAGE_BYTES } from '../../types/diagnosis.js';
 import { parseOrThrow } from '../../utils/validation.js';
 import { audit } from '../audit/audit.service.js';
@@ -12,6 +13,7 @@ import {
   draftListing,
   findPhoto,
   listSellerListings,
+  photoContent,
   storePhoto,
   toSellerListingView,
   updateListing,
@@ -43,31 +45,34 @@ function requirePhoto(file: Express.Multer.File | undefined): UploadedPhoto {
 export interface ListingRouterDeps {
   ai: AiProvider;
   aiRateLimit: RequestHandler;
+  photos: PhotoStorage;
 }
 
-export function createListingRouter({ ai, aiRateLimit }: ListingRouterDeps): Router {
+export function createListingRouter({ ai, aiRateLimit, photos }: ListingRouterDeps): Router {
   const router = Router();
   const json = express.json({ limit: '16kb' });
   const canList = requireRole('seller', 'coordinator');
 
   router.post('/market/listings/draft', canList, aiRateLimit, uploadListingPhoto, async (req, res: Response<DraftResponse>) => {
     const { text } = parseOrThrow(draftBodySchema, req.body ?? {});
-    res.json(await draftListing(ai, currentUser(req), requirePhoto(req.file), text));
+    res.json(await draftListing(ai, photos, currentUser(req), requirePhoto(req.file), text));
   });
 
   router.post('/market/photos', canList, uploadListingPhoto, async (req, res: Response<{ photoId: string }>) => {
-    res.status(201).json({ photoId: await storePhoto(currentUser(req).id, requirePhoto(req.file)) });
+    res.status(201).json({ photoId: await storePhoto(photos, currentUser(req).id, requirePhoto(req.file)) });
   });
 
   router.get('/market/photos/:id', async (req, res) => {
     const photo = await findPhoto(String(req.params.id), req.user);
-    if (!photo) throw new AppError('NOT_FOUND');
-    res
-      .type(photo.mimeType)
-      // A saved photo never changes, so phones can keep it (saves data on slow networks).
-      .set('Cache-Control', photo.attached ? 'public, max-age=604800, immutable' : 'private, no-store')
-      .set('Cross-Origin-Resource-Policy', 'cross-origin')
-      .send(photo.data);
+    const content = photo ? await photoContent(photo, photos) : null;
+    if (!photo || !content) throw new AppError('NOT_FOUND');
+    // A saved photo never changes, so phones can keep it (saves data on slow networks).
+    res.set('Cache-Control', photo.attached ? 'public, max-age=604800, immutable' : 'private, no-store');
+    if (content.kind === 'redirect') {
+      res.redirect(302, content.url);
+      return;
+    }
+    res.type(content.mimeType).set('Cross-Origin-Resource-Policy', 'cross-origin').send(content.data);
   });
 
   // Public (no login): browse and open listings. Never includes phone numbers or UPI IDs.

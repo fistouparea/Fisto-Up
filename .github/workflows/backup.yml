@@ -1,0 +1,36 @@
+# Daily encrypted MongoDB backup kept as a private GitHub artifact for 14 days (free on GitHub).
+# Needs repository secrets MONGO_URI (a read-only Atlas user is enough) and BACKUP_PASSPHRASE.
+# Without them the job does nothing. Restore: download the artifact, then scripts/restore.sh (DEPLOY.md).
+name: Daily backup
+
+on:
+  schedule:
+    - cron: "30 20 * * *" # 02:00 India time
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      MONGO_URI: ${{ secrets.MONGO_URI }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Skip when secrets are not set
+        id: check
+        run: |
+          if [ -z "$MONGO_URI" ] || [ -z "$BACKUP_PASSPHRASE" ]; then echo "MONGO_URI / BACKUP_PASSPHRASE secrets not set, skipping."; echo "run=no" >> "$GITHUB_OUTPUT"; else echo "run=yes" >> "$GITHUB_OUTPUT"; fi
+      - name: Back up (encrypted)
+        if: steps.check.outputs.run == 'yes'
+        run: BACKUP_DIR=backups RETENTION_DAYS=1 ./scripts/backup.sh
+      - uses: actions/upload-artifact@v4
+        if: steps.check.outputs.run == 'yes'
+        with:
+          name: agriai-backup-${{ github.run_id }}
+          path: backups/*.gpg
+          retention-days: 14
+          if-no-files-found: error

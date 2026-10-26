@@ -852,3 +852,49 @@ banayein (local wali dobara use na karein).
   `@sentry/react` (error tracking). Sab jaane-maane aur free.
 - Purane single-field indexes (orders.buyerId wagairah) compound index se badle. Pehle se chal rahe database mein
   purane index bhi rahenge, jo nuksaan nahi karte.
+
+## Task 3 – Production deployment setup
+
+**Kya bana:**
+- **Dockerfiles (multi-stage, non-root):**
+  - Backend: build stage mein TypeScript compile hota hai. Runtime = khaali Alpine + sirf `node` binary +
+    production packages (npm/yarn bhi nahi). User `node` (uid 1000), `HEALTHCHECK` `/health` par.
+    Size: 375 MB khula / **74 MB download** (pehle 419 MB; zyada hissa node binary aur Sentry ka hai).
+  - Frontend: `nginx-unprivileged` (uid 101, port 8080). **21 MB download.**
+- **nginx** (`frontend/nginx/`): gzip, `/assets` 1 saal immutable cache, `index.html`/`sw.js`/manifest hamesha
+  naye (`no-cache`), saare security headers har location mein, `X-Request-Id` backend ko jaata hai.
+  `deploy/nginx-https.conf`: HTTP→HTTPS redirect, TLS 1.2/1.3, HSTS, Let's Encrypt renewal path.
+- **`docker-compose.prod.yml`:** Atlas ke saath (local Mongo sirf `--profile local-db` se), backend read-only
+  filesystem, `cap_drop: ALL`, `no-new-privileges`, log rotation, port 80/443.
+- **Photo storage provider** (`services/storage/`): `PhotoStorage` interface.
+  - `database` (default; dev, tests): photo MongoDB mein, pehle jaisa.
+  - `cloudinary` (production): Cloudinary REST API, signed request, koi SDK nahi. Phone ko photo
+    `f_auto,q_auto,w_1024` (WebP, chhoti) CDN se milti hai. `GET /api/market/photos/:id` 302 redirect deta hai,
+    isliye purane order/listing links waise hi chalte hain. Purani database wali photos bhi dikhti rehti hain.
+  - Bina use hui photos ab ek **hourly job** (`jobs/photoCleanup.ts`) hatata hai: pehle Cloudinary se, phir record.
+    Delete fail ho to record rehta hai aur agli baar dobara koshish hoti hai. Purana TTL index hata diya (woh sirf
+    record mitata tha, Cloudinary ki file nahi).
+- **Atlas-ready:** `MONGO_URI=mongodb+srv://...` chalta hai (TLS, retryable writes, replica set → transactions).
+  `appName` set hai. Production mein database storage ho to log mein chetavni (Atlas M0 sirf 512 MB).
+- **GitHub Actions** (`.github/workflows/ci.yml`): har push/PR par dono apps ka lint, typecheck, test, build,
+  `npm audit --audit-level=high`, aur Docker images build + non-root check. Merge rokne ka tareeka DEPLOY.md step 9.
+- **Backup** (`scripts/backup.sh`, `scripts/restore.sh`): mongodump (ya Docker), gzip, gpg encryption (passphrase ho to),
+  retention (default 14 din). Restore bina `--drop` ke safe hai; `--drop` par "RESTORE" type karna padta hai.
+  `.github/workflows/backup.yml`: roz 2 baje encrypted backup GitHub artifact mein (14 din).
+- **`render.yaml`** (Blueprint) + **`DEPLOY.md`** (Hinglish, step by step).
+
+**Maine kya check kiya:**
+- Ek throwaway MongoDB container par: backup → encrypt → ek document mitaya → restore → document wapas aaya.
+- `docker compose` (alag project naam, port 18080) se poora stack: `/api/ready` ok, CSP + headers, gzip, asset cache,
+  nginx ki request id backend log mein, SIGTERM par "shutdown complete". Baad mein containers aur volume hata diye.
+- Galat production config par container saaf message dekar band hota hai (value nahi dikhti).
+
+**Decisions:**
+- Render par farmer app **static site** hai (free, CDN, kabhi soti nahi) aur `/api/*` ko backend tak **rewrite**
+  karti hai. Isse app aur API ek address par rehte hain: login cookie (SameSite=Strict) chalti hai aur CSP `'self'` kaafi hai.
+  Render ke docs mein rewrite se POST/cookie ka vyavhaar saaf likha nahi hai, isliye DEPLOY.md mein test aur
+  "Plan B" (`api.` subdomain + `VITE_API_BASE_URL`) diya hai. **Ye asli Render par test nahi hua** (account nahi hai).
+- `TRUST_PROXY=2` Render ke liye (rewrite + load balancer). Asli Render par logs mein IP dekhkar pakka karein.
+- Local "storage" = MongoDB (koi naya folder/volume nahi), kyunki ye tests aur Docker mein bina setup chalta hai.
+- Backup scripts archive ko stdout/stdin se bhejti hain (Docker mein folder share karne ki permission dikkat nahi).
+- Startup par index banana "slow query" mein nahi gina jaata.

@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { COMMISSION_RULES, percentToBps } from './marketRules.js';
 import { LOG_LEVELS } from '../observability/logger.js';
+import { parseCloudinaryUrl } from '../services/storage/cloudinaryStorage.js';
+import { STORAGE_PROVIDERS } from '../services/storage/photoStorage.js';
 
 /** Optional value; an empty line in .env (e.g. "DATA_GOV_API_KEY=") counts as not set. */
 function optional<T extends z.ZodType>(schema: T) {
@@ -50,6 +52,11 @@ const envSchema = z.object({
   COMMISSION_PERCENT: optional(
     z.coerce.number().min(COMMISSION_RULES.minPercent).max(COMMISSION_RULES.maxPercent),
   ),
+  /** Where listing photos are stored: "database" (MongoDB, default) or "cloudinary" (production). */
+  STORAGE_PROVIDER: optional(z.enum(STORAGE_PROVIDERS)).default('database'),
+  /** Cloudinary dashboard → "API environment variable": cloudinary://<key>:<secret>@<cloud>. Keep secret. */
+  CLOUDINARY_URL: optional(z.string().trim()),
+  CLOUDINARY_FOLDER: optional(z.string().trim().regex(/^[\w/-]{1,100}$/)).default('agriai/listings'),
   /** Log detail: info (default), warn, error, debug ... Tests default to silent. */
   LOG_LEVEL: optional(z.enum(LOG_LEVELS)),
   /** Sentry error tracking (optional, free tier): the backend project's DSN. Empty = off. */
@@ -92,7 +99,13 @@ const productionChecks = envSchema.superRefine((env, ctx) => {
   require('JWT_SECRET', 'the marketplace and pilot logins need it');
 });
 
-const envWithDefaults = productionChecks.transform((env) => ({ ...env, CORS_ORIGIN: env.CORS_ORIGIN ?? [DEV_CORS_ORIGIN] }));
+const storageChecks = productionChecks.superRefine((env, ctx) => {
+  if (env.STORAGE_PROVIDER === 'cloudinary' && !(env.CLOUDINARY_URL && parseCloudinaryUrl(env.CLOUDINARY_URL, env.CLOUDINARY_FOLDER))) {
+    ctx.addIssue({ code: 'custom', path: ['CLOUDINARY_URL'], message: 'STORAGE_PROVIDER=cloudinary needs CLOUDINARY_URL=cloudinary://<key>:<secret>@<cloud>' });
+  }
+});
+
+const envWithDefaults = storageChecks.transform((env) => ({ ...env, CORS_ORIGIN: env.CORS_ORIGIN ?? [DEV_CORS_ORIGIN] }));
 
 export type Env = z.infer<typeof envWithDefaults>;
 

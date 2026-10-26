@@ -1,0 +1,75 @@
+# Lint, type-check, test and build both apps on every push and pull request.
+# To block merging on failure: GitHub → Settings → Branches → Add branch ruleset for "main" →
+# "Require status checks to pass" → add "backend", "frontend" and "docker" (DEPLOY.md, step 9).
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      # Tests start a throwaway MongoDB replica set (mongodb-memory-server); keep its binary between runs.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/mongodb-binaries
+          key: mongodb-binaries-${{ runner.os }}-${{ hashFiles('backend/package-lock.json') }}
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npm audit --audit-level=high --omit=dev
+
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npm audit --audit-level=high
+
+  docker:
+    # The production images must still build, stay small and run as a non-root user.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t agriai-backend ./backend
+      - run: docker build -t agriai-frontend ./frontend
+      - name: Images run as non-root
+        run: |
+          test "$(docker run --rm --entrypoint id agriai-backend -u)" != "0"
+          test "$(docker run --rm --entrypoint id agriai-frontend -u)" != "0"
+          docker image ls --format '{{.Repository}} {{.Size}}' | grep agriai
