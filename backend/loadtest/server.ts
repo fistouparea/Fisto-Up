@@ -26,6 +26,7 @@ const ai: AiProvider = {
   chat: async () => (await wait(AI_DELAY_MS), 'शाम को छिड़काव करें।'),
   draftListing: async () => (await wait(AI_DELAY_MS), bajraListingDraft),
   estimatePrice: async () => ({ min_rupees: 180, max_rupees: 240, confidence: 'medium' }),
+  classifyIntent: async () => ({ intent: null }),
 };
 
 const replSet = await MongoMemoryReplSet.create({ replSet: { count: 1, storageEngine: 'wiredTiger' } });

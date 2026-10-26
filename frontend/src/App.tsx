@@ -25,6 +25,8 @@ import { reportAppOpen } from './utils/appOpen';
 import { hasConsented, isConsentPending, markConsentSent, rememberConsent } from './utils/consentState';
 import { cn } from './utils/cn';
 import { RequireRole } from './components/market/RequireRole';
+import { AutoReader } from './components/voice/AutoReader';
+import { VoiceFab } from './components/voice/VoiceFab';
 import { useAuth } from './hooks/useAuth';
 import { useLang } from './hooks/useLang';
 import type { Account } from './api/marketTypes';
@@ -48,6 +50,7 @@ const WeatherPage = lazyNamed(() => import('./pages/WeatherPage'), 'WeatherPage'
 const LegalPage = lazyNamed(() => import('./pages/LegalPage'), 'LegalPage');
 const MyDataPage = lazyNamed(() => import('./pages/MyDataPage'), 'MyDataPage');
 const HelpPage = lazyNamed(() => import('./pages/HelpPage'), 'HelpPage');
+const SettingsPage = lazyNamed(() => import('./pages/SettingsPage'), 'SettingsPage');
 const AccountPage = lazyNamed(() => import('./pages/market/AccountPage'), 'AccountPage');
 const BuyerProfilePage = lazyNamed(() => import('./pages/market/BuyerProfilePage'), 'BuyerProfilePage');
 const LoginPage = lazyNamed(() => import('./pages/market/LoginPage'), 'LoginPage');
@@ -139,6 +142,12 @@ function AppShell() {
           </ErrorBoundary>
         </PageTransition>
       </main>
+      {!showConsent && !showOnboarding && route.name !== 'admin' && (
+        <>
+          <VoiceFab />
+          <AutoReader screenKey={screenKey} />
+        </>
+      )}
       {!showConsent && (
         <BottomNav
           label={hi.nav.label}
@@ -230,6 +239,8 @@ function Page({ route, diagnoseKey }: { route: Route; diagnoseKey: number }) {
       return <MyDataPage />;
     case 'help':
       return <HelpPage />;
+    case 'settings':
+      return <SettingsPage />;
     case 'buyerProfile':
       return <RequireRole roles={['buyer']}>{(user) => <BuyerProfilePage user={user} onSaved={savedProfile} />}</RequireRole>;
   }

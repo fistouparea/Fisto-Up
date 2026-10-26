@@ -7,7 +7,9 @@ import {
   type GenerateContentParameters,
   type Schema,
 } from '@google/genai';
-import type { z } from 'zod';
+import { z } from 'zod';
+import { VOICE_INTENT_IDS, type VoiceIntentId } from '../../config/voiceIntents.js';
+import { buildIntentUserPrompt, INTENT_SYSTEM_PROMPT } from './voicePrompt.js';
 import { AppError } from '../../errors/AppError.js';
 import { aiChatAnswerSchema } from '../../types/chat.js';
 import { aiDiagnosisSchema, type AiDiagnosis } from '../../types/diagnosis.js';
@@ -130,6 +132,13 @@ const PRICE_RESPONSE_SCHEMA: Schema = {
   required: ['min_rupees', 'max_rupees', 'confidence'],
 };
 
+const INTENT_RESPONSE_SCHEMA: Schema = {
+  type: Type.OBJECT,
+  properties: { intent: { type: Type.STRING, enum: [...VOICE_INTENT_IDS, 'unknown'] } },
+  required: ['intent'],
+};
+const aiIntentSchema = z.object({ intent: z.enum([...VOICE_INTENT_IDS, 'unknown']) });
+
 type GenerateRequest = Pick<GenerateContentParameters, 'contents'> & {
   systemInstruction: string;
   responseSchema: Schema;
@@ -222,6 +231,15 @@ export class GeminiProvider implements AiProvider {
       responseSchema: PRICE_RESPONSE_SCHEMA,
       contents: [{ role: 'user', parts: [{ text: buildPriceEstimatePrompt(productName, UNIT_NAMES[unit].en) }] }],
     }, aiPriceEstimateSchema);
+  }
+
+  async classifyIntent({ text }: { text: string }): Promise<{ intent: VoiceIntentId | null }> {
+    const result = await this.generateValidated({
+      systemInstruction: INTENT_SYSTEM_PROMPT,
+      responseSchema: INTENT_RESPONSE_SCHEMA,
+      contents: [{ role: 'user', parts: [{ text: buildIntentUserPrompt(text) }] }],
+    }, aiIntentSchema);
+    return { intent: result.intent === 'unknown' ? null : result.intent };
   }
 
   /**

@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { buildListingUserPrompt, buildPriceEstimatePrompt, LISTING_SYSTEM_PROMPT, PRICE_ESTIMATE_SYSTEM_PROMPT } from './marketPrompt.js';
+import { buildIntentUserPrompt, INTENT_SYSTEM_PROMPT } from './voicePrompt.js';
 import { buildChatSystemPrompt, buildDiagnosisUserPrompt, DIAGNOSIS_SYSTEM_PROMPT } from './prompt.js';
 
 /**
@@ -16,6 +17,7 @@ export const PROMPTS = {
   },
   chat: { version: 'chat-v1', text: () => buildChatSystemPrompt('<crop>', SAMPLE_DIAGNOSIS) },
   listing: { version: 'listing-v1', text: () => `${LISTING_SYSTEM_PROMPT}\n\n--- user ---\n${buildListingUserPrompt('<seller words>')}` },
+  intent: { version: 'intent-v1', text: () => `${INTENT_SYSTEM_PROMPT}\n\n--- user ---\n${buildIntentUserPrompt('<farmer words>')}` },
   priceEstimate: { version: 'price-v1', text: () => `${PRICE_ESTIMATE_SYSTEM_PROMPT}\n\n--- user ---\n${buildPriceEstimatePrompt('<product>', '<unit>')}` },
 } as const;
 

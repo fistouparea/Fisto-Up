@@ -29,7 +29,8 @@ export type Route =
   | { name: 'privacy' }
   | { name: 'terms' }
   | { name: 'myData' }
-  | { name: 'help' };
+  | { name: 'help' }
+  | { name: 'settings' };
 
 export const routes = {
   home: '#/',
@@ -57,6 +58,7 @@ export const routes = {
   terms: '#/terms',
   myData: '#/my-data',
   help: '#/help',
+  settings: '#/settings',
   admin: (tab: AdminTab = 'overview') => (tab === 'overview' ? '#/admin' : `#/admin/${tab}`),
 };
 
@@ -89,6 +91,7 @@ export function parseRoute(hash: string): Route {
   if (section === 'terms') return { name: 'terms' };
   if (section === 'my-data') return { name: 'myData' };
   if (section === 'help') return { name: 'help' };
+  if (section === 'settings') return { name: 'settings' };
   if (section === 'sell' && id === 'new') return { name: 'sellNew' };
   if (section === 'sell') return { name: 'sell' };
   if (section === 'login') return { name: 'login' };

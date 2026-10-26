@@ -1,0 +1,84 @@
+/**
+ * "बोलकर चलाएँ": what a farmer can ask for by voice, with example phrases. Edit here, not in code.
+ * The app opens the screen of the chosen intent (ids mirrored in frontend/src/data/voiceIntents.ts).
+ * Keywords are checked first (free, instant); only when none fits, the AI picks from this fixed list.
+ * Keywords include common Marwari/Shekhawati forms (⚠️ review by a local speaker).
+ */
+export interface VoiceIntent {
+  /** For the AI: what this screen is for (English, short). */
+  description: string;
+  /** Example phrases (Hindi / Rajasthani), also shown to the AI. */
+  examples: readonly string[];
+  /** Any of these words in the spoken text selects this intent without the AI. Lower case. */
+  keywords: readonly string[];
+}
+
+export const VOICE_INTENTS = {
+  diagnose: {
+    description: 'check a sick crop with a photo',
+    examples: ['फसल की जाँच करनी है', 'पत्ते पीले हो गए', 'बीमारी देखनी है', 'फोटो से जाँच'],
+    keywords: ['जाँच', 'जांच', 'बीमारी', 'रोग', 'कीड़ा', 'कीड़े', 'फोटो', 'पीले', 'पीला'],
+  },
+  weather: {
+    description: 'weather forecast, rain, heat, frost',
+    examples: ['मौसम बताओ', 'बारिश होगी क्या', 'आज कितनी गर्मी है', 'मेह आसी के'],
+    keywords: ['मौसम', 'बारिश', 'बरसात', 'मेह', 'मेंह', 'गर्मी', 'पाला', 'ठंड', 'आंधी', 'आँधी'],
+  },
+  water: {
+    description: 'when to irrigate / water the crop',
+    examples: ['पानी कब दूँ', 'सिंचाई करनी है क्या', 'पाणी कद देऊं'],
+    keywords: ['पानी', 'पाणी', 'सिंचाई', 'सींच'],
+  },
+  calendar: {
+    description: 'crop calendar and today\'s farm work',
+    examples: ['आज क्या काम करना है', 'फसल कैलेंडर दिखाओ', 'बुवाई कब करूँ'],
+    keywords: ['कैलेंडर', 'आज का काम', 'क्या काम', 'काम बताओ', 'बुवाई कब'],
+  },
+  sell: {
+    description: 'sell own produce in the marketplace',
+    examples: ['बाजरा बेचना है', 'माल बेचना है', 'मेरा अनाज बिकवाओ', 'बेचणो है'],
+    keywords: ['बेचना', 'बेचनी', 'बेचणो', 'बेचणा', 'बिकवा', 'बेचूं', 'बेचूँ'],
+  },
+  buy: {
+    description: 'buy things in the marketplace (grain, SHG products, seeds, fertilizer, medicine)',
+    examples: ['खाद खरीदनी है', 'बाज़ार दिखाओ', 'बीज चाहिए', 'दवाई कठे मिलसी'],
+    keywords: ['खरीद', 'बाज़ार', 'बाजार', 'खाद', 'बीज', 'दवाई', 'कठे मिल'],
+  },
+  history: {
+    description: 'earlier crop checks (history)',
+    examples: ['पुरानी जाँच दिखाओ', 'मेरी जाँच'],
+    keywords: ['पुरानी', 'मेरी जाँच', 'पिछली'],
+  },
+  farm: {
+    description: 'my farm details: location, crops, field size',
+    examples: ['मेरा खेत', 'खेत की जानकारी बदलनी है', 'नई फसल जोड़नी है'],
+    keywords: ['मेरा खेत', 'खेत की जानकारी', 'म्हारो खेत', 'फसल जोड़'],
+  },
+  notifications: {
+    description: 'notifications and alerts',
+    examples: ['सूचना दिखाओ', 'कोई नया संदेश'],
+    keywords: ['सूचना', 'संदेश', 'नोटिफिकेशन'],
+  },
+  help: {
+    description: 'help or complaint to the coordinator',
+    examples: ['मदद चाहिए', 'शिकायत करनी है', 'संयोजक से बात'],
+    keywords: ['मदद', 'शिकायत', 'संयोजक'],
+  },
+  settings: {
+    description: 'app settings: language, read aloud',
+    examples: ['भाषा बदलो', 'राजस्थानी में', 'पढ़कर सुनाओ चालू करो'],
+    keywords: ['भाषा', 'सेटिंग', 'पढ़कर सुना', 'राजस्थानी', 'अंग्रेज़ी', 'english'],
+  },
+  home: {
+    description: 'home screen',
+    examples: ['होम पर चलो', 'शुरू की स्क्रीन'],
+    keywords: ['होम', 'शुरू'],
+  },
+} as const satisfies Record<string, VoiceIntent>;
+
+export type VoiceIntentId = keyof typeof VOICE_INTENTS;
+export const VOICE_INTENT_IDS = Object.keys(VOICE_INTENTS) as [VoiceIntentId, ...VoiceIntentId[]];
+
+export const VOICE_RULES = {
+  maxTextLength: 300,
+} as const;

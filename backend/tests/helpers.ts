@@ -5,6 +5,7 @@ import type { HistoryRepository } from '../src/services/history/historyRepositor
 import type { AiDiagnosis } from '../src/types/diagnosis.js';
 import type { AiListingDraft } from '../src/modules/listings/listing.types.js';
 import type { AiPriceEstimate } from '../src/modules/pricing/pricing.types.js';
+import type { VoiceIntentId } from '../src/config/voiceIntents.js';
 
 /** Smallest byte sequence our magic-number check accepts as a JPEG. */
 export const JPEG_BYTES = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(100)]);
@@ -40,6 +41,8 @@ export const bajraListingDraft: AiListingDraft = {
 export interface FakeMarketAi {
   draftListing?: AiListingDraft | Error;
   estimatePrice?: AiPriceEstimate | Error;
+  /** "बोलकर चलाएँ": what the AI picks when no keyword matched (default: not understood). */
+  classifyIntent?: { intent: VoiceIntentId | null } | Error;
 }
 
 export function createFakeProvider(
@@ -65,7 +68,12 @@ export function createFakeProvider(
     if (result instanceof Error) throw result;
     return result;
   });
-  return { diagnose, chat, draftListing, estimatePrice } satisfies AiProvider;
+  const classifyIntent = vi.fn<AiProvider['classifyIntent']>(async () => {
+    const result = market.classifyIntent ?? { intent: null };
+    if (result instanceof Error) throw result;
+    return result;
+  });
+  return { diagnose, chat, draftListing, estimatePrice, classifyIntent } satisfies AiProvider;
 }
 
 export function createTestApp(

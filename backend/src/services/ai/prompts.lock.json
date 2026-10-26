@@ -14,5 +14,9 @@
   "priceEstimate": {
     "version": "price-v1",
     "fingerprint": "6572c0e44831"
+  },
+  "intent": {
+    "version": "intent-v1",
+    "fingerprint": "7bfaa62ffc31"
   }
 }

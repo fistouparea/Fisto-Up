@@ -3,6 +3,7 @@ import type { AiDiagnosis, Diagnosis, ImageMimeType } from '../../types/diagnosi
 import type { AiListingDraft } from '../../modules/listings/listing.types.js';
 import type { AiPriceEstimate } from '../../modules/pricing/pricing.types.js';
 import type { Unit } from '../../config/marketCatalog.js';
+import type { VoiceIntentId } from '../../config/voiceIntents.js';
 
 export interface DiagnoseInput {
   image: Buffer;
@@ -40,4 +41,6 @@ export interface AiProvider {
   draftListing(input: ListingDraftInput): Promise<AiListingDraft>;
   /** Rough fair price for an SHG product. Only the product name and unit are sent. */
   estimatePrice(input: { productName: string; unit: Unit }): Promise<AiPriceEstimate>;
+  /** "बोलकर चलाएँ": one intent from config/voiceIntents.ts for the spoken text, null when unsure. */
+  classifyIntent(input: { text: string }): Promise<{ intent: VoiceIntentId | null }>;
 }
