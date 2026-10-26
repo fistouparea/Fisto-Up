@@ -6,7 +6,7 @@ import { sellerRating } from '../auth/accountView.js';
 import type { AuthUser } from '../auth/auth.types.js';
 import { UserModel } from '../auth/user.model.js';
 import { ListingModel, type ListingDocument } from './listing.model.js';
-import { isPubliclyVisible, photoUrl } from './listing.service.js';
+import { isBlockedListing, isPubliclyVisible, photoUrl } from './listing.service.js';
 import type { PublicListingView, PublicSeller } from './listing.types.js';
 
 const EARTH_RADIUS_KM = 6378.1;
@@ -106,7 +106,7 @@ export async function findPublicListing(id: string, viewer: AuthUser | undefined
 /** The fields a public view needs; full documents and lean rows both have them. */
 type ListingSource = Pick<
   ListingDocument,
-  '_id' | 'sellerId' | 'category' | 'product' | 'title' | 'description' | 'qualityNotes' | 'unit' | 'pricePerUnitPaise' | 'quantityAvailable' | 'minOrderQty' | 'photoIds' | 'fssaiNumber' | 'location' | 'place' | 'createdAt'
+  '_id' | 'sellerId' | 'category' | 'product' | 'genericId' | 'title' | 'description' | 'qualityNotes' | 'unit' | 'pricePerUnitPaise' | 'quantityAvailable' | 'minOrderQty' | 'photoIds' | 'fssaiNumber' | 'location' | 'place' | 'createdAt'
 >;
 
 export async function toPublicViews(listings: ListingSource[], origin?: { lat: number; lon: number }): Promise<PublicListingView[]> {
@@ -128,7 +128,7 @@ export async function toPublicViews(listings: ListingSource[], origin?: { lat: n
 
   return listings.flatMap((listing) => {
     const seller = byId.get(listing.sellerId.toString());
-    if (!seller) return [];
+    if (!seller || isBlockedListing(listing)) return [];
     const [lon, lat] = listing.location?.coordinates ?? [];
     return [
       {
@@ -144,7 +144,9 @@ export async function toPublicViews(listings: ListingSource[], origin?: { lat: n
         minOrderQty: listing.minOrderQty,
         photoUrls: listing.photoIds.map(photoUrl),
         ...(listing.fssaiNumber && { fssaiNumber: listing.fssaiNumber }),
+        ...(listing.genericId && { genericId: listing.genericId }),
         seller,
+        partner: listing.category === 'input',
         place: {
           ...(listing.place?.district && { district: listing.place.district }),
           ...(listing.place?.tehsil && { tehsil: listing.place.tehsil }),

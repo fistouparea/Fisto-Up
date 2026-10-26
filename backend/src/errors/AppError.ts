@@ -24,6 +24,9 @@ export type ErrorCode =
   | 'ACTIVE_ORDERS'
   | 'INVITE_REQUIRED'
   | 'INVALID_INVITE'
+  | 'LICENCE_CHECK_REQUIRED'
+  | 'BLOCKED_INPUT'
+  | 'LICENCE_NOT_VERIFIED'
   | 'INTERNAL';
 
 const HTTP_STATUS: Record<ErrorCode, number> = {
@@ -59,6 +62,12 @@ const HTTP_STATUS: Record<ErrorCode, number> = {
   INVITE_REQUIRED: 403,
   /** Unknown, used up, expired or revoked invite code. */
   INVALID_INVITE: 400,
+  /** An input dealer is verified only when the coordinator confirms the licence check. */
+  LICENCE_CHECK_REQUIRED: 400,
+  /** A banned, red-label or restricted input (config/inputRules.ts) cannot be listed. */
+  BLOCKED_INPUT: 400,
+  /** Input dealers list only after a coordinator checked their licence. */
+  LICENCE_NOT_VERIFIED: 403,
   INTERNAL: 500,
 };
 

@@ -3,6 +3,7 @@ import { LuBanknote, LuHandCoins, LuLogIn, LuQrCode, LuSend, LuShoppingCart, LuS
 import { ApiError } from '../../api/client';
 import type { Fulfilment, PaymentMethod, PublicListing } from '../../api/marketTypes';
 import { placeOrder } from '../../api/orders';
+import { isKitReferral } from '../../utils/kitReferral';
 import { useAuth } from '../../hooks/useAuth';
 import { routes } from '../../hooks/useHashRoute';
 import { useLang } from '../../hooks/useLang';
@@ -76,6 +77,7 @@ function OpenOrderForm({ listing, defaultAddress, lang }: { listing: PublicListi
         ...(fulfilment === 'delivery' && { deliveryAddress: address.trim() }),
         ...(offer !== null && { offeredPricePerUnitPaise: offer }),
         ...(note.trim() && { note: note.trim() }),
+        ...(listing.category === 'input' && isKitReferral(listing.id) && { referral: 'ai_kit' as const }),
       });
       notifySuccess(text.placed);
       navigateTo(routes.order(order.id));

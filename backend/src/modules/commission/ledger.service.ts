@@ -51,6 +51,16 @@ export async function monthlyTotals(): Promise<MonthTotal[]> {
   return rows.map(({ _id, ...totals }) => withDue({ month: _id, ...totals }));
 }
 
+/** Partner referrals (input dealers' orders from the "ज़रूरी सामान" kit) month by month: our income source. */
+export async function referralTotals(): Promise<MonthTotal[]> {
+  const rows = await CommissionEntryModel.aggregate<Totals & { _id: string }>([
+    { $match: { type: 'partner_referral' } },
+    { $group: { _id: '$month', ...TOTALS } },
+    { $sort: { _id: -1 } },
+  ]).exec();
+  return rows.map(({ _id, ...totals }) => withDue({ month: _id, ...totals }));
+}
+
 /** Per seller for one month (or all time without `month`), biggest dues first. */
 export async function sellerDues(month?: string): Promise<SellerDues[]> {
   const rows = await CommissionEntryModel.aggregate<Totals & { _id: Types.ObjectId }>([
@@ -102,7 +112,7 @@ export async function ledgerCsv(month?: string): Promise<string> {
   const byId = new Map(sellers.map((user) => [user._id.toString(), user]));
   const rupees = (paise: number) => (paise / 100).toFixed(2);
 
-  const header = ['month', 'completed_at', 'order_ref', 'seller', 'village', 'seller_phone', 'order_total_inr', 'rate_percent', 'commission_inr', 'status', 'collected_at'];
+  const header = ['month', 'completed_at', 'order_ref', 'seller', 'village', 'seller_phone', 'order_total_inr', 'rate_percent', 'commission_inr', 'status', 'collected_at', 'type'];
   const lines = entries.map((entry) => {
     const seller = byId.get(entry.sellerId.toString());
     return [
@@ -117,6 +127,7 @@ export async function ledgerCsv(month?: string): Promise<string> {
       rupees(entry.amountPaise),
       entry.status,
       entry.collectedAt?.toISOString() ?? '',
+      entry.type ?? 'order',
     ];
   });
   return toCsv(header, lines);

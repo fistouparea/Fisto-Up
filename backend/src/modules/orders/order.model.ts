@@ -1,6 +1,7 @@
 import { model, Schema } from 'mongoose';
 import { PRODUCT_IDS, UNITS } from '../../config/marketCatalog.js';
 import { ROLES } from '../auth/auth.types.js';
+import { REFERRALS } from '../../config/inputRules.js';
 import { FULFILMENTS, ORDER_STATUSES } from './orderStateMachine.js';
 
 export const PAYMENT_METHODS = ['upi', 'cash'] as const;
@@ -38,6 +39,8 @@ const orderSchema = new Schema(
     totalPaise: { type: Number, required: true },
     /** B2B counter-offer the seller accepts or rejects. */
     isPriceRequest: { type: Boolean, default: false },
+    /** Partner referral (the "ज़रूरी सामान" kit): its commission goes to the ledger as its own type. */
+    referral: { type: String, enum: REFERRALS },
     fulfilment: { type: String, enum: FULFILMENTS, required: true },
     deliveryAddress: String,
     /** How the buyer plans to pay; `paidVia` is what the seller confirmed. */

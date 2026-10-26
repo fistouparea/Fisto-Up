@@ -1,5 +1,5 @@
 import { model, Schema } from 'mongoose';
-import { BUYER_TYPES, ROLES, SELLER_STATUSES } from './auth.types.js';
+import { BUYER_TYPES, ROLES, SELLER_KINDS, SELLER_STATUSES } from './auth.types.js';
 
 const placeSchema = new Schema(
   {
@@ -17,6 +17,11 @@ const placeSchema = new Schema(
 const sellerSchema = new Schema(
   {
     status: { type: String, enum: SELLER_STATUSES, required: true, default: 'pending' },
+    kind: { type: String, enum: SELLER_KINDS, required: true, default: 'producer' },
+    /** Input dealers only. A coordinator checks it before verifying; changing it needs a new check. */
+    licenceNumber: String,
+    licenceVerifiedAt: Date,
+    licenceVerifiedBy: { type: Schema.Types.ObjectId, ref: 'User' },
     village: String,
     shgName: String,
     upiId: String,

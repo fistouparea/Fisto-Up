@@ -21,6 +21,7 @@ import { CropGrid } from '../components/CropGrid';
 import { PhotoActions, SquareButton } from '../components/PhotoActions';
 import { PhotoPreview } from '../components/PhotoPreview';
 import { ResultView } from '../components/ResultView';
+import { AiKitCard } from '../components/kit/AiKitCard';
 import { FeedbackCard } from '../components/FeedbackCard';
 import { SelectedCrop } from '../components/SelectedCrop';
 import { Button } from '../components/ui/Button';
@@ -163,6 +164,7 @@ export function DiagnosePage() {
             <>
               <SelectedCrop crop={state.crop} photo={state.photo} />
               <ResultView diagnosis={state.diagnosis} />
+              <AiKitCard diagnosis={state.diagnosis} />
               {state.historyId && <FeedbackCard historyId={state.historyId} />}
               <ChatPanel crop={state.crop} diagnosis={state.diagnosis} />
               <Button icon={LuCamera} onClick={() => chooseAgain(null)}>

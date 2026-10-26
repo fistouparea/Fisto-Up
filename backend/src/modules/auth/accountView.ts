@@ -36,6 +36,9 @@ export function toAccountView(user: UserDocument): AccountView {
 export function toSellerProfileView(seller: SellerData): SellerProfileView {
   return {
     status: seller.status,
+    kind: seller.kind ?? 'producer',
+    ...(seller.licenceNumber && { licenceNumber: seller.licenceNumber }),
+    licenceVerified: isLicenceVerified(seller),
     ...(seller.village && { village: seller.village }),
     ...(seller.shgName && { shgName: seller.shgName }),
     ...(seller.upiId && { upiId: seller.upiId }),
@@ -47,7 +50,13 @@ export function toSellerProfileView(seller: SellerData): SellerProfileView {
 }
 
 export function isSellerProfileComplete(seller: SellerData | null | undefined): boolean {
-  return Boolean(seller?.village && seller.upiId && seller.pickup);
+  const licenceOk = seller?.kind !== 'input_dealer' || Boolean(seller.licenceNumber);
+  return Boolean(seller?.village && seller.upiId && seller.pickup && licenceOk);
+}
+
+/** An input dealer whose licence a coordinator checked (and who is still verified). */
+export function isLicenceVerified(seller: SellerData | null | undefined): boolean {
+  return seller?.kind === 'input_dealer' && seller.status === 'verified' && Boolean(seller.licenceNumber && seller.licenceVerifiedAt);
 }
 
 export function sellerRating(seller: Pick<SellerData, 'ratingSum' | 'ratingCount'>): { average: number | null; count: number } {

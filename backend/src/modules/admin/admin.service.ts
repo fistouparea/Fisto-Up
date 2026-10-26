@@ -2,9 +2,9 @@ import { isValidObjectId } from 'mongoose';
 import { z } from 'zod';
 import { AppError } from '../../errors/AppError.js';
 import { escapeRegex } from '../listings/listing.search.js';
-import { sellerRating, toPlace } from '../auth/accountView.js';
+import { isLicenceVerified, isSellerProfileComplete, sellerRating, toPlace } from '../auth/accountView.js';
 import type { AuthService } from '../auth/auth.service.js';
-import { personNameSchema, phoneSchema, pinSchema, SELLER_STATUSES, type Place, type SellerStatus } from '../auth/auth.types.js';
+import { personNameSchema, phoneSchema, pinSchema, SELLER_KINDS, SELLER_STATUSES, type Place, type SellerKind, type SellerStatus } from '../auth/auth.types.js';
 import { UserModel, type UserDocument } from '../auth/user.model.js';
 import { CommissionEntryModel } from '../commission/commission.model.js';
 import { ListingModel } from '../listings/listing.model.js';
@@ -17,10 +17,13 @@ import { saveSellerProfile } from '../sellers/seller.service.js';
 
 export const sellerListQuerySchema = z.object({
   status: z.enum(SELLER_STATUSES).optional(),
+  kind: z.enum(SELLER_KINDS).optional(),
   q: z.string().trim().max(50).optional(),
 });
 
 export const rejectBodySchema = z.object({ reason: z.string().trim().min(2).max(300) });
+/** Input dealers: the coordinator confirms they checked the licence number (e.g. on the licence paper). */
+export const verifyBodySchema = z.object({ licenceChecked: z.boolean().optional() });
 export const hideBodySchema = z.object({ reason: z.string().trim().min(2).max(300) });
 export const resolveBodySchema = z.object({ resolution: z.string().trim().max(300).optional() });
 
@@ -52,6 +55,9 @@ export interface AdminSellerView {
   name: string;
   phone: string;
   status: SellerStatus;
+  kind: SellerKind;
+  licenceNumber?: string;
+  licenceVerified: boolean;
   village?: string;
   shgName?: string;
   upiId?: string;
@@ -70,6 +76,9 @@ export async function listSellers(query: z.infer<typeof sellerListQuerySchema>):
     role: 'seller',
     deletedAt: { $exists: false },
     ...(query.status && { 'seller.status': query.status }),
+    // Sellers saved before Phase 5 have no kind: they are producers.
+    ...(query.kind === 'input_dealer' && { 'seller.kind': 'input_dealer' }),
+    ...(query.kind === 'producer' && { 'seller.kind': { $ne: 'input_dealer' } }),
     ...(pattern && { $or: [{ name: pattern }, { phone: pattern }, { 'seller.village': pattern }] }),
   })
     .sort({ createdAt: -1 })
@@ -90,12 +99,15 @@ export function toAdminSeller(user: UserDocument, listings = 0): AdminSellerView
     name: user.name,
     phone: user.phone,
     status: seller?.status ?? 'pending',
+    kind: seller?.kind ?? 'producer',
+    ...(seller?.licenceNumber && { licenceNumber: seller.licenceNumber }),
+    licenceVerified: isLicenceVerified(seller),
     ...(seller?.village && { village: seller.village }),
     ...(seller?.shgName && { shgName: seller.shgName }),
     ...(seller?.upiId && { upiId: seller.upiId }),
     ...(seller?.pickup && { pickup: toPlace(seller.pickup) }),
     ...(seller?.rejectReason && { rejectReason: seller.rejectReason }),
-    profileComplete: Boolean(seller?.village && seller.upiId && seller.pickup),
+    profileComplete: isSellerProfileComplete(seller),
     listings,
     rating: sellerRating(seller ?? { ratingSum: 0, ratingCount: 0 }),
     createdAt: user.createdAt,

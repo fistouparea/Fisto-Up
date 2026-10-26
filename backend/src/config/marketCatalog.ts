@@ -4,10 +4,10 @@ import type { CropId } from '../types/diagnosis.js';
  * What can be sold. Product ids are mirrored in frontend/src/api/marketTypes.ts (PRODUCT_IDS); keep them in sync.
  * To add a product: add it here and in the frontend list + Hindi/English names (strings).
  */
-export const CATEGORIES = ['crop', 'shg'] as const;
+export const CATEGORIES = ['crop', 'shg', 'input'] as const;
 export type Category = (typeof CATEGORIES)[number];
 
-export const UNITS = ['quintal', 'kg', 'piece', 'pack'] as const;
+export const UNITS = ['quintal', 'kg', 'piece', 'pack', 'litre'] as const;
 export type Unit = (typeof UNITS)[number];
 
 interface ProductInfo {
@@ -24,6 +24,8 @@ interface ProductInfo {
 
 const CROP_UNITS = ['quintal', 'kg'] as const;
 const SHG_FOOD_UNITS = ['kg', 'pack', 'piece'] as const;
+/** खाद-बीज-दवाई: sold by licensed input dealers only (see config/inputRules.ts). */
+const INPUT_UNITS = ['pack', 'kg', 'litre'] as const;
 
 export const PRODUCTS = {
   bajra: { category: 'crop', hi: 'बाजरा', en: 'Bajra (Pearl millet)', units: CROP_UNITS, food: true, mandiCrop: 'bajra' },
@@ -42,6 +44,12 @@ export const PRODUCTS = {
   ker_sangri: { category: 'shg', hi: 'केर-सांगरी', en: 'Ker Sangri', units: SHG_FOOD_UNITS, food: true },
   handicraft: { category: 'shg', hi: 'हस्तशिल्प', en: 'Handicraft', units: ['piece', 'pack'], food: false },
   other_shg: { category: 'shg', hi: 'दूसरा सामान', en: 'Other product', units: ['piece', 'pack', 'kg'], food: false },
+  fungicide: { category: 'input', hi: 'फफूंदनाशक दवाई', en: 'Fungicide', units: INPUT_UNITS, food: false },
+  insecticide: { category: 'input', hi: 'कीटनाशक दवाई', en: 'Insecticide', units: INPUT_UNITS, food: false },
+  fertilizer: { category: 'input', hi: 'खाद', en: 'Fertilizer', units: ['kg', 'pack'], food: false },
+  seed: { category: 'input', hi: 'बीज', en: 'Seed', units: ['kg', 'pack'], food: false },
+  bio_input: { category: 'input', hi: 'जैविक दवाई', en: 'Bio / organic input', units: INPUT_UNITS, food: false },
+  other_input: { category: 'input', hi: 'दूसरा खेती का सामान', en: 'Other farm input', units: ['piece', 'pack', 'kg', 'litre'], food: false },
 } as const satisfies Record<string, ProductInfo>;
 
 export type ProductId = keyof typeof PRODUCTS;
@@ -56,4 +64,8 @@ export const UNIT_NAMES: Record<Unit, { hi: string; en: string }> = {
   kg: { hi: 'किलो', en: 'kg' },
   piece: { hi: 'नग', en: 'piece' },
   pack: { hi: 'पैकेट', en: 'pack' },
+  litre: { hi: 'लीटर', en: 'litre' },
 };
+
+/** Snap & List and the AI price estimate are for farm produce and SHG products, not for inputs. */
+export const AI_LISTING_PRODUCT_IDS = PRODUCT_IDS.filter((id) => PRODUCTS[id].category !== 'input') as [ProductId, ...ProductId[]];

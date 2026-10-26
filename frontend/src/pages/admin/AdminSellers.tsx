@@ -101,6 +101,7 @@ function SellerRow({ seller, onChanged }: { seller: AdminSeller; onChanged: () =
     }
   };
 
+  const [licenceChecked, setLicenceChecked] = useState(false);
   const tone = seller.status === 'verified' ? 'success' : seller.status === 'rejected' ? 'danger' : 'warning';
   const place = [seller.pickup?.address, seller.pickup?.tehsil, seller.pickup?.district].filter(Boolean).join(', ');
 
@@ -110,6 +111,7 @@ function SellerRow({ seller, onChanged }: { seller: AdminSeller; onChanged: () =
         <h3 className="text-xl font-bold">{seller.name}</h3>
         <Badge tone={tone} label={sellerStatusLabels[seller.status]} />
         {seller.assisted && <Badge tone="neutral" label={hi.admin.assisted} />}
+        {seller.kind === 'input_dealer' && <Badge tone="neutral" label={hi.sellerKinds.input_dealer} />}
       </div>
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 text-base">
         <dt className="text-ink-500">{hi.account.phone}</dt>
@@ -121,6 +123,14 @@ function SellerRow({ seller, onChanged }: { seller: AdminSeller; onChanged: () =
         </dd>
         <dt className="text-ink-500">{hi.sellerProfile.village}</dt>
         <dd>{seller.village ?? '—'}</dd>
+        {seller.kind === 'input_dealer' && (
+          <>
+            <dt className="text-ink-500">{hi.licence.number}</dt>
+            <dd className="break-all font-bold">
+              {seller.licenceNumber ?? '—'} · {seller.licenceVerified ? hi.licence.verified : hi.licence.notVerified}
+            </dd>
+          </>
+        )}
         {seller.shgName && (
           <>
             <dt className="text-ink-500">SHG</dt>
@@ -158,13 +168,19 @@ function SellerRow({ seller, onChanged }: { seller: AdminSeller; onChanged: () =
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-2">
+          {seller.status !== 'verified' && seller.kind === 'input_dealer' && (
+            <label className="col-span-2 flex min-h-14 items-center gap-3 rounded-2xl border-2 border-line p-3 text-base font-bold">
+              <input type="checkbox" className="size-6" checked={licenceChecked} onChange={(event) => setLicenceChecked(event.target.checked)} />
+              {hi.licence.checked}
+            </label>
+          )}
           {seller.status !== 'verified' && (
             <Button
               variant="accent"
               size="md"
               icon={LuBadgeCheck}
-              disabled={busy || !seller.profileComplete}
-              onClick={() => void act(() => verifySeller(seller.id), hi.admin.verified)}
+              disabled={busy || !seller.profileComplete || (seller.kind === 'input_dealer' && !licenceChecked)}
+              onClick={() => void act(() => verifySeller(seller.id, seller.kind === 'input_dealer' && licenceChecked), hi.admin.verified)}
             >
               {hi.admin.verify}
             </Button>

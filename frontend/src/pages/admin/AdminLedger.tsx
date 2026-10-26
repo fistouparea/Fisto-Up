@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { LuFileDown, LuHandCoins, LuPhone } from 'react-icons/lu';
 import { ApiError } from '../../api/client';
-import { downloadLedgerCsv, fetchMonthTotals, fetchSellerDues, markCollected, type SellerDues } from '../../api/admin';
+import { downloadLedgerCsv, fetchMonthTotals, fetchReferralTotals, fetchSellerDues, markCollected, type SellerDues } from '../../api/admin';
 import { LoadState } from '../../components/admin/LoadState';
 import { Button } from '../../components/ui/Button';
 import { Chip } from '../../components/ui/Chip';
@@ -20,6 +20,7 @@ const num = 'text-right tabular-nums';
 export function AdminLedger() {
   const [month, setMonth] = useState<string | undefined>(undefined);
   const months = useLoad(fetchMonthTotals, []);
+  const referrals = useLoad(fetchReferralTotals, []);
   const dues = useLoad(() => fetchSellerDues(month), [month]);
   const reloadAll = () => {
     months.reload();
@@ -36,6 +37,19 @@ export function AdminLedger() {
 
   return (
     <div className="flex flex-col gap-6">
+      {referrals.data && referrals.data.length > 0 && (
+        <section className="rounded-3xl border-2 border-accent-300 bg-surface-cream p-4">
+          <h3 className="text-xl font-bold">{hi.admin.referrals}</h3>
+          <ul className="mt-2 flex flex-col gap-1 text-base">
+            {referrals.data.map((row) => (
+              <li key={row.month} className="flex justify-between gap-3">
+                <span>{monthLabel(row.month)} · {row.orders} {hi.admin.ordersCount}</span>
+                <strong className="tabular-nums">{formatRupees(row.commissionPaise)}</strong>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       <LoadState data={months.data} errorCode={months.errorCode} reload={months.reload}>
         {(rows) =>
           rows.length === 0 ? (

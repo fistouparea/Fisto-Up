@@ -28,6 +28,7 @@ import type { OrderStatus } from '../modules/orders/orderStateMachine.js';
 import { ReportModel } from '../modules/reports/report.model.js';
 import { setSellerStatus } from '../modules/sellers/seller.service.js';
 import { connectFromEnv } from './cli.js';
+import { seedPhase5 } from './seedPhase5.js';
 
 const DEMO_PIN = '2580';
 const ASSETS = path.resolve(process.cwd(), 'seed-assets');
@@ -89,7 +90,7 @@ async function main(): Promise<void> {
     await removeOldDemo();
     await createDemoData();
     console.log('Demo data created. Every demo PIN is 2580.');
-    console.log('  Coordinator: 9000000001 · Sellers: 9000000101–105 (105 is pending) · Buyers: 9000000201 (hotel), 9000000202 (household)');
+    console.log('  Coordinator: 9000000001 · Sellers: 9000000101–105 (105 is pending), 9000000106 input dealer · Buyers: 9000000201 (hotel), 9000000202 (household)');
   } finally {
     await mongoose.disconnect();
   }
@@ -169,6 +170,8 @@ async function createDemoData(): Promise<void> {
     // One collected commission line so the ledger shows both states.
     await CommissionEntryModel.updateOne({ sellerId: sellers.get('mohan') }, { $set: { status: 'collected', collectedAt: new Date(), collectedBy: coordinatorUser.id } }).exec();
     await ReportModel.create({ reporterId: family._id, reporterRole: 'buyer', listingId: listings.get('guar'), reason: 'quality', text: 'फोटो और माल अलग लगे (डेमो शिकायत)' });
+
+    await seedPhase5({ auth, pin: DEMO_PIN, coordinator: coordinatorUser, family: familyUser, hotel: hotelUser, sellers });
 
   } finally {
     // Also after a failure: whatever was created is marked demo, so the next run removes it cleanly.

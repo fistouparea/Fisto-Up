@@ -7,9 +7,11 @@ import { redactPersonalData } from '../../services/ai/marketPrompt.js';
 import type { ImageMimeType } from '../../types/diagnosis.js';
 import type { PhotoContent, PhotoSize, PhotoStorage } from '../../services/storage/photoStorage.js';
 import { logger } from '../../observability/logger.js';
-import { isSellerProfileComplete } from '../auth/accountView.js';
+import { GENERIC_KIND_BY_PRODUCT, isBlockedInput } from '../../config/inputRules.js';
+import { INPUT_GENERICS } from '../../data/inputGenerics.js';
+import { isLicenceVerified, isSellerProfileComplete } from '../auth/accountView.js';
 import type { AuthUser } from '../auth/auth.types.js';
-import { UserModel } from '../auth/user.model.js';
+import { UserModel, type UserDocument } from '../auth/user.model.js';
 import { ListingModel, ListingPhotoModel, type ListingDocument, type ListingPhotoDocument } from './listing.model.js';
 import type {
   AiListingDraft,
@@ -131,6 +133,7 @@ export async function createListing(
     throw new AppError('INVALID_INPUT', 'Product, category and unit do not match');
   }
   if (body.minOrderQty > body.quantity) throw new AppError('INVALID_INPUT', 'Minimum order is more than the quantity');
+  checkInputRules(seller.seller, body);
 
   const listingId = new Types.ObjectId();
   const photoIds = [...new Set(body.photoIds)].map((id) => new Types.ObjectId(id));
@@ -164,6 +167,7 @@ export async function createListing(
       minOrderQty: body.minOrderQty,
       photoIds,
       ...(product.food && body.fssaiNumber && { fssaiNumber: body.fssaiNumber }),
+      ...(body.genericId && { genericId: body.genericId }),
       location: { type: 'Point', coordinates: [pickup.lon, pickup.lat] },
       place: { district: pickup.district, tehsil: pickup.tehsil },
       ...(options.assisted && {
@@ -179,6 +183,25 @@ export async function createListing(
     await releasePhotos(listingId);
     throw error;
   }
+}
+
+/**
+ * खाद-बीज-दवाई: only licensed input dealers (licence checked by a coordinator) list them, and they list nothing
+ * else. Medicines name their generic. Banned, red-label or restricted inputs are never listed (any category).
+ */
+function checkInputRules(seller: NonNullable<UserDocument['seller']>, body: CreateListingBody): void {
+  const dealer = seller.kind === 'input_dealer';
+  if (body.category === 'input' && !dealer) throw new AppError('FORBIDDEN', 'Only input dealers list farm inputs');
+  if (dealer && body.category !== 'input') throw new AppError('INVALID_INPUT', 'Input dealers list farm inputs only');
+  if (dealer && !isLicenceVerified(seller)) throw new AppError('LICENCE_NOT_VERIFIED');
+
+  const neededKind = GENERIC_KIND_BY_PRODUCT[body.product];
+  if (body.category !== 'input' && body.genericId) throw new AppError('INVALID_INPUT', 'Generic name only for farm inputs');
+  if (neededKind && (!body.genericId || INPUT_GENERICS[body.genericId].kind !== neededKind)) {
+    throw new AppError('INVALID_INPUT', 'Generic name missing or of another kind');
+  }
+  const text = [body.title.hi, body.title.en, body.description.hi, body.description.en, body.qualityNotes].join(' ');
+  if (isBlockedInput(text)) throw new AppError('BLOCKED_INPUT');
 }
 
 /** Gives photos claimed for a listing that was not saved back to their uploader (they expire later). */
@@ -232,7 +255,13 @@ export function photoUrl(photoId: Types.ObjectId | string): string {
 }
 
 export function isPubliclyVisible(listing: ListingDocument): boolean {
-  return listing.status === 'active' && !listing.hidden && listing.sellerVerified && listing.quantityAvailable > 0;
+  return listing.status === 'active' && !listing.hidden && listing.sellerVerified && listing.quantityAvailable > 0 && !isBlockedListing(listing);
+}
+
+/** A listing that names a blocked input (e.g. the blocklist grew after it was listed) is never shown. */
+export function isBlockedListing(listing: { category: string; title: { hi: string; en: string }; description?: { hi?: string; en?: string } | null }): boolean {
+  if (listing.category !== 'input') return false;
+  return isBlockedInput([listing.title.hi, listing.title.en, listing.description?.hi ?? '', listing.description?.en ?? ''].join(' '));
 }
 
 export function toSellerListingView(listing: ListingDocument): SellerListingView {
@@ -249,6 +278,7 @@ export function toSellerListingView(listing: ListingDocument): SellerListingView
     minOrderQty: listing.minOrderQty,
     photoUrls: listing.photoIds.map(photoUrl),
     ...(listing.fssaiNumber && { fssaiNumber: listing.fssaiNumber }),
+    ...(listing.genericId && { genericId: listing.genericId }),
     status: listing.status,
     hidden: listing.hidden ?? false,
     visible: isPubliclyVisible(listing),

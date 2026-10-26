@@ -13,6 +13,8 @@ export const enMarket: MarketText = {
   all: 'All',
   crops: 'Grains & pulses',
   shg: 'SHG products',
+  inputs: 'Seeds, fertilizer & crop medicine',
+  partner: 'Partner shop',
   filters: 'Filters',
   priceRange: 'Price (₹ per unit)',
   min: 'Min',

@@ -21,6 +21,7 @@ import { createAdminRouter } from './admin/admin.routes.js';
 import { createMyDataRouter } from './privacy/privacy.routes.js';
 import { createFlagRouter } from './flags/flag.routes.js';
 import { createHelpRouter } from './help/help.routes.js';
+import { createInputKitRouter } from './inputs/inputKit.routes.js';
 import { helpDeviceData } from './help/help.service.js';
 import { feedbackDeviceData } from './feedback/feedback.service.js';
 import { eventDeviceData } from './metrics/events.js';
@@ -66,6 +67,7 @@ export function createMarketRouter(
   router.use(createAccountRouter());
   router.use(createListingRouter({ ai, aiRateLimit, photos: photoStorage }));
   router.use(createPricingRouter({ ai, mandi }, aiRateLimit));
+  router.use(createInputKitRouter(flags));
 
   const orders = new OrderService({ notifier: new MarketNotifier(pushSender), commissionBps: config.commissionBps, now });
   router.use(createOrderRouter(orders));

@@ -1,10 +1,10 @@
-import { PRODUCTS, UNIT_NAMES } from '../../config/marketCatalog.js';
+import { AI_LISTING_PRODUCT_IDS, PRODUCTS, UNIT_NAMES } from '../../config/marketCatalog.js';
 
-const PRODUCT_LIST = Object.entries(PRODUCTS)
-  .map(([id, product]) => `   - ${id}: ${product.hi} / ${product.en} (${product.category})`)
-  .join('\n');
+const PRODUCT_LIST = AI_LISTING_PRODUCT_IDS.map((id) => `   - ${id}: ${PRODUCTS[id].hi} / ${PRODUCTS[id].en} (${PRODUCTS[id].category})`).join('\n');
 
+/** Litre is only used by input dealers, who list without the AI. */
 const UNIT_LIST = Object.entries(UNIT_NAMES)
+  .filter(([id]) => id !== 'litre')
   .map(([id, name]) => `${id} (${name.hi})`)
   .join(', ');
 

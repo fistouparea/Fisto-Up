@@ -21,6 +21,7 @@ import {
   type TransitionRule,
 } from './orderStateMachine.js';
 import { upiPayLink } from './upi.js';
+import { track } from '../metrics/events.js';
 
 export interface OrderServiceDeps {
   notifier: MarketNotifier;
@@ -61,6 +62,7 @@ export class OrderService {
         throw new AppError('INVALID_INPUT', 'Price requests are for bulk listings, below the listed price');
       }
     }
+    if (body.referral && listing.category !== 'input') throw new AppError('INVALID_INPUT', 'Referral only for farm inputs');
     const seller = await UserModel.findById(listing.sellerId).exec();
     if (!seller) throw new AppError('NOT_FOUND');
 
@@ -88,6 +90,7 @@ export class OrderService {
               pricePerUnitPaise,
               totalPaise: body.quantity * pricePerUnitPaise,
               isPriceRequest: offer !== undefined,
+              ...(body.referral && { referral: body.referral }),
               fulfilment: body.fulfilment,
               ...(body.fulfilment === 'delivery' && { deliveryAddress: body.deliveryAddress }),
               paymentMethod: body.paymentMethod,
@@ -104,6 +107,7 @@ export class OrderService {
       }),
     );
     await this.deps.notifier.sendPush(pending);
+    if (order.referral) track('ai_kit_order');
     return order;
   }
 
@@ -268,6 +272,7 @@ export async function toOrderView(order: OrderDocument, viewer: AuthUser): Promi
     pricePerUnitPaise: order.pricePerUnitPaise,
     totalPaise: order.totalPaise,
     isPriceRequest: order.isPriceRequest ?? false,
+    ...(order.referral && { referral: order.referral }),
     fulfilment: order.fulfilment,
     ...(order.deliveryAddress && { deliveryAddress: order.deliveryAddress }),
     paymentMethod: order.paymentMethod,

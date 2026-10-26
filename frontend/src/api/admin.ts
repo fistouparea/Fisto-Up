@@ -1,5 +1,5 @@
 import { downloadFile, getJson, isRecord, sendJson } from './client';
-import type { NewListing, Order, OrderStatus, Place, ReportReason, SellerListing, SellerStatus } from './marketTypes';
+import type { NewListing, Order, OrderStatus, Place, ReportReason, SellerKind, SellerListing, SellerStatus } from './marketTypes';
 import { isOrder } from './orders';
 import { isSellerListing } from './listings';
 
@@ -10,6 +10,9 @@ export interface AdminSeller {
   name: string;
   phone: string;
   status: SellerStatus;
+  kind: SellerKind;
+  licenceNumber?: string;
+  licenceVerified: boolean;
   village?: string;
   shgName?: string;
   upiId?: string;
@@ -95,7 +98,9 @@ export async function fetchSellers(status?: SellerStatus, q?: string): Promise<A
   return (await getJson(`/api/admin/sellers?${params}`, isItems(isAdminSeller))).items;
 }
 
-export const verifySeller = (id: string) => sendJson('POST', `/api/admin/sellers/${encodeURIComponent(id)}/verify`, {}, isOk);
+/** Input dealers: `licenceChecked` confirms the coordinator checked the licence number. */
+export const verifySeller = (id: string, licenceChecked = false) =>
+  sendJson('POST', `/api/admin/sellers/${encodeURIComponent(id)}/verify`, licenceChecked ? { licenceChecked } : {}, isOk);
 export const rejectSeller = (id: string, reason: string) =>
   sendJson('POST', `/api/admin/sellers/${encodeURIComponent(id)}/reject`, { reason }, isOk);
 export const createSeller = (input: NewSellerInput) => sendJson('POST', '/api/admin/sellers', input, isOk);
@@ -127,6 +132,11 @@ export async function fetchAdminOrders(status?: OrderStatus): Promise<Order[]> {
 }
 export const assignDeliveryPerson = (orderId: string, person: { name: string; phone: string }) =>
   sendJson('PUT', `/api/admin/orders/${encodeURIComponent(orderId)}/delivery`, person, isOk);
+
+/** Partner referrals from the "ज़रूरी सामान" kit (separate ledger type), month by month. */
+export async function fetchReferralTotals(): Promise<MonthTotal[]> {
+  return (await getJson('/api/admin/commission/referrals', isItems(isMonth))).items;
+}
 
 export async function fetchMonthTotals(): Promise<MonthTotal[]> {
   return (await getJson('/api/admin/commission/months', isItems(isMonth))).items;

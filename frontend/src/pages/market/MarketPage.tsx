@@ -99,6 +99,7 @@ export function MarketPage() {
         <Chip label={t.all} selected={!filters.category} onClick={() => chooseCategory(undefined)} />
         <Chip label={t.crops} selected={filters.category === 'crop'} onClick={() => chooseCategory('crop')} />
         <Chip label={t.shg} selected={filters.category === 'shg'} onClick={() => chooseCategory('shg')} />
+        <Chip label={t.inputs} selected={filters.category === 'input'} onClick={() => chooseCategory('input')} />
       </div>
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
         {products.map((product) => (

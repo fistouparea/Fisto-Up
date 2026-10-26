@@ -3,6 +3,7 @@ import type { ProductId, Unit } from '../../config/marketCatalog.js';
 import { LISTING_RULES, ORDER_RULES } from '../../config/marketRules.js';
 import type { Place, Role } from '../auth/auth.types.js';
 import { objectIdSchema } from '../listings/listing.types.js';
+import { REFERRALS, type Referral } from '../../config/inputRules.js';
 import { personNameSchema, phoneSchema } from '../auth/auth.types.js';
 import { PAYMENT_METHODS, type PaymentMethod } from './order.model.js';
 import { FULFILMENTS, ORDER_STATUSES, type Fulfilment, type OrderStatus } from './orderStateMachine.js';
@@ -17,6 +18,8 @@ export const createOrderBodySchema = z
     /** Price request (B2B counter-offer), integer paise per unit. */
     offeredPricePerUnitPaise: z.number().int().min(100).max(LISTING_RULES.maxPricePerUnitPaise).optional(),
     note: z.string().trim().max(ORDER_RULES.maxNoteLength).optional(),
+    /** "ज़रूरी सामान": the farmer came from the kit after a diagnosis (only for खाद-बीज-दवाई). */
+    referral: z.enum(REFERRALS).optional(),
   })
   .refine((body) => body.fulfilment === 'pickup' || body.deliveryAddress, 'Delivery needs an address');
 export type CreateOrderBody = z.infer<typeof createOrderBodySchema>;
@@ -62,6 +65,7 @@ export interface OrderView {
   listedPricePerUnitPaise: number;
   pricePerUnitPaise: number;
   totalPaise: number;
+  referral?: Referral;
   isPriceRequest: boolean;
   fulfilment: Fulfilment;
   deliveryAddress?: string;

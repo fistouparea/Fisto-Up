@@ -21,6 +21,7 @@ import { StepIndicator, type Step } from '../ui/StepIndicator';
 import { StickyActions } from '../ui/StickyActions';
 import { notifySuccess } from '../ui/notify';
 import { ListingConfirmForm } from './ListingConfirmForm';
+import { DEALER_CATEGORIES, PRODUCER_CATEGORIES } from '../../data/marketCatalog';
 
 type State =
   | { step: 'photo'; preparing: boolean }
@@ -45,10 +46,12 @@ interface SnapListFlowProps {
   header?: ReactNode;
   onFinished: () => void;
   finishLabel: string;
+  /** Input dealers: no AI (Snap & List knows produce, not medicines); photo, then the form with inputs only. */
+  dealer?: boolean;
 }
 
 /** Photo → speak (or type) → AI fills the form → seller checks big cards → one button to list. */
-export function SnapListFlow({ submit, header, onFinished, finishLabel }: SnapListFlowProps) {
+export function SnapListFlow({ submit, header, onFinished, finishLabel, dealer = false }: SnapListFlowProps) {
   const [state, setState] = useState<State>({ step: 'photo', preparing: false });
   const [errors, setErrors] = useState<Partial<Record<ListingFormField, string>>>({});
   const { offline } = useConnectivity();
@@ -62,7 +65,12 @@ export function SnapListFlow({ submit, header, onFinished, finishLabel }: SnapLi
   const pickPhoto = async (file: File) => {
     setState({ step: 'photo', preparing: true });
     try {
-      setState({ step: 'describe', photo: await compressImage(file), text: '' });
+      const photo = await compressImage(file);
+      if (dealer) {
+        await uploadWithoutAi(photo, null, false);
+        return;
+      }
+      setState({ step: 'describe', photo, text: '' });
     } catch {
       setState({ step: 'error', code: 'PHOTO_READ_FAILED', retry: null });
     }
@@ -89,10 +97,10 @@ export function SnapListFlow({ submit, header, onFinished, finishLabel }: SnapLi
   };
 
   /** No AI help (it failed), or the seller keeps a photo the AI doubted: save the photo alone, go to the form. */
-  const uploadWithoutAi = async (photo: Blob, draft: ListingDraft | null = null) => {
+  const uploadWithoutAi = async (photo: Blob, draft: ListingDraft | null = null, aiFailed = draft === null) => {
     try {
       const photoId = await uploadListingPhoto(photo);
-      setState({ step: 'confirm', photo, photoId, form: formFromDraft(draft), aiFailed: draft === null });
+      setState({ step: 'confirm', photo, photoId, form: formFromDraft(draft), aiFailed });
     } catch (error) {
       const code = error instanceof ApiError ? error.code : 'UNKNOWN';
       setState({ step: 'error', code, retry: () => void uploadWithoutAi(photo, draft) });
@@ -127,7 +135,7 @@ export function SnapListFlow({ submit, header, onFinished, finishLabel }: SnapLi
             <>
               {header}
               <PageHeader title={hi.sell.photoTitle} icon={LuCamera} speakText={`${hi.sell.photoTitle}। ${hi.sell.photoHint}`} />
-              <Callout tone="cream" icon={LuCamera} text={hi.sell.photoHint} />
+              <Callout tone="cream" icon={LuCamera} text={dealer ? hi.sell.dealerNoAi : hi.sell.photoHint} />
               <StickyActions>
                 <PhotoActions onPick={(file) => void pickPhoto(file)} />
               </StickyActions>
@@ -169,6 +177,7 @@ export function SnapListFlow({ submit, header, onFinished, finishLabel }: SnapLi
             <PhotoPreview photo={state.photo} size="small" />
             {state.step === 'confirm' && state.aiFailed && <Callout tone="warning" icon={LuStore} text={hi.sell.aiFailed} />}
             <ListingConfirmForm
+              categories={dealer ? DEALER_CATEGORIES : PRODUCER_CATEGORIES}
               form={state.form}
               errors={errors}
               onChange={(form) => state.step === 'confirm' && setState({ ...state, form })}

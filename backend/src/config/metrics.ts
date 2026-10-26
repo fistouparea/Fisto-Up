@@ -11,6 +11,8 @@ export const EVENT_NAMES = [
   'feedback_given',
   'followup_answered',
   'help_request',
+  'ai_kit_shown',
+  'ai_kit_order',
 ] as const;
 export type EventName = (typeof EVENT_NAMES)[number];
 

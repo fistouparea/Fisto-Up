@@ -1,5 +1,6 @@
 import type { ListingDraft, NewListing, ProductId, Unit } from '../api/marketTypes';
 import { PRODUCT_CATALOG } from '../data/marketCatalog';
+import { INPUT_GENERICS, type InputGenericId } from '../data/inputGenerics';
 import { hi, productLabels } from '../strings/hi';
 import { paiseToRupeesInput, rupeesToPaise } from './money';
 
@@ -16,9 +17,11 @@ export interface ListingForm {
   descriptionHi: string;
   descriptionEn: string;
   qualityNotes: string;
+  /** खाद-बीज-दवाई: generic name (never a brand). */
+  genericId: InputGenericId | null;
 }
 
-export type ListingFormField = 'product' | 'unit' | 'quantity' | 'price' | 'title' | 'minOrder' | 'fssai';
+export type ListingFormField = 'product' | 'unit' | 'quantity' | 'price' | 'title' | 'minOrder' | 'fssai' | 'generic';
 
 export function formFromDraft(draft: ListingDraft | null): ListingForm {
   return {
@@ -33,6 +36,7 @@ export function formFromDraft(draft: ListingDraft | null): ListingForm {
     descriptionHi: draft?.description.hi ?? '',
     descriptionEn: draft?.description.en ?? '',
     qualityNotes: draft?.qualityNotes ?? '',
+    genericId: null,
   };
 }
 
@@ -48,6 +52,7 @@ export function changeProduct(form: ListingForm, product: ProductId): ListingFor
     titleEn: productLabels[product].en,
     descriptionHi: '',
     descriptionEn: '',
+    genericId: null,
   };
 }
 
@@ -67,6 +72,8 @@ export function validateListingForm(
   if (form.titleHi.trim().length < 2) errors.title = hi.sell.missing.title;
   if (form.quantity && form.minOrderQty > form.quantity) errors.minOrder = hi.sell.missing.minOrder;
   if (fssai && !/^\d{14}$/.test(fssai)) errors.fssai = hi.sell.fssaiInvalid;
+  const genericKind = form.product ? PRODUCT_CATALOG[form.product].genericKind : undefined;
+  if (genericKind && (!form.genericId || INPUT_GENERICS[form.genericId].kind !== genericKind)) errors.generic = hi.sell.genericMissing;
 
   if (Object.keys(errors).length > 0 || !form.product || !form.unit || !form.quantity || price === null) {
     return { errors, listing: null };
@@ -86,6 +93,7 @@ export function validateListingForm(
       qualityNotes: form.qualityNotes.trim(),
       photoIds,
       ...(food && fssai && { fssaiNumber: fssai }),
+      ...(genericKind && form.genericId && { genericId: form.genericId }),
     },
   };
 }

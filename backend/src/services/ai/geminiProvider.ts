@@ -11,7 +11,7 @@ import type { z } from 'zod';
 import { AppError } from '../../errors/AppError.js';
 import { aiChatAnswerSchema } from '../../types/chat.js';
 import { aiDiagnosisSchema, type AiDiagnosis } from '../../types/diagnosis.js';
-import { CATEGORIES, PRODUCT_IDS, UNITS } from '../../config/marketCatalog.js';
+import { AI_LISTING_PRODUCT_IDS, CATEGORIES, UNITS } from '../../config/marketCatalog.js';
 import { aiListingDraftSchema, type AiListingDraft } from '../../modules/listings/listing.types.js';
 import type { AiProvider, ChatInput, DiagnoseInput, ListingDraftInput } from './aiProvider.js';
 import {
@@ -78,10 +78,10 @@ const LISTING_RESPONSE_SCHEMA: Schema = {
   properties: {
     photo_matches_product: { type: Type.BOOLEAN },
     photo_problem: { type: Type.STRING },
-    category: { type: Type.STRING, enum: [...CATEGORIES] },
-    product: { type: Type.STRING, enum: [...PRODUCT_IDS] },
+    category: { type: Type.STRING, enum: CATEGORIES.filter((category) => category !== 'input') },
+    product: { type: Type.STRING, enum: [...AI_LISTING_PRODUCT_IDS] },
     quantity: { type: Type.NUMBER, nullable: true },
-    unit: { type: Type.STRING, enum: [...UNITS], nullable: true },
+    unit: { type: Type.STRING, enum: UNITS.filter((unit) => unit !== 'litre'), nullable: true },
     price_per_unit_rupees: { type: Type.NUMBER, nullable: true },
     quality_notes: { type: Type.STRING },
     title_hi: { type: Type.STRING },

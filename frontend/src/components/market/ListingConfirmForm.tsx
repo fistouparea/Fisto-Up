@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { LuIndianRupee, LuPackage, LuPencil, LuScale, LuStore } from 'react-icons/lu';
+import { LuFlaskConical, LuIndianRupee, LuPackage, LuPencil, LuScale, LuStore } from 'react-icons/lu';
+import type { Category } from '../../api/marketTypes';
+import { INPUT_GENERIC_IDS, INPUT_GENERICS } from '../../data/inputGenerics';
 import { PRODUCT_CATALOG } from '../../data/marketCatalog';
 import { hi, productLabels, unitLabels } from '../../strings/hi';
 import { changeProduct, type ListingForm, type ListingFormField } from '../../utils/listingForm';
@@ -18,10 +20,12 @@ interface ListingConfirmFormProps {
   form: ListingForm;
   onChange: (form: ListingForm) => void;
   errors: Partial<Record<ListingFormField, string>>;
+  /** Input dealers pick from खाद-बीज-दवाई only. */
+  categories?: readonly Category[];
 }
 
 /** Three big cards (product, quantity, price) with speaker buttons, then optional details. */
-export function ListingConfirmForm({ form, onChange, errors }: ListingConfirmFormProps) {
+export function ListingConfirmForm({ form, onChange, errors, categories }: ListingConfirmFormProps) {
   const [pickingProduct, setPickingProduct] = useState(form.product === null);
   const [showDetails, setShowDetails] = useState(false);
   const suggestion = usePriceSuggestion(form.product, form.unit);
@@ -45,6 +49,7 @@ export function ListingConfirmForm({ form, onChange, errors }: ListingConfirmFor
           </div>
         ) : (
           <ProductPicker
+            categories={categories}
             value={product}
             onChange={(next) => {
               onChange(changeProduct(form, next));
@@ -54,6 +59,18 @@ export function ListingConfirmForm({ form, onChange, errors }: ListingConfirmFor
         )}
         <FieldError message={errors.product} />
       </Card>
+
+      {product && PRODUCT_CATALOG[product].genericKind && (
+        <Card icon={LuFlaskConical} title={hi.sell.generic} speakText={`${hi.sell.generic}. ${hi.sell.genericHint}`}>
+          <p className="mb-3 text-base text-ink-500">{hi.sell.genericHint}</p>
+          <div className="flex flex-wrap gap-2">
+            {INPUT_GENERIC_IDS.filter((id) => INPUT_GENERICS[id].kind === PRODUCT_CATALOG[product].genericKind).map((id) => (
+              <Chip key={id} label={INPUT_GENERICS[id].hi} selected={form.genericId === id} onClick={() => set({ genericId: id })} />
+            ))}
+          </div>
+          <FieldError message={errors.generic} />
+        </Card>
+      )}
 
       <Card
         icon={LuScale}

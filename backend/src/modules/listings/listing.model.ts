@@ -1,5 +1,6 @@
 import { model, Schema } from 'mongoose';
 import { CATEGORIES, PRODUCT_IDS, UNITS } from '../../config/marketCatalog.js';
+import { INPUT_GENERIC_IDS } from '../../data/inputGenerics.js';
 import { STORAGE_PROVIDERS } from '../../services/storage/photoStorage.js';
 import { LISTING_STATUSES } from './listing.types.js';
 
@@ -12,6 +13,8 @@ const listingSchema = new Schema(
     sellerVerified: { type: Boolean, required: true, default: false },
     category: { type: String, enum: CATEGORIES, required: true },
     product: { type: String, enum: PRODUCT_IDS, required: true },
+    /** खाद-बीज-दवाई: the generic (technical) name, used to match a diagnosis's medicines. Never a brand. */
+    genericId: { type: String, enum: INPUT_GENERIC_IDS },
     title: { type: bilingualSchema, required: true },
     description: { type: bilingualSchema, default: () => ({}) },
     qualityNotes: { type: String, default: '' },
@@ -55,6 +58,8 @@ listingSchema.index({ status: 1, hidden: 1, sellerVerified: 1, category: 1, prod
 // "मेरी बिक्री" (newest first) and the platform price suggestion for one product + unit.
 listingSchema.index({ sellerId: 1, createdAt: -1 });
 listingSchema.index({ product: 1, unit: 1, createdAt: -1 });
+// "ज़रूरी सामान": visible input listings with one of the diagnosis's generics.
+listingSchema.index({ genericId: 1, status: 1, hidden: 1, sellerVerified: 1 }, { partialFilterExpression: { genericId: { $exists: true } } });
 
 export const ListingModel = model('Listing', listingSchema, 'listings');
 export type ListingDocument = InstanceType<typeof ListingModel>;

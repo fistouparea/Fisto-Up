@@ -20,6 +20,7 @@ export async function recordCommission(order: OrderDocument, rateBps: number, co
       {
         orderId: order._id,
         orderRef: order.ref,
+        type: order.referral ? 'partner_referral' : 'order',
         sellerId: order.sellerId,
         orderTotalPaise: order.totalPaise,
         rateBps,

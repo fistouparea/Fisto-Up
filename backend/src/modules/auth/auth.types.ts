@@ -11,6 +11,10 @@ export const SELF_SIGNUP_ROLES = ['seller', 'buyer'] as const;
 export const SELLER_STATUSES = ['pending', 'verified', 'rejected'] as const;
 export type SellerStatus = (typeof SELLER_STATUSES)[number];
 
+/** producer: farmer or SHG selling produce. input_dealer: licensed खाद-बीज-दवाई shop (Phase 5). */
+export const SELLER_KINDS = ['producer', 'input_dealer'] as const;
+export type SellerKind = (typeof SELLER_KINDS)[number];
+
 export const BUYER_TYPES = ['household', 'business'] as const;
 export type BuyerType = (typeof BUYER_TYPES)[number];
 
@@ -64,12 +68,16 @@ export interface Place {
 
 export interface SellerProfileView {
   status: SellerStatus;
+  kind: SellerKind;
+  /** Input dealers: their agri-input licence number and whether a coordinator checked it. */
+  licenceNumber?: string;
+  licenceVerified: boolean;
   village?: string;
   shgName?: string;
   upiId?: string;
   pickup?: Place;
   rejectReason?: string;
-  /** Name, village, UPI ID and pickup place are filled: the seller may create listings. */
+  /** Name, village, UPI ID and pickup place (and a licence number for input dealers) are filled. */
   profileComplete: boolean;
   rating: { average: number | null; count: number };
 }

@@ -211,7 +211,7 @@ function Page({ route, diagnoseKey }: { route: Route; diagnoseKey: number }) {
     case 'sell':
       return <RequireRole roles={['seller']}>{(user) => <MySalesPage user={user} />}</RequireRole>;
     case 'sellNew':
-      return <RequireRole roles={['seller']}>{() => <SnapListPage />}</RequireRole>;
+      return <RequireRole roles={['seller']}>{(user) => <SnapListPage user={user} />}</RequireRole>;
     case 'market':
       return <MarketPage />;
     case 'listing':

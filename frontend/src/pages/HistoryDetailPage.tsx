@@ -1,6 +1,7 @@
 import { LuCamera, LuRefreshCw, LuSearchX, LuServerCrash } from 'react-icons/lu';
 import { ChatPanel } from '../components/ChatPanel';
 import { ResultView } from '../components/ResultView';
+import { AiKitCard } from '../components/kit/AiKitCard';
 import { SelectedCrop } from '../components/SelectedCrop';
 import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
@@ -60,6 +61,7 @@ export function HistoryDetailPage({ id }: HistoryDetailPageProps) {
             detail={`${hi.history.checkedOn}: ${formatDate(state.record.createdAt)}`}
           />
           <ResultView diagnosis={state.record.diagnosis} />
+          <AiKitCard diagnosis={state.record.diagnosis} />
           <ChatPanel crop={state.record.crop} diagnosis={state.record.diagnosis} />
           <Button icon={LuCamera} onClick={goToNewCheck}>
             {hi.newCheck}

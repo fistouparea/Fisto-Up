@@ -1,7 +1,10 @@
+import type { InputGenericId } from '../data/inputGenerics';
 /** Marketplace types. Mirror backend/src/modules/** types; keep the two in sync. Money is integer paise. */
 
 export type Role = 'seller' | 'buyer' | 'coordinator';
 export type SellerStatus = 'pending' | 'verified' | 'rejected';
+/** producer: farmer/SHG. input_dealer: licensed खाद-बीज-दवाई shop. */
+export type SellerKind = 'producer' | 'input_dealer';
 export type BuyerType = 'household' | 'business';
 
 export interface Place {
@@ -14,6 +17,9 @@ export interface Place {
 
 export interface SellerProfile {
   status: SellerStatus;
+  kind: SellerKind;
+  licenceNumber?: string;
+  licenceVerified: boolean;
   village?: string;
   shgName?: string;
   upiId?: string;
@@ -47,6 +53,8 @@ export interface SellerProfileInput {
   shgName?: string;
   upiId: string;
   pickup: Place;
+  kind: SellerKind;
+  licenceNumber?: string;
 }
 
 export interface BuyerProfileInput {
@@ -58,10 +66,10 @@ export interface BuyerProfileInput {
 }
 
 /** Mirrors backend/src/config/marketCatalog.ts. */
-export const CATEGORIES = ['crop', 'shg'] as const;
+export const CATEGORIES = ['crop', 'shg', 'input'] as const;
 export type Category = (typeof CATEGORIES)[number];
 
-export const UNITS = ['quintal', 'kg', 'piece', 'pack'] as const;
+export const UNITS = ['quintal', 'kg', 'piece', 'pack', 'litre'] as const;
 export type Unit = (typeof UNITS)[number];
 
 export const PRODUCT_IDS = [
@@ -81,6 +89,12 @@ export const PRODUCT_IDS = [
   'ker_sangri',
   'handicraft',
   'other_shg',
+  'fungicide',
+  'insecticide',
+  'fertilizer',
+  'seed',
+  'bio_input',
+  'other_input',
 ] as const;
 export type ProductId = (typeof PRODUCT_IDS)[number];
 
@@ -119,6 +133,7 @@ export interface NewListing {
   minOrderQty: number;
   photoIds: string[];
   fssaiNumber?: string;
+  genericId?: InputGenericId;
 }
 
 export interface ListingChange {
@@ -142,6 +157,7 @@ export interface SellerListing {
   minOrderQty: number;
   photoUrls: string[];
   fssaiNumber?: string;
+  genericId?: InputGenericId;
   status: ListingStatus;
   hidden: boolean;
   visible: boolean;
@@ -190,7 +206,10 @@ export interface PublicListing {
   minOrderQty: number;
   photoUrls: string[];
   fssaiNumber?: string;
+  genericId?: InputGenericId;
   seller: PublicSeller;
+  /** A licensed input dealer's product: shown as "साझेदार दुकान". */
+  partner: boolean;
   place: { district?: string; tehsil?: string };
   distanceKm?: number;
   createdAt: string;
@@ -240,6 +259,8 @@ export interface NewOrder {
   paymentMethod: PaymentMethod;
   offeredPricePerUnitPaise?: number;
   note?: string;
+  /** Came from the "ज़रूरी सामान" kit after a diagnosis (farm inputs only). */
+  referral?: 'ai_kit';
 }
 
 export interface Order {

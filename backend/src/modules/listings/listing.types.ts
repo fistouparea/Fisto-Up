@@ -2,6 +2,7 @@ import { isValidObjectId } from 'mongoose';
 import { z } from 'zod';
 import { CATEGORIES, PRODUCT_IDS, UNITS, type Category, type ProductId, type Unit } from '../../config/marketCatalog.js';
 import { LISTING_RULES } from '../../config/marketRules.js';
+import { INPUT_GENERIC_IDS, type InputGenericId } from '../../data/inputGenerics.js';
 
 export const LISTING_STATUSES = ['active', 'paused', 'sold_out'] as const;
 export type ListingStatus = (typeof LISTING_STATUSES)[number];
@@ -74,6 +75,8 @@ export const createListingBodySchema = z.object({
   photoIds: z.array(objectIdSchema).max(LISTING_RULES.maxPhotos).default([]),
   /** 14-digit FSSAI registration, for SHG food products (optional). */
   fssaiNumber: z.string().trim().regex(/^\d{14}$/).optional(),
+  /** खाद-बीज-दवाई only: the generic name from data/inputGenerics.ts. */
+  genericId: z.enum(INPUT_GENERIC_IDS).optional(),
 });
 export type CreateListingBody = z.infer<typeof createListingBodySchema>;
 
@@ -101,6 +104,7 @@ export interface SellerListingView {
   minOrderQty: number;
   photoUrls: string[];
   fssaiNumber?: string;
+  genericId?: InputGenericId;
   status: ListingStatus;
   /** Hidden by a coordinator (after a report). */
   hidden: boolean;
@@ -132,7 +136,10 @@ export interface PublicListingView {
   minOrderQty: number;
   photoUrls: string[];
   fssaiNumber?: string;
+  genericId?: InputGenericId;
   seller: PublicSeller;
+  /** A licensed input dealer's product (खाद-बीज-दवाई): shown with a "साझेदार दुकान" label. */
+  partner: boolean;
   place: { district?: string; tehsil?: string };
   /** Only when the buyer gave their location. */
   distanceKm?: number;

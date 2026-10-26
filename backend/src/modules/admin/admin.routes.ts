@@ -19,7 +19,7 @@ import { listHelpRequests, resolveHelpRequest, type HelpRequestView } from '../h
 import { createInvite, createInviteBodySchema, listInvites, revokeInvite, toInviteView, type InviteView } from '../invites/invite.service.js';
 import { currentUser, requireRole } from '../auth/auth.middleware.js';
 import type { AuthService } from '../auth/auth.service.js';
-import { ledgerCsv, markCollected, monthlyTotals, sellerDues, type MonthTotal, type SellerDues } from '../commission/ledger.service.js';
+import { ledgerCsv, markCollected, monthlyTotals, referralTotals, sellerDues, type MonthTotal, type SellerDues } from '../commission/ledger.service.js';
 import { ListingModel } from '../listings/listing.model.js';
 import { createListing, toSellerListingView } from '../listings/listing.service.js';
 import type { SellerListingView } from '../listings/listing.types.js';
@@ -42,6 +42,7 @@ import {
   resolveReport,
   setListingHidden,
   toAdminSeller,
+  verifyBodySchema,
   type AdminReportView,
   type AdminSellerView,
   type MarketStats,
@@ -88,8 +89,9 @@ export function createAdminRouter({ auth, orders, commissionBps, flags, mandi }:
     res.status(201).json({ seller });
   });
   router.post('/admin/sellers/:id/verify', json, async (req, res: Response<{ seller: AdminSellerView }>) => {
-    const seller = toAdminSeller(await setSellerStatus(id(req.params.id), { status: 'verified' }, currentUser(req).id));
-    await audit(req, 'seller.verify', { type: 'user', id: seller.id });
+    const { licenceChecked } = parseOrThrow(verifyBodySchema, req.body ?? {});
+    const seller = toAdminSeller(await setSellerStatus(id(req.params.id), { status: 'verified', licenceChecked }, currentUser(req).id));
+    await audit(req, 'seller.verify', { type: 'user', id: seller.id }, { kind: seller.kind, ...(seller.kind === 'input_dealer' && { licenceChecked: true }) });
     res.json({ seller });
   });
   router.post('/admin/sellers/:id/reject', json, async (req, res: Response<{ seller: AdminSellerView }>) => {
@@ -152,6 +154,9 @@ export function createAdminRouter({ auth, orders, commissionBps, flags, mandi }:
   // --- Commission ledger ---
   router.get('/admin/commission/months', async (_req, res: Response<{ items: MonthTotal[] }>) => {
     res.json({ items: await monthlyTotals() });
+  });
+  router.get('/admin/commission/referrals', async (_req, res: Response<{ items: MonthTotal[] }>) => {
+    res.json({ items: await referralTotals() });
   });
   router.get('/admin/commission', async (req, res: Response<{ month: string | null; items: SellerDues[] }>) => {
     const { month } = parseOrThrow(monthQuerySchema, req.query);

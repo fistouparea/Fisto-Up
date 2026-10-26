@@ -26,6 +26,9 @@ export function ListingCard({ listing }: { listing: PublicListing }) {
         {listing.minOrderQty > 1 && (
           <span className="absolute left-2 top-2 rounded-full bg-ink-900/80 px-2 py-0.5 text-sm font-bold text-white">{t.bulk}</span>
         )}
+        {listing.partner && (
+          <span className="absolute right-2 top-2 rounded-full bg-accent-400 px-2 py-0.5 text-sm font-bold text-ink-900">{t.partner}</span>
+        )}
       </div>
       <div className="flex flex-1 flex-col gap-1 p-3">
         <h3 className="line-clamp-2 text-base font-bold leading-snug text-ink-900">{title}</h3>

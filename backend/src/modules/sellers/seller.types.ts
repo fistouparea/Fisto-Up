@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { BUYER_TYPES } from '../auth/auth.types.js';
+import { LICENCE_NUMBER_PATTERN } from '../../config/inputRules.js';
+import { BUYER_TYPES, SELLER_KINDS } from '../auth/auth.types.js';
 
 const shortText = (max: number) => z.string().trim().min(1).max(max);
 
@@ -18,13 +19,20 @@ export const placeSchema = z.object({
   lon: z.number().min(68).max(98),
 });
 
-export const sellerProfileBodySchema = z.object({
-  name: shortText(60).pipe(z.string().min(2)),
-  village: shortText(60),
-  shgName: shortText(80).optional(),
-  upiId: upiIdSchema,
-  pickup: placeSchema,
-});
+export const licenceNumberSchema = z.string().trim().regex(LICENCE_NUMBER_PATTERN, 'licence number');
+
+export const sellerProfileBodySchema = z
+  .object({
+    name: shortText(60).pipe(z.string().min(2)),
+    village: shortText(60),
+    shgName: shortText(80).optional(),
+    upiId: upiIdSchema,
+    pickup: placeSchema,
+    /** Left out by older app versions: the seller keeps their kind. */
+    kind: z.enum(SELLER_KINDS).optional(),
+    licenceNumber: licenceNumberSchema.optional(),
+  })
+  .refine((body) => body.kind !== 'input_dealer' || body.licenceNumber !== undefined, { message: 'licence number needed', path: ['licenceNumber'] });
 export type SellerProfileBody = z.infer<typeof sellerProfileBodySchema>;
 
 export const buyerProfileBodySchema = z.object({

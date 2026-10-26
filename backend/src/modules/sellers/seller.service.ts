@@ -7,20 +7,33 @@ import type { BuyerProfileBody, SellerProfileBody } from './seller.types.js';
 
 /**
  * Saves the seller's profile. Changing the UPI ID of a verified seller sends them back to "pending":
- * buyers pay to that ID, so a coordinator must check it again.
+ * buyers pay to that ID, so a coordinator must check it again. The same for becoming (or leaving) an input
+ * dealer and for a new licence number: the coordinator checks the licence before the dealer can list.
  */
 export async function saveSellerProfile(userId: string, body: SellerProfileBody): Promise<UserDocument> {
   const user = await findUser(userId);
   if (user.role !== 'seller' || !user.seller) throw new AppError('FORBIDDEN');
 
   const upiChanged = user.seller.upiId !== undefined && user.seller.upiId !== body.upiId;
-  const status: SellerStatus = user.seller.status === 'rejected' || upiChanged ? 'pending' : user.seller.status;
+  const kind = body.kind ?? user.seller.kind ?? 'producer';
+  const licenceNumber = kind === 'input_dealer' ? (body.licenceNumber ?? user.seller.licenceNumber) : undefined;
+  if (kind === 'input_dealer' && !licenceNumber) throw new AppError('INVALID_INPUT', 'Licence number needed');
+  const kindChanged = kind !== (user.seller.kind ?? 'producer');
+  const licenceChanged = licenceNumber !== user.seller.licenceNumber;
+  const recheck = upiChanged || kindChanged || licenceChanged;
+  const status: SellerStatus = user.seller.status === 'rejected' || recheck ? 'pending' : user.seller.status;
 
   user.name = body.name;
   user.seller.village = body.village;
   user.seller.shgName = body.shgName;
   user.seller.upiId = body.upiId;
   user.seller.pickup = body.pickup;
+  user.seller.kind = kind;
+  user.seller.licenceNumber = licenceNumber;
+  if (kindChanged || licenceChanged) {
+    user.seller.licenceVerifiedAt = undefined;
+    user.seller.licenceVerifiedBy = undefined;
+  }
   user.seller.status = status;
   if (status === 'pending') user.seller.rejectReason = undefined;
   await user.save();
@@ -53,20 +66,31 @@ export async function saveBuyerProfile(userId: string, body: BuyerProfileBody): 
   return user;
 }
 
-/** Coordinator decision. Rejected sellers can fix their profile, which sends it back to "pending". */
+/**
+ * Coordinator decision. Rejected sellers can fix their profile, which sends it back to "pending".
+ * An input dealer is verified only together with the licence check (`licenceChecked`).
+ */
 export async function setSellerStatus(
   sellerId: string,
-  decision: { status: 'verified' | 'rejected'; reason?: string },
+  decision: { status: 'verified' | 'rejected'; reason?: string; licenceChecked?: boolean },
   coordinatorId: string,
 ): Promise<UserDocument> {
   const user = await findUser(sellerId);
   if (user.role !== 'seller' || !user.seller) throw new AppError('NOT_FOUND');
+  const dealer = user.seller.kind === 'input_dealer';
+  if (decision.status === 'verified' && dealer && (!decision.licenceChecked || !user.seller.licenceNumber)) {
+    throw new AppError('LICENCE_CHECK_REQUIRED');
+  }
 
   user.seller.status = decision.status;
   user.seller.rejectReason = decision.status === 'rejected' ? decision.reason : undefined;
   if (decision.status === 'verified') {
     user.seller.verifiedAt = new Date();
     user.seller.verifiedBy = new Types.ObjectId(coordinatorId);
+    if (dealer) {
+      user.seller.licenceVerifiedAt = user.seller.verifiedAt;
+      user.seller.licenceVerifiedBy = user.seller.verifiedBy;
+    }
   }
   await user.save();
   await ListingModel.updateMany({ sellerId: user._id }, { $set: { sellerVerified: decision.status === 'verified' } }).exec();

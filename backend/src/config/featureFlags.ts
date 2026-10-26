@@ -15,6 +15,8 @@ export const FEATURE_FLAGS = {
   helpRequests: { default: 'all', description: '"मदद/शिकायत" बटन' },
   voiceInput: { default: 'all', description: 'फीडबैक और शिकायत बोलकर लिखना (🎤)' },
   pilotDashboard: { default: 'pilot', description: 'संयोजक का पायलट डैशबोर्ड' },
+  // Phase 5: every new feature starts with pilot users only.
+  aiKit: { default: 'pilot', description: 'जाँच के बाद "ज़रूरी सामान" और खाद-बीज-दवाई की साझेदार दुकानें' },
 } as const satisfies Record<string, { default: FlagState; description: string }>;
 
 export type FlagKey = keyof typeof FEATURE_FLAGS;
