@@ -67,10 +67,12 @@ export async function searchListings(query: SearchQuery): Promise<SearchPage> {
   if (query.q) filter.$or = textConditions(query.q);
 
   const pageSize = LISTING_RULES.pageSize;
+  // Plain objects (lean): the busiest public endpoint; no need to build full mongoose documents.
   const rows = await ListingModel.find(filter)
     .sort(SORTS[query.sort])
     .skip((query.page - 1) * pageSize)
     .limit(pageSize + 1)
+    .lean()
     .exec();
 
   const origin = query.lat !== undefined && query.lon !== undefined ? { lat: query.lat, lon: query.lon } : undefined;
@@ -101,9 +103,15 @@ export async function findPublicListing(id: string, viewer: AuthUser | undefined
   return view ?? null;
 }
 
-export async function toPublicViews(listings: ListingDocument[], origin?: { lat: number; lon: number }): Promise<PublicListingView[]> {
+/** The fields a public view needs; full documents and lean rows both have them. */
+type ListingSource = Pick<
+  ListingDocument,
+  '_id' | 'sellerId' | 'category' | 'product' | 'title' | 'description' | 'qualityNotes' | 'unit' | 'pricePerUnitPaise' | 'quantityAvailable' | 'minOrderQty' | 'photoIds' | 'fssaiNumber' | 'location' | 'place' | 'createdAt'
+>;
+
+export async function toPublicViews(listings: ListingSource[], origin?: { lat: number; lon: number }): Promise<PublicListingView[]> {
   const sellerIds = [...new Set(listings.map((listing) => listing.sellerId.toString()))];
-  const sellers = await UserModel.find({ _id: { $in: sellerIds } }, { name: 1, seller: 1 }).exec();
+  const sellers = await UserModel.find({ _id: { $in: sellerIds } }, { name: 1, seller: 1 }).lean().exec();
   const byId = new Map<string, PublicSeller>(
     sellers.map((user) => [
       user._id.toString(),

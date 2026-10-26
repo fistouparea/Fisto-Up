@@ -11,7 +11,7 @@ export class MongoFarmProfileRepository implements FarmProfileRepository {
 
   async save(deviceId: string, profile: FarmProfile): Promise<StoredFarmProfile> {
     const row = await withStorageErrors(() =>
-      FarmProfileModel.findOneAndReplace({ deviceId }, { deviceId, ...profile }, { upsert: true, new: true })
+      FarmProfileModel.findOneAndReplace({ deviceId }, { deviceId, ...profile }, { upsert: true, returnDocument: 'after' })
         .lean()
         .exec(),
     );

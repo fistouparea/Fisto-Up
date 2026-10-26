@@ -9,9 +9,16 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "outDir": "dist",
     "rootDir": "."
   },
-  "include": ["src", "tests", "vitest.config.ts"]
+  "include": [
+    "src",
+    "tests",
+    "vitest.config.ts",
+    "loadtest"
+  ]
 }

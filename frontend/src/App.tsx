@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
+import { lazyNamed, prefetchCommonScreens } from './utils/lazyNamed';
+import { Skeleton } from './components/ui/Skeleton';
 import { LuCamera, LuHistory, LuHouse, LuShoppingBasket, LuSprout } from 'react-icons/lu';
 import { AppBar } from './components/AppBar';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -10,41 +12,17 @@ import { AuthProvider } from './context/AuthProvider';
 import { LangProvider } from './context/LangProvider';
 import { MarketNotificationsProvider } from './context/MarketNotificationsProvider';
 import { NewOrderAlert } from './components/market/NewOrderAlert';
-import { OrderForm } from './components/market/OrderForm';
-import { OrdersPage } from './pages/market/OrdersPage';
-import { OrderPage } from './pages/market/OrderPage';
-import { AdminPage } from './pages/admin/AdminPage';
 import { FarmProfileProvider } from './context/FarmProfileProvider';
 import { NotificationsProvider } from './context/NotificationsProvider';
 import { useFarmProfile } from './hooks/useFarmProfile';
 import { routes, useHashRoute, type Route } from './hooks/useHashRoute';
-import { CalendarPage } from './pages/CalendarPage';
-import { DiagnosePage } from './pages/DiagnosePage';
-import { FarmPage } from './pages/FarmPage';
 import { FarmSetupPage } from './pages/FarmSetupPage';
-import { HistoryDetailPage } from './pages/HistoryDetailPage';
-import { HistoryPage } from './pages/HistoryPage';
 import { HomePage } from './pages/HomePage';
-import { NotificationsPage } from './pages/NotificationsPage';
-import { WaterPage } from './pages/WaterPage';
-import { WeatherPage } from './pages/WeatherPage';
 import { ConsentPage } from './pages/ConsentPage';
-import { LegalPage } from './pages/LegalPage';
-import { MyDataPage } from './pages/MyDataPage';
-import { HelpPage } from './pages/HelpPage';
 import { FlagsProvider } from './context/FlagsProvider';
 import { sendConsent } from './api/privacy';
 import { reportAppOpen } from './utils/appOpen';
 import { hasConsented, isConsentPending, markConsentSent, rememberConsent } from './utils/consentState';
-import { AccountPage } from './pages/market/AccountPage';
-import { BuyerProfilePage } from './pages/market/BuyerProfilePage';
-import { LoginPage } from './pages/market/LoginPage';
-import { RegisterPage } from './pages/market/RegisterPage';
-import { SellerProfilePage } from './pages/market/SellerProfilePage';
-import { MySalesPage } from './pages/market/MySalesPage';
-import { SnapListPage } from './pages/market/SnapListPage';
-import { MarketPage } from './pages/market/MarketPage';
-import { ListingDetailPage } from './pages/market/ListingDetailPage';
 import { cn } from './utils/cn';
 import { RequireRole } from './components/market/RequireRole';
 import { useAuth } from './hooks/useAuth';
@@ -53,6 +31,32 @@ import type { Account } from './api/marketTypes';
 import { roleHome } from './utils/loginRedirect';
 import { hi } from './strings/hi';
 import { readFlag, setFlag } from './utils/offlineCache';
+
+// Screens load when first opened: the first visit downloads only the home screen (slow 2G/3G phones).
+const OrderForm = lazyNamed(() => import('./components/market/OrderForm'), 'OrderForm');
+const OrdersPage = lazyNamed(() => import('./pages/market/OrdersPage'), 'OrdersPage');
+const OrderPage = lazyNamed(() => import('./pages/market/OrderPage'), 'OrderPage');
+const AdminPage = lazyNamed(() => import('./pages/admin/AdminPage'), 'AdminPage');
+const CalendarPage = lazyNamed(() => import('./pages/CalendarPage'), 'CalendarPage');
+const DiagnosePage = lazyNamed(() => import('./pages/DiagnosePage'), 'DiagnosePage');
+const FarmPage = lazyNamed(() => import('./pages/FarmPage'), 'FarmPage');
+const HistoryDetailPage = lazyNamed(() => import('./pages/HistoryDetailPage'), 'HistoryDetailPage');
+const HistoryPage = lazyNamed(() => import('./pages/HistoryPage'), 'HistoryPage');
+const NotificationsPage = lazyNamed(() => import('./pages/NotificationsPage'), 'NotificationsPage');
+const WaterPage = lazyNamed(() => import('./pages/WaterPage'), 'WaterPage');
+const WeatherPage = lazyNamed(() => import('./pages/WeatherPage'), 'WeatherPage');
+const LegalPage = lazyNamed(() => import('./pages/LegalPage'), 'LegalPage');
+const MyDataPage = lazyNamed(() => import('./pages/MyDataPage'), 'MyDataPage');
+const HelpPage = lazyNamed(() => import('./pages/HelpPage'), 'HelpPage');
+const AccountPage = lazyNamed(() => import('./pages/market/AccountPage'), 'AccountPage');
+const BuyerProfilePage = lazyNamed(() => import('./pages/market/BuyerProfilePage'), 'BuyerProfilePage');
+const LoginPage = lazyNamed(() => import('./pages/market/LoginPage'), 'LoginPage');
+const RegisterPage = lazyNamed(() => import('./pages/market/RegisterPage'), 'RegisterPage');
+const SellerProfilePage = lazyNamed(() => import('./pages/market/SellerProfilePage'), 'SellerProfilePage');
+const MySalesPage = lazyNamed(() => import('./pages/market/MySalesPage'), 'MySalesPage');
+const SnapListPage = lazyNamed(() => import('./pages/market/SnapListPage'), 'SnapListPage');
+const MarketPage = lazyNamed(() => import('./pages/market/MarketPage'), 'MarketPage');
+const ListingDetailPage = lazyNamed(() => import('./pages/market/ListingDetailPage'), 'ListingDetailPage');
 
 const ONBOARDING_FLAG = 'onboardingDone';
 
@@ -94,6 +98,8 @@ function AppShell() {
     if (consented && isConsentPending()) sendConsent(lang).then(() => markConsentSent(), () => undefined);
     // Anonymous "active today" for the pilot dashboard, only after consent.
     if (consented) reportAppOpen();
+    // After the first screen: fetch the photo check and history in the background (instant when tapped).
+    if (consented) prefetchCommonScreens([() => import('./pages/DiagnosePage'), () => import('./pages/HistoryPage')]);
   }, [consented, lang]);
 
   const agree = () => {
@@ -126,7 +132,9 @@ function AppShell() {
             ) : showOnboarding ? (
               <FarmSetupPage onDone={finishOnboarding} />
             ) : (
-              <Page route={route} diagnoseKey={diagnoseKey} />
+              <Suspense fallback={<Skeleton className="h-64" />}>
+                <Page route={route} diagnoseKey={diagnoseKey} />
+              </Suspense>
             )}
           </ErrorBoundary>
         </PageTransition>

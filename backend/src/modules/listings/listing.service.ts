@@ -5,7 +5,7 @@ import { AppError } from '../../errors/AppError.js';
 import type { AiProvider } from '../../services/ai/aiProvider.js';
 import { redactPersonalData } from '../../services/ai/marketPrompt.js';
 import type { ImageMimeType } from '../../types/diagnosis.js';
-import type { PhotoContent, PhotoStorage } from '../../services/storage/photoStorage.js';
+import type { PhotoContent, PhotoSize, PhotoStorage } from '../../services/storage/photoStorage.js';
 import { logger } from '../../observability/logger.js';
 import { isSellerProfileComplete } from '../auth/accountView.js';
 import type { AuthUser } from '../auth/auth.types.js';
@@ -64,9 +64,10 @@ export async function storePhoto(storage: PhotoStorage, ownerId: string, photo: 
 }
 
 /** What GET /api/market/photos/:id sends: bytes kept in MongoDB, or a redirect to the provider's CDN. */
-export async function photoContent(photo: ListingPhotoDocument, storage: PhotoStorage): Promise<PhotoContent | null> {
+export async function photoContent(photo: ListingPhotoDocument, storage: PhotoStorage, size: PhotoSize = 'full'): Promise<PhotoContent | null> {
+  // Database photos are already small (≤1024 px from the phone): the same bytes for both sizes.
   if (photo.data) return { kind: 'bytes', data: photo.data, mimeType: photo.mimeType };
-  return photo.storageKey ? storage.open(photo.storageKey) : null;
+  return photo.storageKey ? storage.open(photo.storageKey, size) : null;
 }
 
 /** Cleans up what the AI said into whole units, paise, and a unit the product allows. */

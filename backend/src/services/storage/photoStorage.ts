@@ -11,6 +11,8 @@ export type StoredPhotoRef = { data: Buffer } | { storageKey: string };
 /** How to answer GET /api/market/photos/:id: send the bytes, or redirect to a CDN. */
 export type PhotoContent = { kind: 'bytes'; data: Buffer; mimeType: string } | { kind: 'redirect'; url: string };
 
+export type PhotoSize = 'thumb' | 'full';
+
 export const STORAGE_PROVIDERS = ['database', 'cloudinary'] as const;
 export type StorageProviderName = (typeof STORAGE_PROVIDERS)[number];
 
@@ -22,8 +24,8 @@ export type StorageProviderName = (typeof STORAGE_PROVIDERS)[number];
 export interface PhotoStorage {
   readonly name: StorageProviderName;
   save(photo: PhotoToStore): Promise<StoredPhotoRef>;
-  /** Content of a photo stored under `storageKey` by this provider. */
-  open(storageKey: string): Promise<PhotoContent>;
+  /** Content of a photo stored under `storageKey` by this provider; "thumb" = small version for cards. */
+  open(storageKey: string, size?: PhotoSize): Promise<PhotoContent>;
   /** Deletes a stored file. */
   remove(storageKey: string): Promise<void>;
 }

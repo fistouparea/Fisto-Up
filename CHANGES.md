@@ -1034,3 +1034,63 @@ banayein (local wali dobara use na karein).
 - Free tier ki wajah se default ek photo ek baar mein (`--concurrency 1`).
 - **Asli photos aur asli Gemini se eval abhi nahi chala** (labelled photos nahi hain). Logic fake AI ke saath test hai.
 - Bug pakda aur theek kiya: CSV mein khaali `expected_status` ab "ok" maana jaata hai (pehle line reject ho jaati).
+
+## Task 8 – Performance aur load testing
+
+### Farmer app (sasta Android phone)
+- **Lazy loading:** ab sirf पहली screens (होम, सहमति, खेत की जानकारी) pehle download hoti hain. Baaki har screen
+  (bazaar, orders, संयोजक पैनल, मौसम …) pehli baar kholne par aati hai. Phone khaali ho to फोटो जाँच aur मेरी जाँच
+  peeche se pehle hi aa jaati hain (tap par turant khulti hain).
+  - Main JS: **175 KB → 96 KB gzip** (610 KB → 305 KB). Pehli load par kul JS ~150 KB gzip (pehle ~175 KB + baaki
+    sab ek saath). Coordinator panel (10 KB gz), order screen (12 KB gz), bazaar sirf zaroorat par.
+  - Sentry ka code DSN na ho to bundle mein hai hi nahi (~2 KB ka loader).
+- **Photos:** listing cards ab Cloudinary se **400px** copy lete hain (`?size=thumb`), gallery 1024px. WebP/AVIF
+  apne-aap (`f_auto,q_auto`). `loading="lazy"` + `decoding="async"`. Phone par photo pehle se 1024px JPEG mein chhoti hoti hai.
+- **Lighthouse (mobile, simulated slow 4G + 4× dheema CPU, production build, `vite preview`):**
+
+  | Category | Score |
+  | --- | ---: |
+  | Performance | **91** |
+  | Accessibility | **100** |
+  | Best practices | **96** (sirf isliye kam: preview ke peeche backend nahi tha, API errors console mein) |
+
+  FCP 2.3 s · LCP 2.3 s · TBT 230 ms · CLS 0.03 · Speed Index 2.3 s · TTI 3.5 s · kul 426 KB.
+  Baaki sujhav: ~48 KB unused JS (framer-motion), CSS render-blocking ~300 ms.
+- **Aage kya kar sakte hain (nahi kiya):**
+  - framer-motion hatakar CSS transitions: ~40 KB gzip kam.
+  - Hindi font (Mukta Devanagari 400+700, ~200 KB woff2) ki jagah phone ka Noto Devanagari: `font-display: swap`
+    pehle se hai, isliye text turant dikhta hai, par data bachega.
+
+### Load test (`npm run loadtest`, autocannon)
+Asli app ek alag process mein (`NODE_ENV=production`), AI mock (1.5 s mein jawab, jaise Gemini), mausam mock, memory
+MongoDB replica set: 200 kisan, 600 jaanchein, 60 listings. Har request alag IP se aati hai (asli phones jaisa).
+Laptop: i5-8365U, 8 core, 8 GB. 15 s har run. Poora table: `backend/loadtest/results/2026-10-26-09-13.md`.
+
+| Endpoint | 100 users: req/s · p50 · p99 | 500 users: req/s · p50 · p99 | Errors |
+| --- | --- | --- | ---: |
+| `/health` | 10,056 · 9 ms · 19 ms | 10,120 · 48 ms · 60 ms | 0 |
+| बाज़ार browse `/api/market/listings` | 597 · 156 ms · 304 ms | 671 · 260 ms · 7.8 s | 0 |
+| होम `/api/dashboard` | 536 · 167 ms · 938 ms | 579 · 287 ms · 10 s | 0 |
+| मेरी जाँच `/api/history` | 1,604 · 56 ms · 92 ms | 1,670 · 291 ms · 361 ms | 0 |
+| फोटो जाँच `/api/diagnose` (AI 1.5 s) | 60 · 1.51 s · 1.80 s | 300 · 1.52 s · 1.80 s | 0 |
+
+"100/500 users" yahan matlab 100/500 connection **bina ruke** request bhej rahe hain. Asli kisan har 10–30 second mein
+ek kaam karta hai, isliye 500 asli users ≈ 20–50 req/s, jo upar ki capacity se bahut kam hai.
+
+**Bottlenecks jo mile:**
+1. **Bazaar browse CPU-bound tha** (har result ka poora mongoose document banana): 272 req/s. `.lean()` se
+   **496 req/s (+82%)** (20 connection par), aur p99 117 → 69 ms. Ye fix kiya.
+2. **Overload par lambi poonch (p99 7–10 s, 500 connection):** ek Node process ka CPU bhar jaata hai, aur requests line
+   mein lagti hain. Koi error nahi, sab 2xx. Pilot ke liye theek hai. Badhane ke liye: listings ka chhota cache
+   (5–10 s), zyada CPU wala plan, ya 2+ instance (tab rate limit ke liye Redis store chahiye).
+3. **Render free = 0.1 CPU** (is laptop ke ek core ka chhota hissa). Wahan andaazan in numbers ka ~1/10 milega
+   (browse ~50–60 req/s). Pilot (20–50 kisan) ke liye kaafi, par asli launch par Starter plan lein.
+4. **Photo jaanch ki asli seema Gemini hai, server nahi:** 500 ek saath chal rahi jaanchein server aaram se pakadta hai
+   (p99 = AI ka samay). Gemini free tier ki per-minute limit pehle aayegi, tab app "अभी बहुत लोग…" dikhata hai.
+5. Mongoose ki ek deprecation warning (`new: true`) bhi theek ki (`returnDocument: 'after'`).
+
+**Decisions:**
+- autocannon (Node, devDependency) chuna, k6 nahi: alag install nahi, aur test script TypeScript mein repo ke andar
+  (`backend/loadtest/`). autocannon ke saath aaya purana `uuid` (moderate advisory, sirf dev) `overrides` se 11.x par kiya: `npm audit` 0.
+- **Is machine par npm ne rolldown ka native binding phir chhod diya** (`npm ci` ke baad bhi). Fix:
+  `npm install --no-save @rolldown/binding-linux-x64-gnu@<rolldown version>`. Lock file sahi hai, isliye CI par dikkat nahi.

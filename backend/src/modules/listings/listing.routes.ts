@@ -64,7 +64,7 @@ export function createListingRouter({ ai, aiRateLimit, photos }: ListingRouterDe
 
   router.get('/market/photos/:id', async (req, res) => {
     const photo = await findPhoto(String(req.params.id), req.user);
-    const content = photo ? await photoContent(photo, photos) : null;
+    const content = photo ? await photoContent(photo, photos, req.query.size === 'thumb' ? 'thumb' : 'full') : null;
     if (!photo || !content) throw new AppError('NOT_FOUND');
     // A saved photo never changes, so phones can keep it (saves data on slow networks).
     res.set('Cache-Control', photo.attached ? 'public, max-age=604800, immutable' : 'private, no-store');

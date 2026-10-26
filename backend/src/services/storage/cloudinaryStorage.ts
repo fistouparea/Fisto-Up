@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { withRetry } from '../../utils/retry.js';
-import type { PhotoContent, PhotoStorage, PhotoToStore, StoredPhotoRef } from './photoStorage.js';
+import type { PhotoContent, PhotoSize, PhotoStorage, PhotoToStore, StoredPhotoRef } from './photoStorage.js';
 
 export interface CloudinaryConfig {
   cloudName: string;
@@ -17,8 +17,11 @@ export function parseCloudinaryUrl(url: string, folder: string): CloudinaryConfi
   return match?.[1] && match[2] && match[3] ? { apiKey: match[1], apiSecret: match[2], cloudName: match[3], folder } : null;
 }
 
-/** Shown to phones: at most 1024 px wide, best format (WebP/AVIF) and quality for the phone, from Cloudinary's CDN. */
-const DELIVERY_TRANSFORM = 'f_auto,q_auto,c_limit,w_1024';
+/** Shown to phones: best format (WebP/AVIF) and quality for the phone, from Cloudinary's CDN; cards get a 400 px copy. */
+const DELIVERY_TRANSFORMS: Record<PhotoSize, string> = {
+  full: 'f_auto,q_auto,c_limit,w_1024',
+  thumb: 'f_auto,q_auto,c_limit,w_400',
+};
 const TIMEOUT_MS = 20_000;
 
 const uploadResponseSchema = z.object({ public_id: z.string().min(1) });
@@ -45,17 +48,17 @@ export class CloudinaryPhotoStorage implements PhotoStorage {
     return { storageKey: uploadResponseSchema.parse(body).public_id };
   }
 
-  async open(storageKey: string): Promise<PhotoContent> {
-    return { kind: 'redirect', url: this.deliveryUrl(storageKey) };
+  async open(storageKey: string, size: PhotoSize = 'full'): Promise<PhotoContent> {
+    return { kind: 'redirect', url: this.deliveryUrl(storageKey, size) };
   }
 
   async remove(storageKey: string): Promise<void> {
     await this.post('destroy', this.signedForm({ public_id: storageKey, timestamp: this.timestamp() }));
   }
 
-  deliveryUrl(storageKey: string): string {
+  deliveryUrl(storageKey: string, size: PhotoSize = 'full'): string {
     const path = storageKey.split('/').map(encodeURIComponent).join('/');
-    return `https://res.cloudinary.com/${this.config.cloudName}/image/upload/${DELIVERY_TRANSFORM}/${path}`;
+    return `https://res.cloudinary.com/${this.config.cloudName}/image/upload/${DELIVERY_TRANSFORMS[size]}/${path}`;
   }
 
   /** Cloudinary's signature: SHA-1 of the sorted "key=value" pairs joined with "&", followed by the API secret. */

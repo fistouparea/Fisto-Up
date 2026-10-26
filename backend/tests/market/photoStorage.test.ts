@@ -75,6 +75,8 @@ describe('Cloudinary storage', () => {
       kind: 'redirect',
       url: 'https://res.cloudinary.com/demo-cloud/image/upload/f_auto,q_auto,c_limit,w_1024/agriai/listings/abc',
     });
+    // Cards and lists get a small copy (less data on slow networks).
+    await expect(storage.open('agriai/listings/abc', 'thumb')).resolves.toMatchObject({ url: expect.stringContaining('/f_auto,q_auto,c_limit,w_400/') });
   });
 
   it('the app refuses to start with STORAGE_PROVIDER=cloudinary but no valid CLOUDINARY_URL', () => {
