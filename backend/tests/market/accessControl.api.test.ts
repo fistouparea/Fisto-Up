@@ -43,6 +43,12 @@ const ROUTES: { method: 'get' | 'post' | 'put' | 'patch'; path: string; roles: (
   { method: 'post', path: '/api/admin/listings', roles: ['coordinator'] },
   { method: 'put', path: `/api/admin/orders/${ID}/delivery`, roles: ['coordinator'] },
   { method: 'post', path: '/api/admin/commission/collect', roles: ['coordinator'] },
+  { method: 'get', path: '/api/admin/commission/referrals', roles: ['coordinator'] },
+  { method: 'get', path: '/api/admin/schemes', roles: ['coordinator'] },
+  { method: 'put', path: '/api/admin/schemes/pmfby', roles: ['coordinator'] },
+  { method: 'get', path: '/api/admin/services', roles: ['coordinator'] },
+  { method: 'post', path: `/api/admin/services/${ID}/approve`, roles: ['coordinator'] },
+  { method: 'post', path: `/api/admin/services/${ID}/reject`, roles: ['coordinator'] },
 ];
 
 async function agents(app: App) {

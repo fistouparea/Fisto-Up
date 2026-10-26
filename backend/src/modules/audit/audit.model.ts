@@ -21,10 +21,13 @@ export const AUDIT_ACTIONS = [
   'help.resolve',
   'metrics.export',
   'scheme.update',
+  'service.approve',
+  'service.reject',
+  'service.booking',
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
 
-export const AUDIT_TARGETS = ['user', 'listing', 'report', 'order', 'commission', 'invite', 'flag', 'help', 'metrics', 'scheme'] as const;
+export const AUDIT_TARGETS = ['user', 'listing', 'report', 'order', 'commission', 'invite', 'flag', 'help', 'metrics', 'scheme', 'service'] as const;
 export type AuditTarget = (typeof AUDIT_TARGETS)[number];
 
 /**

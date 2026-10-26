@@ -17,7 +17,7 @@ export const PROMPTS = {
   },
   chat: { version: 'chat-v2', text: () => buildChatSystemPrompt('<crop>', SAMPLE_DIAGNOSIS) },
   listing: { version: 'listing-v1', text: () => `${LISTING_SYSTEM_PROMPT}\n\n--- user ---\n${buildListingUserPrompt('<seller words>')}` },
-  intent: { version: 'intent-v3', text: () => `${INTENT_SYSTEM_PROMPT}\n\n--- user ---\n${buildIntentUserPrompt('<farmer words>')}` },
+  intent: { version: 'intent-v4', text: () => `${INTENT_SYSTEM_PROMPT}\n\n--- user ---\n${buildIntentUserPrompt('<farmer words>')}` },
   priceEstimate: { version: 'price-v1', text: () => `${PRICE_ESTIMATE_SYSTEM_PROMPT}\n\n--- user ---\n${buildPriceEstimatePrompt('<product>', '<unit>')}` },
 } as const;
 

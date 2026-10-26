@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
+import { SERVICE_KINDS, type ServiceKind, type ServiceSide } from '../data/serviceKinds';
 
-export const ADMIN_TABS = ['overview', 'pilot', 'sellers', 'orders', 'reports', 'help', 'ledger', 'newListing', 'invites', 'flags', 'audit', 'schemes'] as const;
+export const ADMIN_TABS = ['overview', 'pilot', 'sellers', 'orders', 'reports', 'help', 'ledger', 'newListing', 'invites', 'flags', 'audit', 'schemes', 'services'] as const;
 export type AdminTab = (typeof ADMIN_TABS)[number];
 
 export type Route =
@@ -31,7 +32,12 @@ export type Route =
   | { name: 'myData' }
   | { name: 'help' }
   | { name: 'settings' }
-  | { name: 'schemes' };
+  | { name: 'schemes' }
+  | { name: 'services'; kind: ServiceKind; side: ServiceSide }
+  | { name: 'serviceItem'; id: string }
+  | { name: 'serviceBooking'; id: string }
+  | { name: 'servicesMine' }
+  | { name: 'serviceNew'; kind: ServiceKind; side: ServiceSide };
 
 export const routes = {
   home: '#/',
@@ -61,6 +67,11 @@ export const routes = {
   help: '#/help',
   settings: '#/settings',
   schemes: '#/schemes',
+  services: (kind: ServiceKind, side: ServiceSide = 'offer') => (side === 'offer' ? `#/services/${kind}` : `#/services/${kind}/need`),
+  serviceItem: (id: string) => `#/services/item/${encodeURIComponent(id)}`,
+  serviceBooking: (id: string) => `#/services/booking/${encodeURIComponent(id)}`,
+  servicesMine: '#/services/my',
+  serviceNew: (kind: ServiceKind, side: ServiceSide = 'offer') => `#/services/new/${kind}/${side}`,
   admin: (tab: AdminTab = 'overview') => (tab === 'overview' ? '#/admin' : `#/admin/${tab}`),
 };
 
@@ -74,7 +85,8 @@ export function useHashRoute(): Route {
 }
 
 export function parseRoute(hash: string): Route {
-  const [, section, id, sub] = hash.replace(/^#/, '').split('/');
+  const [, section, id, sub, extra] = hash.replace(/^#/, '').split('/');
+  if (section === 'services') return parseServiceRoute(id, sub, extra);
   if (section === 'market' && id === 'listing' && sub) return { name: 'listing', id: decodeURIComponent(sub) };
   if (section === 'market') return { name: 'market' };
   if (section === 'admin') return { name: 'admin', tab: ADMIN_TABS.find((tab) => tab === id) ?? 'overview' };
@@ -102,6 +114,19 @@ export function parseRoute(hash: string): Route {
   if (section === 'account' && id === 'seller') return { name: 'sellerProfile' };
   if (section === 'account' && id === 'buyer') return { name: 'buyerProfile' };
   if (section === 'account') return { name: 'account' };
+  return { name: 'home' };
+}
+
+const isKind = (value: string | undefined): value is ServiceKind => SERVICE_KINDS.some((kind) => kind === value);
+const toSide = (value: string | undefined): ServiceSide => (value === 'need' ? 'need' : 'offer');
+
+/** #/services/<kind>[/need] · /item/<id> · /booking/<id> · /my · /new/<kind>/<side> */
+function parseServiceRoute(id: string | undefined, sub: string | undefined, extra: string | undefined): Route {
+  if (id === 'item' && sub) return { name: 'serviceItem', id: decodeURIComponent(sub) };
+  if (id === 'booking' && sub) return { name: 'serviceBooking', id: decodeURIComponent(sub) };
+  if (id === 'my') return { name: 'servicesMine' };
+  if (id === 'new' && isKind(sub)) return { name: 'serviceNew', kind: sub, side: toSide(extra) };
+  if (isKind(id)) return { name: 'services', kind: id, side: toSide(sub) };
   return { name: 'home' };
 }
 

@@ -1,5 +1,6 @@
 import type { IconType } from 'react-icons';
 import { LuLandmark } from 'react-icons/lu';
+import { SERVICE_KIND_INFO } from '../../data/serviceKinds';
 import type { FlagKey } from '../../api/flags';
 import { useFlags } from '../../hooks/useFlags';
 import { routes } from '../../hooks/useHashRoute';
@@ -15,7 +16,12 @@ interface ServiceTile {
 }
 
 /** Phase 5 features on the home screen, each only when its feature flag is on for this person. */
-const TILES: ServiceTile[] = [{ flag: 'schemes', href: routes.schemes, icon: LuLandmark, label: () => hi.schemes.homeButton }];
+const TILES: ServiceTile[] = [
+  { flag: 'schemes', href: routes.schemes, icon: LuLandmark, label: () => hi.schemes.homeButton },
+  { flag: 'equipment', href: routes.services('equipment'), icon: SERVICE_KIND_INFO.equipment.icon, label: () => hi.services.kinds.equipment.home },
+  { flag: 'labour', href: routes.services('labour'), icon: SERVICE_KIND_INFO.labour.icon, label: () => hi.services.kinds.labour.home },
+  { flag: 'livestock', href: routes.services('livestock'), icon: SERVICE_KIND_INFO.livestock.icon, label: () => hi.services.kinds.livestock.home },
+];
 
 export function MoreServices() {
   const flags = useFlags();

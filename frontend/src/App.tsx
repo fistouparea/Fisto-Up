@@ -52,6 +52,11 @@ const MyDataPage = lazyNamed(() => import('./pages/MyDataPage'), 'MyDataPage');
 const HelpPage = lazyNamed(() => import('./pages/HelpPage'), 'HelpPage');
 const SettingsPage = lazyNamed(() => import('./pages/SettingsPage'), 'SettingsPage');
 const SchemesPage = lazyNamed(() => import('./pages/SchemesPage'), 'SchemesPage');
+const ServicesPage = lazyNamed(() => import('./pages/services/ServicesPage'), 'ServicesPage');
+const ServiceDetailPage = lazyNamed(() => import('./pages/services/ServiceDetailPage'), 'ServiceDetailPage');
+const NewServicePage = lazyNamed(() => import('./pages/services/NewServicePage'), 'NewServicePage');
+const BookingPage = lazyNamed(() => import('./pages/services/BookingPage'), 'BookingPage');
+const MyServicesPage = lazyNamed(() => import('./pages/services/MyServicesPage'), 'MyServicesPage');
 const AccountPage = lazyNamed(() => import('./pages/market/AccountPage'), 'AccountPage');
 const BuyerProfilePage = lazyNamed(() => import('./pages/market/BuyerProfilePage'), 'BuyerProfilePage');
 const LoginPage = lazyNamed(() => import('./pages/market/LoginPage'), 'LoginPage');
@@ -244,6 +249,16 @@ function Page({ route, diagnoseKey }: { route: Route; diagnoseKey: number }) {
       return <SettingsPage />;
     case 'schemes':
       return <SchemesPage />;
+    case 'services':
+      return <ServicesPage key={`${route.kind}-${route.side}`} kind={route.kind} side={route.side} />;
+    case 'serviceItem':
+      return <ServiceDetailPage id={route.id} />;
+    case 'serviceNew':
+      return <RequireRole>{(user) => <NewServicePage kind={route.kind} side={route.side} user={user} />}</RequireRole>;
+    case 'serviceBooking':
+      return <RequireRole>{() => <BookingPage id={route.id} />}</RequireRole>;
+    case 'servicesMine':
+      return <RequireRole>{() => <MyServicesPage />}</RequireRole>;
     case 'buyerProfile':
       return <RequireRole roles={['buyer']}>{(user) => <BuyerProfilePage user={user} onSaved={savedProfile} />}</RequireRole>;
   }
@@ -256,5 +271,7 @@ function pageKey(route: Route, diagnoseKey: number): string {
   if (route.name === 'listing') return `listing-${route.id}`;
   if (route.name === 'order') return `order-${route.id}`;
   if (route.name === 'admin') return `admin-${route.tab}`;
+  if (route.name === 'services' || route.name === 'serviceNew') return `${route.name}-${route.kind}-${route.side}`;
+  if (route.name === 'serviceItem' || route.name === 'serviceBooking') return `${route.name}-${route.id}`;
   return route.name;
 }

@@ -74,6 +74,22 @@ export const VOICE_INTENTS = {
     examples: ['सरकारी योजना बताओ', 'फसल बीमा कैसे करें', 'किसान सम्मान निधि'],
     keywords: ['योजना', 'सरकारी', 'बीमा', 'सम्मान निधि', 'सब्सिडी', 'अनुदान', 'किसान क्रेडिट'],
   },
+  equipment: {
+    description: 'rent a farm machine (tractor, thresher, sprayer) or give own machine on rent',
+    examples: ['ट्रैक्टर किराए पर चाहिए', 'थ्रेशर चाहिए', 'मशीन किराए पर देनी है'],
+    keywords: ['ट्रैक्टर', 'थ्रेशर', 'मशीन', 'किराए', 'किराये', 'रोटावेटर', 'स्प्रेयर'],
+  },
+  labour: {
+    description: 'find farm workers or find farm work (daily wage)',
+    examples: ['मज़दूर चाहिए', 'कटाई के लिए आदमी चाहिए', 'मुझे काम चाहिए'],
+    keywords: ['मज़दूर', 'मजदूर', 'आदमी चाहिए', 'काम चाहिए', 'दिहाड़ी', 'मजूर'],
+  },
+  livestock: {
+    description: 'buy or sell cattle, goats, camels (animals)',
+    examples: ['गाय बेचनी है', 'भैंस खरीदनी है', 'पशु देखने हैं', 'ऊँट'],
+    // "गाय बेचनी है" is about animals, not about selling produce: the longer animal phrases win.
+    keywords: ['गाय', 'भैंस', 'बकरी', 'भेड़', 'ऊँट', 'ऊंट', 'पशु', 'ढोर', ...['गाय', 'भैंस', 'बकरी', 'ऊँट', 'पशु'].flatMap((animal) => [`${animal} बेच`, `${animal} खरीद`])],
+  },
   home: {
     description: 'home screen',
     examples: ['होम पर चलो', 'शुरू की स्क्रीन'],

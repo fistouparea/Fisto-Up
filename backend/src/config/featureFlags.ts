@@ -19,6 +19,9 @@ export const FEATURE_FLAGS = {
   voiceMode: { default: 'pilot', description: 'बोलकर चलाएँ: हर स्क्रीन पर बड़ा माइक, और "पढ़कर सुनाएँ"' },
   languages: { default: 'pilot', description: 'भाषा चुनें (हिंदी / English / राजस्थानी) और "जवाब राजस्थानी में"' },
   schemes: { default: 'pilot', description: 'सरकारी योजनाएँ: "मेरे लिए योजनाएँ"' },
+  equipment: { default: 'pilot', description: 'किराए पर मशीन (ट्रैक्टर, थ्रेशर, ...)' },
+  labour: { default: 'pilot', description: 'मज़दूर: काम चाहिए / मज़दूर चाहिए' },
+  livestock: { default: 'pilot', description: 'पशु (गाय, बकरी, ऊँट): संयोजक की मंज़ूरी के बाद' },
   aiKit: { default: 'pilot', description: 'जाँच के बाद "ज़रूरी सामान" और खाद-बीज-दवाई की साझेदार दुकानें' },
 } as const satisfies Record<string, { default: FlagState; description: string }>;
 

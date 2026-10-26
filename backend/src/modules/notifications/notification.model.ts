@@ -6,8 +6,8 @@ const marketNotificationSchema = new Schema(
   {
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     orderId: { type: Schema.Types.ObjectId, ref: 'Order' },
-    /** Order status the message is about, or "report" for problem reports. */
-    kind: { type: String, enum: [...ORDER_STATUSES, 'report'], required: true },
+    /** Order status the message is about, "report" for problem reports, "service" for bookings/approvals. */
+    kind: { type: String, enum: [...ORDER_STATUSES, 'report', 'service'], required: true },
     title: { type: String, required: true },
     body: { type: String, required: true },
     /** App route to open, e.g. "#/orders/<id>". */
