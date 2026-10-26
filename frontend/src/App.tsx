@@ -139,32 +139,34 @@ function AppShell() {
           </ErrorBoundary>
         </PageTransition>
       </main>
-      <BottomNav
-        label={hi.nav.label}
-        items={[
-          { href: routes.home, label: hi.nav.home, icon: LuHouse, active: route.name === 'home' },
-          {
-            href: routes.diagnose,
-            label: hi.nav.newCheck,
-            icon: LuCamera,
-            active: route.name === 'diagnose',
-            onClick: () => setDiagnoseKey((key) => key + 1),
-          },
-          {
-            href: user?.role === 'seller' ? routes.sell : user?.role === 'coordinator' ? routes.admin() : routes.market,
-            label: hi.nav.market,
-            icon: LuShoppingBasket,
-            active: MARKET_ROUTES.has(route.name),
-          },
-          {
-            href: routes.history,
-            label: hi.nav.history,
-            icon: LuHistory,
-            active: route.name === 'history' || route.name === 'historyItem',
-          },
-          { href: routes.farm, label: hi.farm.title, icon: LuSprout, active: route.name === 'farm' || route.name === 'farmSetup' },
-        ]}
-      />
+      {!showConsent && (
+        <BottomNav
+          label={hi.nav.label}
+          items={[
+            { href: routes.home, label: hi.nav.home, icon: LuHouse, active: route.name === 'home' },
+            {
+              href: routes.diagnose,
+              label: hi.nav.newCheck,
+              icon: LuCamera,
+              active: route.name === 'diagnose',
+              onClick: () => setDiagnoseKey((key) => key + 1),
+            },
+            {
+              href: user?.role === 'seller' ? routes.sell : user?.role === 'coordinator' ? routes.admin() : routes.market,
+              label: hi.nav.market,
+              icon: LuShoppingBasket,
+              active: MARKET_ROUTES.has(route.name),
+            },
+            {
+              href: routes.history,
+              label: hi.nav.history,
+              icon: LuHistory,
+              active: route.name === 'history' || route.name === 'historyItem',
+            },
+            { href: routes.farm, label: hi.farm.title, icon: LuSprout, active: route.name === 'farm' || route.name === 'farmSetup' },
+          ]}
+        />
+      )}
     </div>
   );
 }

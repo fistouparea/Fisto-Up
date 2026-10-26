@@ -1,5 +1,5 @@
 /**
- * The real app for load tests: fake AI (answers after AI_DELAY_MS, like a busy Gemini), fake weather, a
+ * Demo server for load tests and screenshots (PORT=4000 for the Vite preview proxy). The real app with fake AI (answers after AI_DELAY_MS, like a busy Gemini), fake weather, a
  * throwaway in-memory MongoDB replica set with seeded data. Prints "READY <port> <deviceIds...>" when listening.
  */
 import { randomUUID } from 'node:crypto';
@@ -48,7 +48,10 @@ for (const deviceId of deviceIds) {
     await history.save({ deviceId, crop: 'bajra', diagnosis: { problem_name: 'झुलसा', explanation: '', desi_upay: [], dawai: [], savdhani: [] } });
   }
 }
-const seller = await new AuthService(new PinCredentials(4)).createAccount({ phone: '9000000101', pin: '4826', name: 'रमेश', role: 'seller', verifiedBy: new mongoose.Types.ObjectId().toString() });
+const auth = new AuthService(new PinCredentials(4));
+// Demo coordinator (screenshots): 9000000001 / 2580, as in the seed script.
+await auth.createAccount({ phone: '9000000001', pin: '2580', name: 'सुनीता शर्मा', role: 'coordinator' });
+const seller = await auth.createAccount({ phone: '9000000101', pin: '4826', name: 'रमेश', role: 'seller', verifiedBy: new mongoose.Types.ObjectId().toString() });
 await UserModel.updateOne({ _id: seller._id }, { $set: { 'seller.village': 'घांघू', 'seller.upiId': 'r@okaxis', 'seller.pickup': { lat: 28.3, lon: 74.95, tehsil: 'चूरू' } } });
 await ListingModel.insertMany(
   Array.from({ length: 60 }, (_, i) => ({
@@ -77,7 +80,7 @@ const app = createApp({
   readiness: createReadinessCheck({ mongoConfigured: true, isShuttingDown: () => false }),
 });
 
-const server = app.listen(0, () => {
+const server = app.listen(Number(process.env.PORT ?? 0), () => {
   const address = server.address();
   const port = typeof address === 'object' && address ? address.port : 0;
   console.log(`READY ${port} ${deviceIds.join(' ')}`);

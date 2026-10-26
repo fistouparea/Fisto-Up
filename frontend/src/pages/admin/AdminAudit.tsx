@@ -24,7 +24,7 @@ export function AdminAudit() {
               <ul className="flex flex-col divide-y divide-line rounded-3xl border-2 border-line bg-surface">
                 {items.map((entry) => (
                   <li key={entry.id} className="flex flex-col gap-1 p-3">
-                    <p className="font-bold text-ink-900">{entry.action}</p>
+                    <p className="font-bold text-ink-900">{hi.admin.audit.actions[entry.action] ?? entry.action}</p>
                     <p className="break-all text-sm text-ink-500">
                       {formatDate(entry.at)} · {entry.target.type} {entry.target.id}
                     </p>

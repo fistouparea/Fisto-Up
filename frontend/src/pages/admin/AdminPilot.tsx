@@ -68,11 +68,11 @@ function DashboardBody({ data, onDownload }: { data: PilotDashboard; onDownload:
       </section>
 
       <Section title={text.activeFarmers} csv="weekly-active-farmers" onDownload={onDownload}>
-        <WeeklyBars title={text.activeFarmers} series={ONE} rows={data.weeklyActiveFarmers.map((row) => ({ week: row.week, values: { value: row.farmers } }))} {...chartProps} />
+        <WeeklyBars series={ONE} rows={data.weeklyActiveFarmers.map((row) => ({ week: row.week, values: { value: row.farmers } }))} {...chartProps} />
       </Section>
 
       <Section title={text.diagnoses} csv="diagnoses" onDownload={onDownload}>
-        <WeeklyBars title={text.diagnoses} series={DIAGNOSIS_SERIES} rows={data.diagnoses.map((row) => ({ week: row.week, values: { ok: row.ok, unclear: row.unclear } }))} {...chartProps} />
+        <WeeklyBars series={DIAGNOSIS_SERIES} rows={data.diagnoses.map((row) => ({ week: row.week, values: { ok: row.ok, unclear: row.unclear } }))} {...chartProps} />
       </Section>
 
       <Section title={text.aiFeedback} csv="ai-feedback-by-crop" onDownload={onDownload}>
@@ -125,28 +125,29 @@ function DashboardBody({ data, onDownload }: { data: PilotDashboard; onDownload:
           <p className="text-ink-500">{text.noPrices}</p>
         ) : (
           <div className="overflow-x-auto rounded-3xl border border-line bg-surface">
-            <table className="w-full min-w-[20rem] text-left text-base">
+            <table className="w-full text-left text-base">
               <thead>
                 <tr className="text-ink-500">
-                  <th className="p-3 font-normal" />
-                  <th className="p-3 text-right font-normal">{text.listed}</th>
-                  <th className="p-3 text-right font-normal">{text.sold}</th>
-                  <th className="p-3 text-right font-normal">{text.mandiPrice}</th>
+                  <th className="p-2 sm:p-3 font-normal" />
+                  <th className="p-2 sm:p-3 text-right font-normal">{text.listed}</th>
+                  <th className="p-2 sm:p-3 text-right font-normal">{text.sold}</th>
+                  <th className="p-2 sm:p-3 text-right font-normal">{text.mandiPrice}</th>
                 </tr>
               </thead>
               <tbody>
                 {data.priceVsMandi.map((row) => (
                   <tr key={row.product} className="border-t border-line">
-                    <th className="p-3 font-bold text-ink-900">{productLabels[row.product].hi}</th>
-                    <td className="p-3 text-right tabular-nums">{money(row.listedPerQuintalPaise)}</td>
-                    <td className="p-3 text-right tabular-nums">{money(row.soldPerQuintalPaise)}</td>
-                    <td className="p-3 text-right tabular-nums">{row.mandiPerQuintalPaise === null ? text.noMandi : formatRupees(row.mandiPerQuintalPaise)}</td>
+                    <th className="p-2 sm:p-3 font-bold text-ink-900">{productLabels[row.product].hi}</th>
+                    <td className="p-2 sm:p-3 text-right tabular-nums">{money(row.listedPerQuintalPaise)}</td>
+                    <td className="p-2 sm:p-3 text-right tabular-nums">{money(row.soldPerQuintalPaise)}</td>
+                    <td className="p-2 text-right tabular-nums sm:p-3">{money(row.mandiPerQuintalPaise)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         )}
+        {data.priceVsMandi.some((row) => row.mandiPerQuintalPaise === null) && <p className="text-sm text-ink-500">— {text.noMandi}</p>}
       </Section>
     </>
   );

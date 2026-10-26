@@ -9,7 +9,8 @@ export interface BarSeries {
 }
 
 interface WeeklyBarsProps {
-  title: string;
+  /** Shown above the bars; leave out when the section heading already says it. */
+  title?: string;
   /** One row per week, oldest first; `values[series.key]`. */
   rows: { week: string; values: Record<string, number> }[];
   series: BarSeries[];
@@ -34,7 +35,7 @@ export function WeeklyBars({ title, rows, series, format = String, weekLabel, we
   return (
     <figure className="flex flex-col gap-3 rounded-3xl border border-line bg-surface p-4">
       <figcaption className="flex flex-wrap items-baseline justify-between gap-2">
-        <span className="text-lg font-bold text-ink-900">{title}</span>
+        {title && <span className="text-lg font-bold text-ink-900">{title}</span>}
         {shownRow && (
           <span className="text-base text-ink-700" aria-live="polite">
             {weekLabel(shownRow.week)}:{' '}

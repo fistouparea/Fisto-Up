@@ -1094,3 +1094,18 @@ ek kaam karta hai, isliye 500 asli users ≈ 20–50 req/s, jo upar ki capacity 
   (`backend/loadtest/`). autocannon ke saath aaya purana `uuid` (moderate advisory, sirf dev) `overrides` se 11.x par kiya: `npm audit` 0.
 - **Is machine par npm ne rolldown ka native binding phir chhod diya** (`npm ci` ke baad bhi). Fix:
   `npm install --no-save @rolldown/binding-linux-x64-gnu@<rolldown version>`. Lock file sahi hai, isliye CI par dikkat nahi.
+
+## Screenshots aur unse mile fixes
+
+`docs/screenshots/p4-*` (360px, ek desktop): sahmati, privacy (Hindi), terms (English), app bar mein मदद button,
+जाँच ke baad 👍/👎, मदद/शिकायत, मेरा डेटा (+ pakka mitana), invite code wala sign-up, aur संयोजक पैनल ke 5 naye tab
+(पायलट डैशबोर्ड 360px + desktop, इनवाइट कोड, सुविधाएँ, मदद/शिकायत, बदलाव का रिकॉर्ड).
+Ye ek demo backend (fake AI, memory database, `backend/loadtest/server.ts`) aur production build se bane.
+
+Review mein mila aur theek kiya:
+- 360px par "किसान का भाव vs मंडी" table ka aakhri column kat raha tha → mandi bhav na ho to "—" aur neeche note; chhoti padding.
+- Har chart ke andar section ka heading dobara likha tha → hata diya.
+- Sahmati screen par neeche ka menu dikh raha tha (dabane par bhi wahi screen aati thi, par uljhan hoti) → sahmati tak menu chhupa.
+- बदलाव का रिकॉर्ड mein action English code (`flag.set`) dikh rahe the → Hindi naam ("सुविधा बदली").
+- Note: app bar mein 3 button hone se tagline "फसल की …" kat jaati hai (pehle se truncate tha, theek hai).
+- Error screen (crash) ka screenshot nahi liya: use jaan-boojhkar laane ka production mein koi raasta nahi rakha.
