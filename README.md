@@ -26,6 +26,11 @@ works on slow mobile internet, and installs on the phone like an app (PWA).
 | खरीदें                  | Buyers browse, filter, order or ask a bulk price; pay the seller directly by UPI or cash |
 | Orders                 | Accept/reject with voice alert, stock reserved safely, UPI QR, rating, problem reports |
 | संयोजक पैनल             | Verify sellers, moderate, orders board, assisted listing, commission ledger + CSV     |
+| **Pilot (Phase 4)**    | See [Production + pilot](#production--pilot-phase-4) below                            |
+| सहमति + मेरा डेटा       | First-run consent (Hindi, 🔊); download all data; delete it (orders kept anonymized)  |
+| क्या जवाब सही था?       | 👍 / 👎 after every diagnosis, optional spoken or typed comment                        |
+| मदद/शिकायत              | Help button in the app bar: topic + spoken/typed message, seen by coordinators        |
+| Pilot Dashboard        | Weekly active farmers, diagnoses, 👍 rate by crop, follow-ups, market, price vs mandi + CSV |
 
 ```
 frontend/  React + Vite + TS + Tailwind PWA ──/api──▶ backend/  Express + TS ──▶ Google Gemini (vision + chat)
@@ -43,6 +48,8 @@ frontend/  React + Vite + TS + Tailwind PWA ──/api──▶ backend/  Expres
   Without MongoDB only the photo check and chat work. Or use Docker to run everything together.
 - The marketplace additionally needs MongoDB as a **replica set** (orders use transactions) and a `JWT_SECRET`.
   Docker sets up the replica set for you; for npm see [MongoDB replica set](#mongodb-replica-set-for-npm-dev).
+
+**Deploying for the pilot:** see [DEPLOY.md](DEPLOY.md) (Render + MongoDB Atlas + Cloudinary + Sentry, in Hinglish).
 
 ## 1. Get a free Gemini API key
 
@@ -119,10 +126,20 @@ docker compose up --build               # open http://localhost:8080
 | `JWT_SECRET`        | for marketplace | – (marketplace off) | Signs the login cookie. At least 32 random characters: `openssl rand -hex 32`. Keep secret |
 | `COOKIE_SECURE`     | no    | `true` when `NODE_ENV=production` | Login cookie only over HTTPS. Set `false` only to test over plain http on Wi-Fi |
 | `COMMISSION_PERCENT`| no    | `3`                     | Our commission on completed orders, 2–5 (%)                          |
+| `NODE_ENV`          | no    | `development`           | `production` makes `CORS_ORIGIN`, `MONGO_URI` and `JWT_SECRET` required |
+| `LOG_LEVEL`         | no    | `info`                  | `fatal` … `debug`; JSON logs with request ids (pino), no personal data |
+| `SENTRY_DSN`        | no    | – (off)                 | Sentry error tracking for the backend (free tier)                    |
+| `SENTRY_ENVIRONMENT`| no    | `NODE_ENV`              | Name shown in Sentry, e.g. `pilot`                                    |
+| `STORAGE_PROVIDER`  | no    | `database`              | Listing photos: `database` (MongoDB) or `cloudinary` (production)     |
+| `CLOUDINARY_URL`    | with cloudinary | –             | `cloudinary://<key>:<secret>@<cloud>` from the Cloudinary dashboard. Keep secret |
+| `CLOUDINARY_FOLDER` | no    | `agriai/listings`       | Folder for listing photos                                             |
+| `INVITE_ONLY`       | no    | `false`                 | Pilot: sign-up only with an invite code (coordinators can change it later) |
+| `METRICS_SALT`      | no    | `JWT_SECRET`            | Key for the weekly pseudonyms in usage events (min 16 characters)     |
 
 The server checks these at startup and refuses to start with a clear message if something is wrong.
 
-`frontend/.env` is optional: set `VITE_API_BASE_URL` only if the API runs on a different domain in production.
+`frontend/.env` is optional: set `VITE_API_BASE_URL` only if the API runs on a different domain in production,
+and `VITE_SENTRY_DSN` for frontend error tracking (Sentry is not even downloaded without it).
 
 ### Web push (optional)
 
@@ -287,6 +304,33 @@ Only the product photo and the seller's words (phone numbers removed) are sent t
 the product name and unit for an SHG price estimate. The AI's JSON is validated with Zod; the seller confirms
 and sets the final price. If the AI fails, the seller fills the form by hand; listing is never blocked.
 
+## Production + pilot (Phase 4)
+
+Details, decisions and numbers: CHANGES.md → "Phase 4". Deployment: [DEPLOY.md](DEPLOY.md).
+
+- **Security:** helmet with a strict CSP (API) and a CSP + security headers for the app (`frontend/nginx/`),
+  CORS only from `CORS_ORIGIN`, per-IP limits for all API traffic, writes and AI (`config/securityRules.ts`),
+  PIN lockout, env checked at startup, an access-control test for every protected route, and an append-only
+  **audit log** of coordinator actions (`#/admin/audit`).
+- **Reliability:** pino JSON logs with a request id (PINs, phones, tokens, photos never logged), optional Sentry
+  (backend + frontend), Hindi error screen, `GET /health` (alive) and `GET /ready` (MongoDB), graceful shutdown,
+  timeouts + retries on Gemini, weather, mandi, web push and Cloudinary, indexes checked by a test
+  (`npm run check-indexes` against a real database), slow-query log.
+- **Deployment:** small non-root Docker images, `docker-compose.prod.yml` (nginx: gzip, caching, HTTPS),
+  `render.yaml`, photos behind `PhotoStorage` (MongoDB or Cloudinary), GitHub Actions CI, daily encrypted backup
+  (`scripts/backup.sh`, `scripts/restore.sh`, `.github/workflows/backup.yml`).
+- **Privacy (DPDP basics):** first-run consent (recorded with version + time), draft Privacy Policy and Terms in
+  Hindi + English (`#/privacy`, `#/terms`, ⚠️ need legal review), **मेरा डेटा** (`#/my-data`): download everything,
+  delete everything (orders stay for accounting, without name, village or address).
+- **Pilot mode:** feature flags (`off` / `pilot` / `all`, `config/featureFlags.ts`, changed in `#/admin/flags`),
+  invite codes (`#/admin/invites`), AI feedback, help requests (`#/help`, `#/admin/help`).
+- **Metrics:** own events in MongoDB with weekly pseudonyms (no device id, 400-day TTL) and the Pilot Dashboard
+  (`#/admin/pilot`) with a CSV per metric.
+- **AI quality:** labelled photos in `eval/photos`, `npm run eval` → reports in `eval/reports`; versioned prompts in
+  `eval/prompts` (see [eval/README.md](eval/README.md)).
+- **Performance:** screens load on demand (main JS 96 KB gzip), Lighthouse mobile 91 / 100 / 96,
+  load test `npm run loadtest` (results in `backend/loadtest/results/`).
+
 ## Rules an expert can edit (⚠️ verify with KVK)
 
 All farming rules are data, not code. A KVK expert can change numbers and Hindi texts here without touching logic:
@@ -296,6 +340,7 @@ All farming rules are data, not code. A KVK expert can change numbers and Hindi 
 | `backend/src/config/agroRules.ts` | Alert thresholds (heat 42°C, frost 4°C, heavy rain 50 mm, wind 50 km/h, dry spell) + advice texts; water rules, irrigation intervals per crop/stage, water tips |
 | `backend/src/data/cropCalendar.ts` | Stage start days per crop and "आज का काम" tasks per stage |
 | `backend/src/config/notificationRules.ts` | Follow-up timing (3–21 days), push limits and schedule |
+| `backend/src/services/dawaiSafety.ts` | Banned / red-label pesticides the AI evaluation flags for review |
 | `backend/src/data/mandis.ts` | Nearby mandis and crop names in Agmarknet |
 | `frontend/src/data/locations.ts` | Districts and tehsils (with coordinates) for the location list |
 
@@ -305,6 +350,9 @@ Tests check that the calendar and alerts never tell the farmer to water a crop i
 
 `#/` होम · `#/check` फोटो जाँच · `#/history` मेरी जाँच · `#/farm` मेरा खेत · `#/farm/setup` खेत की जानकारी ·
 `#/weather` मौसम · `#/water` पानी की सलाह · `#/calendar` फसल कैलेंडर · `#/notifications` सूचनाएँ
+
+Phase 4: `#/privacy` · `#/terms` · `#/my-data` मेरा डेटा · `#/help` मदद/शिकायत ·
+`#/admin/pilot` · `#/admin/help` · `#/admin/invites` · `#/admin/flags` · `#/admin/audit`
 
 Marketplace: `#/login` · `#/register` · `#/account` · `#/account/seller` · `#/account/buyer` · `#/sell` मेरी बिक्री ·
 `#/sell/new` बेचें · `#/market` बाज़ार · `#/market/listing/:id` · `#/orders` · `#/orders/:id` ·
@@ -361,7 +409,20 @@ Returns `404` if the id belongs to another device.
 | `GET /api/push/key` | `{ publicKey }` (`null` = push off) |
 | `POST /api/push/subscribe` | body `{ deviceId, subscription }` |
 
-**`GET /api/health`** → `{ "status": "ok" }`
+**`GET /health`** (also `/api/health`) → `{ "status": "ok" }` · **`GET /ready`** (also `/api/ready`) → `200 { status: "ok", checks: { database: "ok" } }` or `503` with the failing check.
+
+**Phase 4:**
+
+| Endpoint | Who | What |
+| --- | --- | --- |
+| `GET/POST /api/consent` | anyone (device id) | latest consent / record consent `{ deviceId, version, lang }` |
+| `GET /api/account/my-data?deviceId` · `POST /api/account/my-data/delete` | the phone (+ account if logged in) | download JSON · delete (`confirm: "DELETE"`; `ACTIVE_ORDERS` 409 while orders run) |
+| `GET /api/account/flags` | anyone | feature flags for this person |
+| `POST /api/history/:id/feedback` | the phone | `{ deviceId, helpful, comment? }` |
+| `POST /api/account/help` | anyone | `{ deviceId, category, message, callbackPhone? }` |
+| `POST /api/events` | the app | only `{ name: "app_open", deviceId }` |
+| `POST /api/auth/register` | anyone | now also `inviteCode` (`INVITE_REQUIRED` 403 / `INVALID_INVITE` 400) |
+| `/api/admin/pilot` (+ `/export/<metric>.csv`, `/feedback-comments.csv`) · `/api/admin/invites` · `/api/admin/flags` · `/api/admin/help` · `/api/admin/audit` | coordinator | pilot dashboard, invite codes, flags, help requests, audit log |
 
 ### Marketplace API
 
@@ -395,6 +456,8 @@ All AI code is behind `AiProvider` in `backend/src/services/ai/aiProvider.ts` (`
 3. Set `AI_PROVIDER=<name>` in `.env`.
 
 Prompts are in `services/ai/prompt.ts` (diagnosis + chat share the persona and medicine rules).
+Every prompt has a version (`services/ai/promptVersions.ts`): after changing a prompt, bump its version and run
+`npm run prompts:snapshot`, then `npm run eval` to compare the new report with the previous one.
 
 ## Scripts (in both `backend/` and `frontend/`)
 
@@ -405,6 +468,9 @@ Prompts are in `services/ai/prompt.ts` (diagnosis + chat share the persona and m
 | `npm test`          | Run tests (no API key needed)   |
 | `npm run lint`      | ESLint                          |
 | `npm run typecheck` | TypeScript check                |
+
+Backend only: `npm run check-indexes` (frequent queries use an index), `npm run eval` (AI quality report),
+`npm run prompts:snapshot` (after changing a prompt), `npm run loadtest` (100/500 connections, AI mocked).
 
 Backend production: `npm run build && npm start`.
 
@@ -447,7 +513,14 @@ backend/src/
     orders/                         orderStateMachine.ts, order service (transactions), UPI link
     commission/  notifications/     ledger; in-app + push notifications
     reports/  admin/                problem reports; coordinator panel API
-  scripts/                        createCoordinator, seed
+  scripts/                        createCoordinator, seed, checkIndexes, evalAi, snapshotPrompts
+  observability/                  pino logger + redaction, request ids, Sentry, health/readiness
+  services/storage/               PhotoStorage: database (default) or Cloudinary
+  modules/audit/ privacy/ flags/  audit log; consent + my-data; feature flags
+  modules/invites/ feedback/ help/ metrics/   invite codes; AI feedback; help requests; events + pilot dashboard
+  eval/                           label parsing, scoring and report for the AI evaluation
+  config/securityRules.ts  featureFlags.ts  metrics.ts  privacy.ts
+backend/loadtest/                 autocannon load test + demo server, results/
 backend/seed-assets/              drawn demo photos for the seed
 backend/tests/                    API + provider + repository tests (fake AI, in-memory history)
 backend/tests/market/             marketplace tests (real MongoDB replica set in memory)
@@ -468,7 +541,12 @@ frontend/src/
   utils/                          compressImage, deviceId, offlineCache, connectivity, push, dates, ...
 public/push-sw.js                 service worker push + notification-click handlers
   strings/hi.ts                   all Hindi text
-docker-compose.yml                mongo + backend + frontend (nginx)
+docker-compose.yml                mongo + backend + frontend (nginx), local
+docker-compose.prod.yml           production on a VPS (Atlas, HTTPS); deploy/nginx-https.conf
+render.yaml  DEPLOY.md            Render blueprint and the deployment guide
+scripts/backup.sh  restore.sh     daily MongoDB backup with retention, restore
+eval/                             photos + labels (not in git), reports, prompt versions
+.github/workflows/                CI (lint, typecheck, test, build, docker) and daily backup
 docs/screenshots/                 UI screenshots at 360px width
 ```
 

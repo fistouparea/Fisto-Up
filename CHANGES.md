@@ -770,7 +770,7 @@ sirf aakhri line dekh rahe the, isliye woh chhup gaya. Ab theek hai, aur ab main
 
 # Phase 4 – Production + Pilot
 
-(Ye section har task ke saath bhar raha hai. Poora saaransh, manual steps aur pilot checklist sabse neeche hai.)
+(Har task ki details neeche hain. Poora saaransh, kya nahi hua, manual steps aur pilot launch checklist sabse neeche "Phase 4 – Saaransh" mein hai.)
 
 ## Task 1 – Security hardening
 
@@ -1109,3 +1109,92 @@ Review mein mila aur theek kiya:
 - बदलाव का रिकॉर्ड mein action English code (`flag.set`) dikh rahe the → Hindi naam ("सुविधा बदली").
 - Note: app bar mein 3 button hone se tagline "फसल की …" kat jaati hai (pehle se truncate tha, theek hai).
 - Error screen (crash) ka screenshot nahi liya: use jaan-boojhkar laane ka production mein koi raasta nahi rakha.
+
+## Phase 4 – Saaransh (summary)
+
+Har task ka alag commit hai (`git show <id>`):
+
+```
+5a5185a Task 1: Security hardening
+1f2af93 Task 2: Reliability and observability
+52b4246 Task 3: Production deployment setup
+d162be2 Task 4: Privacy and consent (DPDP basics)
+589e5af Task 5: Pilot mode and feedback
+ac0c117 Task 6: Privacy-first metrics and Pilot Dashboard
+e7b368d Task 7: AI quality evaluation
+89a4d29 Task 8: Performance and load testing
+ce1b1eb Screenshots + fixes found while reviewing them
+```
+
+**Status (aakhri run):**
+- Backend: **469 tests pass** (pehle 370) + lint + typecheck clean. Frontend: **124 tests pass** (pehle 109) + lint +
+  typecheck + build clean.
+- `npm audit`: dono apps mein 0 vulnerabilities.
+- Tests sirf throwaway `agriai_test_*` databases (memory mein) use karte hain. Aapke `FistoUp`, `DM-platform`,
+  `sportDB`, `agriai` ya `agriai-mongo` ko haath nahi lagaya. Docker check alag project naam se kiya aur baad mein hata diya.
+
+### Kya nahi hua / kya test nahi ho paaya (sach-sach)
+- **Koi cloud account nahi bana** (Render, Atlas, Cloudinary, Sentry, GitHub): sab taiyaar hai, par asli deploy aapko
+  karna hai (DEPLOY.md). Isliye ye **asli mein test nahi hue:**
+  - Render static site ka `/api/*` rewrite (login cookie ke saath). Plan B DEPLOY.md mein hai.
+  - Render par `TRUST_PROXY=2` ki sahi ginti.
+  - Cloudinary upload/delete (code REST API ke docs ke hisaab se hai aur fake server se test hai, asli account se nahi).
+  - Sentry mein error pahunchna (DSN ke bina sirf "kuch nahi bhejta" test hua).
+  - GitHub Actions CI aur backup workflow (YAML likha hai, GitHub par chala nahi). Pehle push par Actions tab dekhein.
+  - HTTPS wala nginx (`deploy/nginx-https.conf`): syntax-check nahi hua (certificate nahi tha). HTTP wala docker mein chala.
+- **AI eval asli photos aur asli Gemini se nahi chala:** labelled photos nahi hain. KVK expert ke saath photos ikatthi karein.
+- **Privacy Policy/Terms DRAFT hain:** vakil se jaanch zaroori. Sahmati ke bina app band rehna (zaroori sahmati) bhi legal review mein dekhein.
+- **Load test laptop par hua**, Render free (0.1 CPU) par nahi. Wahan andaazan 1/10 capacity.
+- **Lighthouse** `vite preview` par (backend ke bina) hua; asli phone par speed check karein.
+- **Error screen** ka screenshot nahi (crash jaan-boojhkar laane ka raasta nahi rakha); component test se nahi, sirf types/lint se check hai.
+- **Rate limit memory mein:** ek hi backend instance ke liye. 2+ instance par Redis chahiye.
+- **Abhi bhi nahi hai** (Phase 3 se): phone OTP, app mein PIN reset, online payment.
+- Purana local MongoDB jo pehle se chal raha hai: listing photos ka purana TTL index server start par hata diya jaata hai
+  (`syncIndexes`), aur naye indexes apne-aap bante hain. Pehle se save photos dikhti rehti hain.
+
+### Aapko khud kya karna hai (manual steps)
+1. **Naye secrets banayein** (laptop wali `.env` ki keys production mein na lagayein): Gemini key, `JWT_SECRET`
+   (Render khud banata hai), `BACKUP_PASSPHRASE`, VAPID keys (agar push chahiye).
+2. **Accounts banayein (sab free):** GitHub (private repo), MongoDB Atlas M0 (Mumbai), Cloudinary, Sentry (2 project),
+   Render, UptimeRobot / cron-job.org. Steps DEPLOY.md mein.
+3. **Render Blueprint** se deploy karein, env values bharein, `/health` aur `/ready` check karein, login + reload test karein.
+4. **Domain** khareedein, `app.<domain>` CNAME karein, `CORS_ORIGIN` badlein (DEPLOY.md step 7).
+5. **Pehla coordinator** laptop se Atlas par banayein (`npm run create-coordinator`, DEPLOY.md step 6).
+6. **GitHub:** branch ruleset (merge se pehle CI pass), aur backup secrets (`MONGO_URI` read-only user, `BACKUP_PASSPHRASE`).
+   "Run workflow" se pehla backup chalayein aur ek baar restore test karein.
+7. **Legal review:** Privacy Policy + Terms (Hindi + English), sahmati ka text, data kitne din rakhte hain, aur
+   Gemini free tier par data use. Phir `CONSENT_VERSION` badlein (backend + frontend).
+8. **KVK ke saath:** `BANNED_OR_RED_LABEL_PESTICIDES` list, `agroRules.ts`, `cropCalendar.ts` pakka karein. 50–150
+   labelled photos se `npm run eval` chalayein.
+9. **Grievance officer / contact:** policy mein shikayat ke liye naam aur phone/email jodein (DPDP).
+10. Purana laptop `.env` / local data production mein copy na karein. Demo seed (`npm run seed`) production mein na chalayein.
+
+### Pilot launch checklist
+**Launch se pehle (1–2 hafte)**
+- [ ] DEPLOY.md ke step 0–10 poore; `/ready` = ok; Sentry mein test error dikha.
+- [ ] Phone (sasta Android, Chrome) par HTTPS URL: install app, sahmati, फोटो जाँच, 🎤, 🔊, offline khulna.
+- [ ] Asli Gemini se 10–20 photos ki jaanch + `npm run eval` report; ⛔ banned dawai = 0, unclear photo par guess = 0.
+- [ ] Legal review ho gaya; DRAFT hata kar asli policy; `CONSENT_VERSION` badla.
+- [ ] Coordinators (2–3) ke khaate bane; unhe संयोजक पैनल, invite code, मदद/शिकायत, CSV ki training.
+- [ ] `inviteOnly` = सबके लिए (`all`); har SHG ke liye ek multi-use code (role: seller), kisano ke liye alag code.
+- [ ] Sellers verify (UPI ID ₹1 bhejkar check), pickup jagah sahi.
+- [ ] Ek poora test order (asli UPI ₹1–10): order → स्वीकार → पैसे मिल गए → पूरा → commission ledger.
+- [ ] Backup workflow chala, restore ek naye database mein test kiya.
+- [ ] Uptime monitor `/health` par (har 10 min), email alert chalu.
+- [ ] Mandi key (`DATA_GOV_API_KEY`) ho to dashboard mein "मंडी भाव" aata hai.
+
+**Launch din**
+- [ ] Har gaanv mein coordinator ke saath demo: app install, sahmati padhkar/sunkar, ek jaanch, 👍/👎, मदद button.
+- [ ] Kisano ko batayein: dawai se pehle KVK; data kabhi bhi "मेरा डेटा" se mita sakte hain.
+
+**Har hafte (pilot ke dauran)**
+- [ ] Pilot Dashboard: sakriya kisan, jaanchein, 👍 dar (fasal ke hisaab se), follow-up, orders, bhav vs mandi. CSV save karein.
+- [ ] "किसानों की बातें" CSV + wrong-answer list KVK expert ke saath dekhein; prompt badlein to version + eval.
+- [ ] मदद/शिकायत aur शिकायतें tab khaali karein (48 ghante ke andar jawab).
+- [ ] Sentry issues aur Render logs (`slow database query`, `error`) dekhein.
+- [ ] Commission vasooli + "बदलाव का रिकॉर्ड" (audit) dekhein.
+- [ ] Atlas storage (512 MB) aur Cloudinary credits dekhein.
+
+**Pilot ke baad (aage ke liye)**
+- [ ] Render Starter plan (sone wali dikkat khatm), Atlas backup ya bada plan.
+- [ ] Phone OTP + PIN reset; Redis rate limit agar 2+ instance.

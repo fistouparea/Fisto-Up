@@ -29,4 +29,10 @@ never weaken tests, and run `npm test`, `npm run lint` and `npm run typecheck` i
 - External APIs (Open-Meteo, data.gov.in, web push) sit behind small provider interfaces with timeouts and are
   mocked in tests. Empty optional env values must be treated as "not set".
 - Frontend routes: `#/` home dashboard, `#/check` photo check (see `hooks/useHashRoute.ts`).
-- Not built yet: login (phase 3), marketplace (mandi prices are the first step).
+- Not built yet: phone OTP, PIN reset in the app, online payments (buyers pay sellers directly).
+- Phase 4 rules: changing an AI prompt = bump its version in `services/ai/promptVersions.ts` + `npm run prompts:snapshot`
+  (a test enforces it). Product events only via `track()` (`modules/metrics/events.ts`) with fixed values, never personal
+  data. Coordinator actions are audited with `audit()`. New device-linked data must be added to "मेरा डेटा"
+  (`DeviceDataSource` in `modules/privacy/privacy.service.ts`). New thresholds/limits go in `config/`.
+- If the rolldown binding is still missing after a clean reinstall:
+  `npm install --no-save @rolldown/binding-linux-x64-gnu@<rolldown version>`.
