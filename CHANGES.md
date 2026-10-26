@@ -1284,7 +1284,9 @@ dono apps mein clean; frontend build pass; `npm audit` (frontend, i18next instal
 ### Task 9 – Mandi + delivery (**aadha hua**)
 - **साथ में मंडी चलें – sirf backend + tests:** sanyojak trip banata hai (mandi, date, gaadi, kshamta), kisan judte/hatte hain,
   kshamta atomic (do log ek saath judein to overfill nahi), phone sirf panel mein. API: `GET /api/mandi-trips`,
-  `POST /api/mandi-trips/:id/join|leave`, `/api/admin/mandi-trips`. **Frontend screen nahi bani.**
+  `POST /api/mandi-trips/:id/join|leave`, `/api/admin/mandi-trips`. Kisan screen `#/mandi-trips` (होम → और सुविधाएँ →
+  साथ में मंडी): trip dekhein, fasal + quintal chunkar judein/hatein. **Sanyojak ke liye trip banane ki screen nahi bani** –
+  abhi API se (`POST /api/admin/mandi-trips`) banayein.
 - **Delivery tracking (bina login link, photo proof, timeline): nahi bana.** Flag `deliveryTracking` aur rules
   (`config/logisticsRules.ts`) taiyaar hain.
 

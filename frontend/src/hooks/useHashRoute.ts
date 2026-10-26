@@ -33,6 +33,7 @@ export type Route =
   | { name: 'help' }
   | { name: 'settings' }
   | { name: 'schemes' }
+  | { name: 'mandiTrips' }
   | { name: 'services'; kind: ServiceKind; side: ServiceSide }
   | { name: 'serviceItem'; id: string }
   | { name: 'serviceBooking'; id: string }
@@ -67,6 +68,7 @@ export const routes = {
   help: '#/help',
   settings: '#/settings',
   schemes: '#/schemes',
+  mandiTrips: '#/mandi-trips',
   services: (kind: ServiceKind, side: ServiceSide = 'offer') => (side === 'offer' ? `#/services/${kind}` : `#/services/${kind}/need`),
   serviceItem: (id: string) => `#/services/item/${encodeURIComponent(id)}`,
   serviceBooking: (id: string) => `#/services/booking/${encodeURIComponent(id)}`,
@@ -107,6 +109,7 @@ export function parseRoute(hash: string): Route {
   if (section === 'help') return { name: 'help' };
   if (section === 'settings') return { name: 'settings' };
   if (section === 'schemes') return { name: 'schemes' };
+  if (section === 'mandi-trips') return { name: 'mandiTrips' };
   if (section === 'sell' && id === 'new') return { name: 'sellNew' };
   if (section === 'sell') return { name: 'sell' };
   if (section === 'login') return { name: 'login' };

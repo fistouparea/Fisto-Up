@@ -52,6 +52,7 @@ const MyDataPage = lazyNamed(() => import('./pages/MyDataPage'), 'MyDataPage');
 const HelpPage = lazyNamed(() => import('./pages/HelpPage'), 'HelpPage');
 const SettingsPage = lazyNamed(() => import('./pages/SettingsPage'), 'SettingsPage');
 const SchemesPage = lazyNamed(() => import('./pages/SchemesPage'), 'SchemesPage');
+const MandiTripsPage = lazyNamed(() => import('./pages/MandiTripsPage'), 'MandiTripsPage');
 const ServicesPage = lazyNamed(() => import('./pages/services/ServicesPage'), 'ServicesPage');
 const ServiceDetailPage = lazyNamed(() => import('./pages/services/ServiceDetailPage'), 'ServiceDetailPage');
 const NewServicePage = lazyNamed(() => import('./pages/services/NewServicePage'), 'NewServicePage');
@@ -249,6 +250,8 @@ function Page({ route, diagnoseKey }: { route: Route; diagnoseKey: number }) {
       return <SettingsPage />;
     case 'schemes':
       return <SchemesPage />;
+    case 'mandiTrips':
+      return <MandiTripsPage />;
     case 'services':
       return <ServicesPage key={`${route.kind}-${route.side}`} kind={route.kind} side={route.side} />;
     case 'serviceItem':

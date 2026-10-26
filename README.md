@@ -343,7 +343,7 @@ Details, decisions and what is not finished: CHANGES.md → "Phase 5". Every fea
 | हिंदी / English / राजस्थानी | `#/settings` | `frontend/src/strings/{hi,enApp,en,raj}.ts`, `data/dialectGlossary.ts` |
 | सरकारी योजनाएँ | `#/schemes`, admin → योजनाएँ | `data/schemes.ts` (only verified facts; rest "verify") |
 | Machines / workers / animals | `#/services/<equipment|labour|livestock>`, `#/services/my` | `config/serviceKinds.ts`, `modules/services/bookingStateMachine.ts` |
-| साथ में मंडी चलें (API only) | `/api/mandi-trips`, `/api/admin/mandi-trips` | `config/logisticsRules.ts` |
+| साथ में मंडी चलें | `#/mandi-trips` (coordinators create trips via `POST /api/admin/mandi-trips`) | `config/logisticsRules.ts` |
 
 ## Rules an expert can edit (⚠️ verify with KVK)
 
