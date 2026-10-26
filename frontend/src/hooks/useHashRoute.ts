@@ -25,7 +25,10 @@ export type Route =
   | { name: 'listing'; id: string }
   | { name: 'orders' }
   | { name: 'order'; id: string }
-  | { name: 'admin'; tab: AdminTab };
+  | { name: 'admin'; tab: AdminTab }
+  | { name: 'privacy' }
+  | { name: 'terms' }
+  | { name: 'myData' };
 
 export const routes = {
   home: '#/',
@@ -49,6 +52,9 @@ export const routes = {
   listing: (id: string) => `#/market/listing/${encodeURIComponent(id)}`,
   orders: '#/orders',
   order: (id: string) => `#/orders/${encodeURIComponent(id)}`,
+  privacy: '#/privacy',
+  terms: '#/terms',
+  myData: '#/my-data',
   admin: (tab: AdminTab = 'overview') => (tab === 'overview' ? '#/admin' : `#/admin/${tab}`),
 };
 
@@ -77,6 +83,9 @@ export function parseRoute(hash: string): Route {
   if (section === 'calendar') return { name: 'calendar' };
   if (section === 'notifications') return { name: 'notifications' };
   if (section === 'check') return { name: 'diagnose' };
+  if (section === 'privacy') return { name: 'privacy' };
+  if (section === 'terms') return { name: 'terms' };
+  if (section === 'my-data') return { name: 'myData' };
   if (section === 'sell' && id === 'new') return { name: 'sellNew' };
   if (section === 'sell') return { name: 'sell' };
   if (section === 'login') return { name: 'login' };

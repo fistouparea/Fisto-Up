@@ -21,6 +21,7 @@ export type ErrorCode =
   | 'INVALID_TRANSITION'
   | 'CONFLICT'
   | 'NEEDS_REPLICA_SET'
+  | 'ACTIVE_ORDERS'
   | 'INTERNAL';
 
 const HTTP_STATUS: Record<ErrorCode, number> = {
@@ -50,6 +51,8 @@ const HTTP_STATUS: Record<ErrorCode, number> = {
   CONFLICT: 409,
   /** Server setup: orders need MongoDB as a replica set (transactions). See README. */
   NEEDS_REPLICA_SET: 503,
+  /** Account deletion: orders that are still running must be finished or cancelled first. */
+  ACTIVE_ORDERS: 409,
   INTERNAL: 500,
 };
 

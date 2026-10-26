@@ -898,3 +898,40 @@ banayein (local wali dobara use na karein).
 - Local "storage" = MongoDB (koi naya folder/volume nahi), kyunki ye tests aur Docker mein bina setup chalta hai.
 - Backup scripts archive ko stdout/stdin se bhejti hain (Docker mein folder share karne ki permission dikkat nahi).
 - Startup par index banana "slow query" mein nahi gina jaata.
+
+## Task 4 – Privacy aur consent (DPDP Act basics)
+
+**Kya bana:**
+- **Pehli baar khulne par sahmati screen** (`ConsentPage`): saral Hindi mein 5 cheezein, har ek ke saath "kyon":
+  फसल की फोटो, खेत की जानकारी, जाँच का रिकॉर्ड, बाज़ार का खाता, ऐप का इस्तेमाल. Ek bada 🔊 button poori screen
+  padhkar sunata hai. "मैं सहमत हूँ" ke baad hi onboarding/app khulta hai. Neeche "पूरी नीति पढ़ें" aur "नियम और शर्तें".
+  - Sahmati server par record hoti hai (`POST /api/consent`: version + samay + bhasha, collection `consents`).
+    Internet na ho to phone yaad rakhta hai aur agli baar bhej deta hai.
+  - Text badle to `CONSENT_VERSION` badlein (`backend/src/config/privacy.ts` + `frontend/src/api/privacy.ts`):
+    sabse dobara poocha jaayega.
+- **Privacy Policy aur Terms** (`#/privacy`, `#/terms`): Hindi + English toggle, upar peela
+  **"DRAFT – needs legal review"**. Text `strings/hi.ts` (`legalHi`) aur `strings/en.ts` (`legalEn`) mein.
+- **मेरा डेटा** (`#/my-data`, मेरा खेत aur खाता screen se link):
+  - **Download:** `GET /api/account/my-data?deviceId=` ek JSON file deta hai: khet, saari jaanchein, sahmati, aur
+    login ho to khaata, listings, orders, reports, notifications. PIN hash, session ya doosron ke phone kabhi nahi.
+  - **Delete:** do baar poochkar `POST /api/account/my-data/delete` (`confirm: "DELETE"`).
+    - Phone ka sab mit jaata hai: khet, jaanchein, sahmati, push.
+    - Khaata ho to naam, phone, UPI, gaanv, pickup, listing ki photos (Cloudinary se bhi) aur notifications mit jaate hain.
+      Listings bazaar se hat jaati hain.
+    - **Orders mitte nahi, anonymize hote hain:** naam "हटाया गया खाता", gaanv, pata, note aur rating comment hat jaate
+      hain. Rakam, ref aur commission hisaab ke liye rehte hain.
+    - Phone number khaali ho jaata hai, isliye wahi number dobara register ho sakta hai. Purana PIN/session kaam nahi karta.
+    - Chal rahe orders hon to `ACTIVE_ORDERS` (409): pehle poora/radd karein (seller intezaar kar raha hota hai).
+    - Coordinator khaata app se nahi mitta (admin karega).
+    - `deletion_log` mein sirf "kab, kis tarah ka" likha jaata hai, kiska nahi.
+    - Phone par bhi `agriai.*` saara local data saaf hota hai aur nayi anonymous id se shuru hota hai.
+- **AI ko personal data nahi:** pehle se test hai (diagnose sirf `image, mimeType, cropName`; chat bina image/device id;
+  Snap & List mein phone number hata diye jaate hain).
+
+**Decisions:**
+- "Account deletion request" ko **turant deletion** banaya (koi manual queue nahi): pilot mein coordinator par kaam nahi
+  badhta aur DPDP ka "bina deri" poora hota hai.
+- Account ka record (khaali) rehta hai, kyunki orders aur commission ledger use point karte hain. Usmein ab koi personal
+  jaankari nahi.
+- Sahmati ke bina app nahi chalti, kyunki bina data ke salah nahi di ja sakti (screen par saaf likha hai). Ye legal review mein dekhein.
+- `मेरा डेटा` ko marketplace ka setup chahiye (MongoDB + JWT_SECRET), kyunki session wahi padhta hai. Production mein dono zaroori hain.

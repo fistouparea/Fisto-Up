@@ -1,6 +1,7 @@
 import { LuMapPin, LuPencil, LuRuler, LuSprout } from 'react-icons/lu';
 import { CropIcon } from '../components/CropIcon';
 import { Button } from '../components/ui/Button';
+import { MyDataLink } from '../components/MyDataLink';
 import { Card } from '../components/ui/Card';
 import { EmptyState } from '../components/ui/EmptyState';
 import { PageHeader } from '../components/ui/PageHeader';
@@ -31,6 +32,7 @@ export function FarmPage() {
             {hi.farm.fill}
           </Button>
         </EmptyState>
+        <MyDataLink />
       </section>
     );
   }
@@ -78,6 +80,7 @@ export function FarmPage() {
       <Button variant="secondary" icon={LuPencil} onClick={goToSetup}>
         {hi.farm.edit}
       </Button>
+      <MyDataLink />
     </section>
   );
 }

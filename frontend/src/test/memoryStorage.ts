@@ -6,7 +6,7 @@ export function memoryStorage(): Storage {
     setItem: (key, value) => void data.set(key, value),
     removeItem: (key) => void data.delete(key),
     clear: () => data.clear(),
-    key: () => null,
+    key: (index) => [...data.keys()][index] ?? null,
     get length() {
       return data.size;
     },

@@ -58,6 +58,8 @@ const userSchema = new Schema(
     buyer: buyerSchema,
     /** Coordinator who created this account for someone who cannot use the app. */
     createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    /** Set when the person deleted their account ("मेरा डेटा"): the row stays empty for order records. */
+    deletedAt: Date,
     /** Demo data from the seed script (removed and recreated on every seed run). */
     demo: Boolean,
   },

@@ -68,6 +68,7 @@ export async function listSellers(query: z.infer<typeof sellerListQuerySchema>):
   const pattern = query.q ? new RegExp(escapeRegex(query.q), 'i') : null;
   const users = await UserModel.find({
     role: 'seller',
+    deletedAt: { $exists: false },
     ...(query.status && { 'seller.status': query.status }),
     ...(pattern && { $or: [{ name: pattern }, { phone: pattern }, { 'seller.village': pattern }] }),
   })
@@ -202,8 +203,8 @@ export interface MarketStats {
 
 export async function marketStats(): Promise<MarketStats> {
   const [sellerRows, buyers, listingsTotal, listingsVisible, orderRows, sales, commission, openReports] = await Promise.all([
-    UserModel.aggregate<{ _id: SellerStatus; count: number }>([{ $match: { role: 'seller' } }, { $group: { _id: '$seller.status', count: { $sum: 1 } } }]).exec(),
-    UserModel.countDocuments({ role: 'buyer' }).exec(),
+    UserModel.aggregate<{ _id: SellerStatus; count: number }>([{ $match: { role: 'seller', deletedAt: { $exists: false } } }, { $group: { _id: '$seller.status', count: { $sum: 1 } } }]).exec(),
+    UserModel.countDocuments({ role: 'buyer', deletedAt: { $exists: false } }).exec(),
     ListingModel.countDocuments().exec(),
     ListingModel.countDocuments({ status: 'active', hidden: false, sellerVerified: true, quantityAvailable: { $gt: 0 } }).exec(),
     OrderModel.aggregate<{ _id: OrderStatus; count: number }>([{ $group: { _id: '$status', count: { $sum: 1 } } }]).exec(),

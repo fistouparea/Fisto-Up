@@ -1,4 +1,4 @@
-import type { hi } from './hi';
+import type { hi, LegalTexts } from './hi';
 
 /** Same shape as a Hindi strings section, with plain `string` values. */
 type Translation<T> = { [K in keyof T]: T[K] extends string ? string : Translation<T[K]> };
@@ -169,4 +169,34 @@ export const enOrders: OrdersText = {
   later: 'Later',
   newOrders: 'New orders',
   seeAllOrders: 'See all orders',
+};
+
+/** ⚠️ DRAFT – needs legal review. Same sections as legalHi (strings/hi.ts). */
+export const legalEn: LegalTexts = {
+  draftNotice: 'DRAFT – needs legal review',
+  privacy: {
+    title: 'Privacy Policy',
+    updated: 'October 2026 (pilot)',
+    sections: [
+      { heading: 'Who we are', body: 'AgriAI is an app by Fisto Up for a pilot with farmers and self-help groups in Churu, Rajasthan. For questions or complaints use "मदद/शिकायत" in the app or talk to your coordinator.' },
+      { heading: 'What we collect', body: 'Crop photos (only during a check, not stored); farm location (rounded to about 1 km), crops, sowing dates, field size, water source; diagnosis results and your follow-up answer; for marketplace accounts: name, mobile number, village, UPI ID, pickup place and orders; counts of app usage without name or number.' },
+      { heading: 'Why', body: 'To detect crop problems, give weather, water and task advice, help people buy and sell, keep the commission ledger, and improve the app. We do not sell your data or use it for advertising.' },
+      { heading: 'AI (Google Gemini)', body: 'A check sends only the photo (GPS removed) and the crop name. Follow-up chat sends the crop, the earlier diagnosis and your questions. Your name, number or device identity are never sent to the AI. On the free tier Google may use this content to improve its services.' },
+      { heading: 'Who sees it', body: 'After a seller accepts an order, buyer and seller see each other’s number. Coordinators (our team) see account details to verify sellers and help users. Servers, database and photos are hosted by our processors (Render, MongoDB Atlas, Cloudinary, Sentry).' },
+      { heading: 'How long', body: 'As long as you use the app. "Delete my data" erases it at once. Amounts and commission of completed orders are kept for accounting law, but without your name, village or address. Backups expire after 14 days.' },
+      { heading: 'Your rights', body: 'You can see, download, correct and delete your data and withdraw consent ("मेरा डेटा"). Please complain to us first; you may also approach the Data Protection Board of India.' },
+      { heading: 'Security', body: 'PINs are stored only as hashes, all traffic uses HTTPS, and logs never contain phone numbers or PINs.' },
+    ],
+  },
+  terms: {
+    title: 'Terms of Use',
+    updated: 'October 2026 (pilot)',
+    sections: [
+      { heading: 'Advice is only advice', body: 'AI and weather advice can be wrong. Ask your nearest Krishi Vigyan Kendra (KVK) before using any pesticide and follow the dose on the packet. AgriAI is not liable for losses.' },
+      { heading: 'Marketplace', body: 'Buyers pay sellers directly (UPI or cash); AgriAI never holds money. Sellers are responsible for quality and delivery. Sellers pay the agreed commission (now 3%) on completed orders to the coordinator.' },
+      { heading: 'Accounts', body: 'One account per person. Never share your PIN. Coordinators may hide listings or block accounts for false information, fake goods or abuse.' },
+      { heading: 'Pilot', body: 'This is a pilot: features may change or stop, and the service may be interrupted.' },
+      { heading: 'Law', body: 'These terms are governed by the laws of India.' },
+    ],
+  },
 };

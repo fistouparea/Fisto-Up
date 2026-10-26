@@ -18,6 +18,7 @@ import { OrderService } from './orders/order.service.js';
 import { createOrderRouter } from './orders/order.routes.js';
 import { createReportRouter } from './reports/report.routes.js';
 import { createAdminRouter } from './admin/admin.routes.js';
+import { createMyDataRouter } from './privacy/privacy.routes.js';
 import type { PushSender } from '../services/push/pushSender.js';
 import { DatabasePhotoStorage, type PhotoStorage } from '../services/storage/photoStorage.js';
 
@@ -63,6 +64,7 @@ export function createMarketRouter(
   router.use(createReportRouter());
   router.use(createNotificationRouter(pushSender !== null));
   router.use(createAdminRouter({ auth, orders, commissionBps: config.commissionBps }));
+  router.use(createMyDataRouter({ photos: photoStorage, cookieSecure: config.cookieSecure }));
   return router;
 }
 

@@ -1,4 +1,5 @@
 import { LuClipboardList, LuShieldCheck, LuLogIn, LuLogOut, LuPencil, LuPhone, LuUserPlus, LuUserRound } from 'react-icons/lu';
+import { MyDataLink } from '../../components/MyDataLink';
 import { SellerStatusCallout } from '../../components/market/SellerStatusCallout';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
@@ -29,6 +30,7 @@ export function AccountPage() {
           </Button>
         </EmptyState>
         <p className="text-center text-base text-ink-500">{hi.auth.advisorFree}</p>
+        <MyDataLink />
       </section>
     );
   }
@@ -84,6 +86,7 @@ export function AccountPage() {
       <Button variant="ghost" icon={LuLogOut} onClick={() => void onLogout()}>
         {hi.account.logout}
       </Button>
+      {user.role !== 'coordinator' && <MyDataLink />}
     </section>
   );
 }
