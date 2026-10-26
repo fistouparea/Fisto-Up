@@ -5,10 +5,11 @@ import type { ChatMessage, CropId, Diagnosis } from './types';
 export const MAX_CHAT_MESSAGES = 10;
 
 /** Asks a follow-up question about a diagnosis. `messages` must end with the farmer's question. */
-export async function askFollowUp(crop: CropId, diagnosis: Diagnosis, messages: ChatMessage[]): Promise<string> {
+/** `rajasthani`: "जवाब राजस्थानी में" is on (सेटिंग). */
+export async function askFollowUp(crop: CropId, diagnosis: Diagnosis, messages: ChatMessage[], rajasthani = false): Promise<string> {
   const body = await postJson(
     '/api/chat',
-    { crop, diagnosis, messages: messages.slice(-MAX_CHAT_MESSAGES) },
+    { crop, diagnosis, messages: messages.slice(-MAX_CHAT_MESSAGES), ...(rajasthani && { answerLanguage: 'raj' }) },
     isChatResponse,
   );
   return body.answer;

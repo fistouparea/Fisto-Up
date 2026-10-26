@@ -1,8 +1,13 @@
+import { live } from './live';
 import type { CropId, ErrorCode } from '../api/types';
 import type { ListingStatus, ProductId, Role, SellerStatus, Unit } from '../api/marketTypes';
 
-/** All Hindi text shown in the app lives here. */
-export const hi = {
+/**
+ * All Hindi text shown in the app lives here. Hindi is the source and the default; English and Rajasthani
+ * translations are in strings/en.ts and strings/raj.ts (react-i18next, see i18n/i18n.ts).
+ * Use `hi.…` everywhere: it answers in the language the farmer chose (strings/live.ts).
+ */
+export const hiStrings = {
   appName: 'AgriAI',
   appTagline: 'फसल की फोटो से बीमारी और इलाज जानें',
 
@@ -339,6 +344,12 @@ export const hi = {
     readAloudHint: 'चालू करने पर हर नई स्क्रीन की ज़रूरी बात अपने-आप बोलकर सुनाई जाएगी।',
     on: 'चालू',
     off: 'बंद',
+    language: 'भाषा',
+    languageHint: 'ऐप किस भाषा में चलाना है? बटन दबाएँ। 🔊 से नाम सुनें।',
+    rajasthaniAnswers: 'जवाब राजस्थानी में',
+    rajasthaniAnswersHint: '"और पूछें" में AI का जवाब मारवाड़ी/शेखावाटी बोली में आएगा।',
+    rajDraftNote: 'राजस्थानी शब्द अभी जाँच में हैं। कोई शब्द गलत लगे तो "मदद" में बताएँ।',
+    listenName: 'नाम सुनें',
   },
 
   auth: {
@@ -886,9 +897,18 @@ export const hi = {
     notVerified: 'लाइसेंस जाँच बाकी',
   },
 
+  marketErrors: {
+    invalidInput: 'कुछ जानकारी सही नहीं है। देखकर फिर से भरें।',
+    notFound: 'यह जानकारी नहीं मिली।',
+    unavailable: 'बाज़ार अभी नहीं खुल रहा। थोड़ी देर बाद कोशिश करें।',
+  },
+
   unclearPhoto: 'फोटो साफ नहीं है, कृपया पास से और रोशनी में दोबारा फोटो लें।',
   tryAgain: 'फिर से कोशिश करें',
 } as const;
+
+/** The strings in the current language (Hindi when a translation is missing). */
+export const hi = live(hiStrings, ['app']);
 
 export const cropLabels: Record<CropId, { hindi: string; english: string; emoji: string }> = {
   bajra: { hindi: 'बाजरा', english: 'Bajra', emoji: '🌾' },
@@ -957,7 +977,7 @@ export const sellerStatusLabels: Record<SellerStatus, string> = {
 const SOMETHING_WENT_WRONG = 'कुछ गड़बड़ हो गई। कृपया फिर से कोशिश करें।';
 const PHOTO_NOT_OPENING = 'यह फोटो नहीं खुल रही। कृपया दूसरी फोटो लें।';
 
-export const errorMessages: Record<ErrorCode, string> = {
+const errorMessagesHi: Record<ErrorCode, string> = {
   RATE_LIMITED: 'अभी बहुत लोग जाँच करवा रहे हैं, थोड़ी देर बाद कोशिश करें।',
   AI_TIMEOUT: 'जाँच में बहुत समय लग रहा है। थोड़ी देर बाद फिर से कोशिश करें।',
   NETWORK: 'इंटरनेट नहीं चल रहा। नेटवर्क देखकर फिर से कोशिश करें।',
@@ -991,11 +1011,15 @@ export const errorMessages: Record<ErrorCode, string> = {
   UNKNOWN: SOMETHING_WENT_WRONG,
 };
 
+/** Hindi source of the error texts; `errorMessages` answers in the current language. */
+export { errorMessagesHi };
+export const errorMessages: Record<ErrorCode, string> = live(errorMessagesHi, ['errors']);
+
 /** Error text for marketplace screens: a few codes need wording that is not about the photo check. */
 export function marketErrorMessage(code: ErrorCode): string {
-  if (code === 'INVALID_INPUT') return 'कुछ जानकारी सही नहीं है। देखकर फिर से भरें।';
-  if (code === 'NOT_FOUND') return 'यह जानकारी नहीं मिली।';
-  if (code === 'STORAGE_UNAVAILABLE') return 'बाज़ार अभी नहीं खुल रहा। थोड़ी देर बाद कोशिश करें।';
+  if (code === 'INVALID_INPUT') return hi.marketErrors.invalidInput;
+  if (code === 'NOT_FOUND') return hi.marketErrors.notFound;
+  if (code === 'STORAGE_UNAVAILABLE') return hi.marketErrors.unavailable;
   return errorMessages[code];
 }
 

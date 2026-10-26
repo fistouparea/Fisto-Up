@@ -4,7 +4,7 @@ import { hi, productLabels } from '../../strings/hi';
 import { SelectCard } from '../ui/SelectCard';
 import { ProductIcon } from './ProductIcon';
 
-const GROUP_TITLES = { crop: hi.sell.crops, shg: hi.sell.shgProducts, input: hi.sell.inputs } as const;
+const groupTitle = (category: Category) => ({ crop: hi.sell.crops, shg: hi.sell.shgProducts, input: hi.sell.inputs })[category];
 
 /** Picture cards for every product of the allowed categories, grains first, then SHG products. */
 export function ProductPicker({
@@ -20,7 +20,7 @@ export function ProductPicker({
     <div className="flex flex-col gap-3">
       {CATEGORIES.filter((category) => categories.includes(category)).map((category) => (
         <section key={category} className="flex flex-col gap-2">
-          <h4 className="text-lg font-bold text-ink-700">{GROUP_TITLES[category]}</h4>
+          <h4 className="text-lg font-bold text-ink-700">{groupTitle(category)}</h4>
           <div className="grid grid-cols-3 gap-2">
             {PRODUCT_IDS.filter((id) => PRODUCT_CATALOG[id].category === category).map((id) => (
               <SelectCard

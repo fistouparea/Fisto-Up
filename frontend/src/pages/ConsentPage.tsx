@@ -9,7 +9,7 @@ import { hi } from '../strings/hi';
 const ITEM_ICONS: IconType[] = [LuCamera, LuSprout, LuHistory, LuShoppingBasket, LuChartColumn];
 
 /** Spoken by the big speaker button: the whole screen, so farmers who cannot read hear everything. */
-const SPOKEN = [hi.consent.title, hi.consent.intro, ...hi.consent.items.map((item) => `${item.title}: ${item.why}`), hi.consent.rights].join(' ');
+const spoken = () => [hi.consent.title, hi.consent.intro, ...hi.consent.items.map((item) => `${item.title}: ${item.why}`), hi.consent.rights].join(' ');
 
 /** First run: what we keep and why, in simple Hindi, before anything is saved. */
 export function ConsentPage({ onAgree }: { onAgree: () => void }) {
@@ -22,7 +22,7 @@ export function ConsentPage({ onAgree }: { onAgree: () => void }) {
         </h2>
       </div>
       <p className="text-lg text-ink-700">{hi.consent.intro}</p>
-      <SpeakButton text={SPOKEN} variant="pill" />
+      <SpeakButton text={spoken()} variant="pill" />
 
       <ul className="flex flex-col gap-3">
         {hi.consent.items.map((item, index) => {

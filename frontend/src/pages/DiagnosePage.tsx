@@ -60,7 +60,8 @@ const RETRYABLE_ERRORS: ReadonlySet<ErrorCode> = new Set([
   'UNKNOWN',
 ]);
 
-const DIAGNOSE_STEPS: Step[] = [
+/** A function: labels follow the chosen language. */
+const diagnoseSteps = (): Step[] => [
   { label: hi.steps.crop, icon: LuSprout },
   { label: hi.steps.photo, icon: LuCamera },
   { label: hi.steps.answer, icon: LuClipboardCheck },
@@ -119,7 +120,7 @@ export function DiagnosePage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <StepIndicator steps={DIAGNOSE_STEPS} current={currentStep(state)} label={hi.steps.label} />
+      <StepIndicator steps={diagnoseSteps()} current={currentStep(state)} label={hi.steps.label} />
       {offline && (state.step === 'choose' || state.step === 'preview') && (
         <Callout tone="warning" icon={LuWifiOff} text={hi.offline.photoNeedsInternet} />
       )}

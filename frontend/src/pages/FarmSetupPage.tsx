@@ -13,12 +13,13 @@ import { StickyActions } from '../components/ui/StickyActions';
 import { useFarmProfile } from '../hooks/useFarmProfile';
 import { hi } from '../strings/hi';
 
-const SETUP_STEPS: Step[] = [
+/** A function: labels follow the chosen language. */
+const setupSteps = (): Step[] => [
   { label: hi.farm.steps.location, icon: LuMapPin },
   { label: hi.farm.steps.crops, icon: LuSprout },
   { label: hi.farm.steps.field, icon: LuDroplets },
 ];
-const LAST_STEP = SETUP_STEPS.length - 1;
+const LAST_STEP = setupSteps().length - 1;
 
 interface FarmSetupPageProps {
   /** Called after saving (or skipping everything during onboarding). */
@@ -61,7 +62,7 @@ export function FarmSetupPage({ onDone }: FarmSetupPageProps) {
         </div>
         <SpeakButton text={`${hi.farm.setupTitle}। ${hi.farm.setupHint}`} />
       </div>
-      <StepIndicator steps={SETUP_STEPS} current={step} label={hi.farm.title} />
+      <StepIndicator steps={setupSteps()} current={step} label={hi.farm.title} />
 
       {step === 0 && <LocationStep value={draft.location} onChange={(location) => update({ location })} />}
       {step === 1 && <CropsStep value={draft.crops} onChange={(crops) => update({ crops })} />}

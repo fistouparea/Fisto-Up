@@ -13,8 +13,13 @@ export const chatMessageSchema = z.object({
 
 export type ChatMessage = z.infer<typeof chatMessageSchema>;
 
+export const ANSWER_LANGUAGES = ['hi', 'raj'] as const;
+export type AnswerLanguage = (typeof ANSWER_LANGUAGES)[number];
+
 /** Body of POST /api/chat. The last message is the farmer's new question. */
 export const chatRequestSchema = z.object({
+  /** "जवाब राजस्थानी में" (Phase 5). Default Hindi. */
+  answerLanguage: z.enum(ANSWER_LANGUAGES).default('hi'),
   crop: cropIdSchema,
   diagnosis: diagnosisSchema,
   messages: z

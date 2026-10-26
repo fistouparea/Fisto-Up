@@ -17,6 +17,7 @@ export const FEATURE_FLAGS = {
   pilotDashboard: { default: 'pilot', description: 'संयोजक का पायलट डैशबोर्ड' },
   // Phase 5: every new feature starts with pilot users only.
   voiceMode: { default: 'pilot', description: 'बोलकर चलाएँ: हर स्क्रीन पर बड़ा माइक, और "पढ़कर सुनाएँ"' },
+  languages: { default: 'pilot', description: 'भाषा चुनें (हिंदी / English / राजस्थानी) और "जवाब राजस्थानी में"' },
   aiKit: { default: 'pilot', description: 'जाँच के बाद "ज़रूरी सामान" और खाद-बीज-दवाई की साझेदार दुकानें' },
 } as const satisfies Record<string, { default: FlagState; description: string }>;
 

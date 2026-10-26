@@ -203,9 +203,9 @@ export class GeminiProvider implements AiProvider {
     }, aiDiagnosisSchema);
   }
 
-  async chat({ cropName, diagnosis, messages }: ChatInput): Promise<string> {
+  async chat({ cropName, diagnosis, messages, answerLanguage }: ChatInput): Promise<string> {
     const result = await this.generateValidated({
-      systemInstruction: buildChatSystemPrompt(cropName, diagnosis),
+      systemInstruction: buildChatSystemPrompt(cropName, diagnosis, answerLanguage),
       responseSchema: CHAT_RESPONSE_SCHEMA,
       contents: toGeminiContents(messages),
     }, aiChatAnswerSchema);

@@ -12,8 +12,9 @@ export function createChatController(provider: AiProvider): RequestHandler {
       throw new AppError('INVALID_INPUT', 'Invalid chat request');
     }
 
-    const { crop, diagnosis, messages } = body.data;
-    const answer = await provider.chat({ cropName: CROPS[crop], diagnosis, messages });
+    const { crop, diagnosis, messages, answerLanguage } = body.data;
+    // Only the language choice is added; still no image, device id or personal data.
+    const answer = await provider.chat({ cropName: CROPS[crop], diagnosis, messages, ...(answerLanguage === 'raj' && { answerLanguage }) });
     track('chat_question', { props: { crop } });
     res.json({ answer });
   };

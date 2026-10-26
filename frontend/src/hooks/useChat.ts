@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { askFollowUp } from '../api/chat';
+import { useFlags } from './useFlags';
+import { useSettings } from './useSettings';
 import { ApiError } from '../api/client';
 import type { ChatMessage, CropId, Diagnosis, ErrorCode } from '../api/types';
 
@@ -8,6 +10,8 @@ export function useChat(crop: CropId, diagnosis: Diagnosis) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [pending, setPending] = useState(false);
   const [errorCode, setErrorCode] = useState<ErrorCode | null>(null);
+  const { languages } = useFlags();
+  const { rajasthaniAnswers } = useSettings();
 
   /** Sends a question. Resolves true on success; on failure the question is removed so it can be resent. */
   const ask = async (question: string): Promise<boolean> => {
@@ -19,7 +23,7 @@ export function useChat(crop: CropId, diagnosis: Diagnosis) {
     setPending(true);
     setErrorCode(null);
     try {
-      const answer = await askFollowUp(crop, diagnosis, withQuestion);
+      const answer = await askFollowUp(crop, diagnosis, withQuestion, languages && rajasthaniAnswers);
       setMessages([...withQuestion, { role: 'assistant', text: answer }]);
       return true;
     } catch (error) {

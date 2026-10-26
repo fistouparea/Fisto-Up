@@ -33,7 +33,8 @@ type State =
   | { step: 'done'; listing: SellerListing }
   | { step: 'error'; code: ErrorCode; retry: (() => void) | null };
 
-const STEPS: Step[] = [
+/** A function: labels follow the chosen language. */
+const listingSteps = (): Step[] => [
   { label: hi.sell.steps.photo, icon: LuCamera },
   { label: hi.sell.steps.speak, icon: LuMic },
   { label: hi.sell.steps.confirm, icon: LuCircleCheckBig },
@@ -124,7 +125,7 @@ export function SnapListFlow({ submit, header, onFinished, finishLabel, dealer =
 
   return (
     <div className="flex flex-col gap-5">
-      <StepIndicator steps={STEPS} current={currentStep(state)} label={hi.sell.steps.label} />
+      <StepIndicator steps={listingSteps()} current={currentStep(state)} label={hi.sell.steps.label} />
       {offline && state.step !== 'done' && <Callout tone="warning" icon={LuWifiOff} text={hi.sell.offline} />}
 
       <PageTransition pageKey={state.step} className="flex flex-col gap-4">

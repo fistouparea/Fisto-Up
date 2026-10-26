@@ -1,4 +1,4 @@
-import type { ChatMessage } from '../../types/chat.js';
+import type { AnswerLanguage, ChatMessage } from '../../types/chat.js';
 import type { AiDiagnosis, Diagnosis, ImageMimeType } from '../../types/diagnosis.js';
 import type { AiListingDraft } from '../../modules/listings/listing.types.js';
 import type { AiPriceEstimate } from '../../modules/pricing/pricing.types.js';
@@ -18,6 +18,8 @@ export interface ChatInput {
   diagnosis: Diagnosis;
   /** Recent chat history; the last message is the farmer's new question. */
   messages: ChatMessage[];
+  /** Hindi (default) or Rajasthani answer. */
+  answerLanguage?: AnswerLanguage;
 }
 
 export interface ListingDraftInput {
