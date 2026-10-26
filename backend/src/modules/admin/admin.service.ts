@@ -115,6 +115,7 @@ export async function createSellerForSomeone(
     role: 'seller',
     createdBy: coordinatorId,
     verifiedBy: coordinatorId,
+    pilot: true,
   });
   const saved = await saveSellerProfile(user._id.toString(), {
     name: body.name,

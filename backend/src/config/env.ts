@@ -57,6 +57,8 @@ const envSchema = z.object({
   /** Cloudinary dashboard → "API environment variable": cloudinary://<key>:<secret>@<cloud>. Keep secret. */
   CLOUDINARY_URL: optional(z.string().trim()),
   CLOUDINARY_FOLDER: optional(z.string().trim().regex(/^[\w/-]{1,100}$/)).default('agriai/listings'),
+  /** Pilot: only sign-ups with an invite code (default for the inviteOnly flag; coordinators can change it). */
+  INVITE_ONLY: optional(z.enum(['true', 'false']).transform((value) => value === 'true')),
   /** Log detail: info (default), warn, error, debug ... Tests default to silent. */
   LOG_LEVEL: optional(z.enum(LOG_LEVELS)),
   /** Sentry error tracking (optional, free tier): the backend project's DSN. Empty = off. */

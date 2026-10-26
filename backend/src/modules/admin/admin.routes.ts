@@ -2,6 +2,10 @@ import express, { Router, type Response } from 'express';
 import { z } from 'zod';
 import { parseOrThrow } from '../../utils/validation.js';
 import { audit, auditQuerySchema, listAudit, type AuditEntryView } from '../audit/audit.service.js';
+import { FLAG_KEYS, FLAG_STATES } from '../../config/featureFlags.js';
+import type { FeatureFlags, FlagView } from '../flags/flag.service.js';
+import { listHelpRequests, resolveHelpRequest, type HelpRequestView } from '../help/help.service.js';
+import { createInvite, createInviteBodySchema, listInvites, revokeInvite, toInviteView, type InviteView } from '../invites/invite.service.js';
 import { currentUser, requireRole } from '../auth/auth.middleware.js';
 import type { AuthService } from '../auth/auth.service.js';
 import { ledgerCsv, markCollected, monthlyTotals, sellerDues, type MonthTotal, type SellerDues } from '../commission/ledger.service.js';
@@ -37,9 +41,17 @@ const monthQuerySchema = z.object({ month: monthSchema.optional() });
 const collectBodySchema = z.object({ sellerId: z.string().min(1), month: monthSchema.optional() });
 const reportQuerySchema = z.object({ status: z.enum(['open', 'resolved']).default('open') });
 const id = (value: unknown) => String(value);
+const setFlagSchema = z.object({ key: z.enum(FLAG_KEYS), state: z.enum(FLAG_STATES) });
 
 /** Coordinator panel. Every route checks the coordinator role on the server. */
-export function createAdminRouter({ auth, orders, commissionBps }: { auth: AuthService; orders: OrderService; commissionBps: number }): Router {
+export interface AdminRouterDeps {
+  auth: AuthService;
+  orders: OrderService;
+  commissionBps: number;
+  flags: FeatureFlags;
+}
+
+export function createAdminRouter({ auth, orders, commissionBps, flags }: AdminRouterDeps): Router {
   const router = Router();
   const json = express.json({ limit: '16kb' });
   router.use('/admin', requireRole('coordinator'));
@@ -143,6 +155,43 @@ export function createAdminRouter({ auth, orders, commissionBps }: { auth: AuthS
       .set('Content-Disposition', `attachment; filename="agriai-commission-${month ?? 'all'}.csv"`)
       .set('Cache-Control', 'no-store')
       .send(csv);
+  });
+
+  // --- Pilot: invite codes ---
+  router.get('/admin/invites', async (_req, res: Response<{ items: InviteView[] }>) => {
+    res.json({ items: (await listInvites()).map((invite) => toInviteView(invite)) });
+  });
+  router.post('/admin/invites', json, async (req, res: Response<{ invite: InviteView }>) => {
+    const invite = await createInvite(parseOrThrow(createInviteBodySchema, req.body ?? {}), currentUser(req).id);
+    await audit(req, 'invite.create', { type: 'invite', id: invite._id.toString() }, { maxUses: invite.maxUses, role: invite.role ?? 'any' });
+    res.status(201).json({ invite: toInviteView(invite) });
+  });
+  router.post('/admin/invites/:id/revoke', async (req, res: Response<{ invite: InviteView }>) => {
+    const invite = await revokeInvite(id(req.params.id));
+    await audit(req, 'invite.revoke', { type: 'invite', id: invite._id.toString() });
+    res.json({ invite: toInviteView(invite) });
+  });
+
+  // --- Feature flags ---
+  router.get('/admin/flags', async (_req, res: Response<{ items: FlagView[] }>) => {
+    res.json({ items: await flags.list() });
+  });
+  router.put('/admin/flags/:key', json, async (req, res: Response<{ items: FlagView[] }>) => {
+    const { key, state } = parseOrThrow(setFlagSchema, { key: req.params.key, state: (req.body as { state?: unknown } | undefined)?.state });
+    await flags.set(key, state, currentUser(req).id);
+    await audit(req, 'flag.set', { type: 'flag', id: key }, { state });
+    res.json({ items: await flags.list() });
+  });
+
+  // --- मदद/शिकायत ---
+  router.get('/admin/help', async (req, res: Response<{ items: HelpRequestView[] }>) => {
+    res.json({ items: await listHelpRequests(parseOrThrow(reportQuerySchema, req.query).status) });
+  });
+  router.post('/admin/help/:id/resolve', json, async (req, res: Response<{ ok: true }>) => {
+    const { resolution } = parseOrThrow(resolveBodySchema, req.body ?? {});
+    await resolveHelpRequest(id(req.params.id), currentUser(req).id, resolution);
+    await audit(req, 'help.resolve', { type: 'help', id: id(req.params.id) }, { resolution });
+    res.json({ ok: true });
   });
 
   // --- Audit log (read-only) ---

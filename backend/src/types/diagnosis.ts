@@ -55,4 +55,5 @@ export const diagnosisSchema = aiDiagnosisSchema.omit({ is_plant_image: true, co
 export type Diagnosis = z.infer<typeof diagnosisSchema>;
 
 /** Response body of POST /api/diagnose. */
-export type DiagnoseResponse = { status: 'ok'; diagnosis: Diagnosis } | { status: 'unclear' };
+/** `historyId`: the saved "मेरी जाँच" record, so the app can ask "क्या जवाब सही था?" about it. */
+export type DiagnoseResponse = { status: 'ok'; diagnosis: Diagnosis; historyId?: string } | { status: 'unclear' };

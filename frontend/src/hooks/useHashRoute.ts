@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
-export const ADMIN_TABS = ['overview', 'sellers', 'orders', 'reports', 'ledger', 'newListing'] as const;
+export const ADMIN_TABS = ['overview', 'sellers', 'orders', 'reports', 'help', 'ledger', 'newListing', 'invites', 'flags', 'audit'] as const;
 export type AdminTab = (typeof ADMIN_TABS)[number];
 
 export type Route =
@@ -28,7 +28,8 @@ export type Route =
   | { name: 'admin'; tab: AdminTab }
   | { name: 'privacy' }
   | { name: 'terms' }
-  | { name: 'myData' };
+  | { name: 'myData' }
+  | { name: 'help' };
 
 export const routes = {
   home: '#/',
@@ -55,6 +56,7 @@ export const routes = {
   privacy: '#/privacy',
   terms: '#/terms',
   myData: '#/my-data',
+  help: '#/help',
   admin: (tab: AdminTab = 'overview') => (tab === 'overview' ? '#/admin' : `#/admin/${tab}`),
 };
 
@@ -86,6 +88,7 @@ export function parseRoute(hash: string): Route {
   if (section === 'privacy') return { name: 'privacy' };
   if (section === 'terms') return { name: 'terms' };
   if (section === 'my-data') return { name: 'myData' };
+  if (section === 'help') return { name: 'help' };
   if (section === 'sell' && id === 'new') return { name: 'sellNew' };
   if (section === 'sell') return { name: 'sell' };
   if (section === 'login') return { name: 'login' };

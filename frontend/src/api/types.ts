@@ -24,7 +24,8 @@ export interface ChatMessage {
   text: string;
 }
 
-export type DiagnoseResponse = { status: 'ok'; diagnosis: Diagnosis } | { status: 'unclear' };
+/** `historyId`: the saved "मेरी जाँच" record (feedback is linked to it). Missing when it was not saved. */
+export type DiagnoseResponse = { status: 'ok'; diagnosis: Diagnosis; historyId?: string } | { status: 'unclear' };
 
 /** One row of the "मेरी जाँच" list. Dates are ISO strings. */
 export interface HistorySummary {
@@ -210,6 +211,8 @@ export const ERROR_CODES = [
   'CONFLICT',
   'NEEDS_REPLICA_SET',
   'ACTIVE_ORDERS',
+  'INVITE_REQUIRED',
+  'INVALID_INVITE',
   'INTERNAL',
   'NETWORK',
   'PHOTO_READ_FAILED',

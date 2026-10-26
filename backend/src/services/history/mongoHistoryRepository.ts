@@ -6,8 +6,9 @@ import type { FollowUpAnswer, FollowUpDue, HistoryPage, HistoryRecord, NewHistor
 import type { HistoryRepository } from './historyRepository.js';
 
 export class MongoHistoryRepository implements HistoryRepository {
-  async save(entry: NewHistoryEntry): Promise<void> {
-    await withStorageErrors(() => DiagnosisRecord.create(entry));
+  async save(entry: NewHistoryEntry): Promise<string> {
+    const saved = await withStorageErrors(() => DiagnosisRecord.create(entry));
+    return saved._id.toString();
   }
 
   async list(deviceId: string, page: number, limit: number): Promise<HistoryPage> {

@@ -9,6 +9,9 @@ import { ListingModel } from '../modules/listings/listing.model.js';
 import { MarketNotificationModel } from '../modules/notifications/notification.model.js';
 import { OrderModel } from '../modules/orders/order.model.js';
 import { ReportModel } from '../modules/reports/report.model.js';
+import { ConsentModel } from '../modules/privacy/privacy.model.js';
+import { HelpRequestModel } from '../modules/help/help.model.js';
+import { DiagnosisFeedbackModel } from '../modules/feedback/feedback.model.js';
 
 /** Something with MongoDB's explain(), i.e. a mongoose query. */
 interface Explainable {
@@ -42,6 +45,10 @@ export const FREQUENT_QUERIES: { name: string; query: () => Explainable }[] = [
   { name: 'commission due per seller', query: () => CommissionEntryModel.find({ sellerId: anyId, status: 'due' }) },
   { name: 'commission by month', query: () => CommissionEntryModel.find({ month: '2026-11' }).sort({ completedAt: 1 }) },
   { name: 'open reports', query: () => ReportModel.find({ status: 'open' }).sort({ createdAt: -1 }).limit(200) },
+  { name: 'latest consent of a phone', query: () => ConsentModel.find({ deviceId }).sort({ acceptedAt: -1 }).limit(1) },
+  { name: 'open help requests', query: () => HelpRequestModel.find({ status: 'open' }).sort({ createdAt: -1 }).limit(200) },
+  { name: 'feedback of a phone', query: () => DiagnosisFeedbackModel.find({ deviceId }) },
+  { name: 'feedback of a diagnosis', query: () => DiagnosisFeedbackModel.find({ diagnosisId: anyId.toString() }) },
   { name: 'audit log of a record', query: () => AuditLogModel.find({ 'target.id': anyId.toString() }).sort({ at: -1 }) },
 ];
 

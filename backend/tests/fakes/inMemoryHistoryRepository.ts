@@ -15,9 +15,9 @@ export class InMemoryHistoryRepository implements HistoryRepository {
   readonly records: StoredRecord[] = [];
   private clock = Date.parse('2026-10-01T06:00:00Z');
 
-  async save(entry: NewHistoryEntry): Promise<void> {
+  async save(entry: NewHistoryEntry): Promise<string> {
     this.clock += 60_000; // each save one minute later, so ordering is predictable
-    this.seed(entry, new Date(this.clock));
+    return this.seed(entry, new Date(this.clock));
   }
 
   /** Adds a record with a chosen creation time (for follow-up tests). */

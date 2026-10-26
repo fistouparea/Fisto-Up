@@ -935,3 +935,40 @@ banayein (local wali dobara use na karein).
   jaankari nahi.
 - Sahmati ke bina app nahi chalti, kyunki bina data ke salah nahi di ja sakti (screen par saaf likha hai). Ye legal review mein dekhein.
 - `मेरा डेटा` ko marketplace ka setup chahiye (MongoDB + JWT_SECRET), kyunki session wahi padhta hai. Production mein dono zaroori hain.
+
+## Task 5 – Pilot mode aur feedback
+
+**Kya bana:**
+- **Feature flags** (`backend/src/config/featureFlags.ts`): har flag ki 3 haalat: `off` (kisi ke liye nahi),
+  `pilot` (sirf coordinator aur pilot khaate), `all` (sabke liye, bina khaate wale kisan bhi).
+  - Default config mein, coordinator संयोजक पैनल → **सुविधाएँ** se badal sakta hai (MongoDB mein save + audit log).
+    Server 15 second tak cache rakhta hai. Database na ho to defaults chalte hain (advisor kabhi nahi rukta).
+  - Flags: `inviteOnly`, `aiFeedback`, `helpRequests`, `voiceInput`, `pilotDashboard`.
+  - App `GET /api/account/flags` se apne flags leta hai (login/logout ke baad dobara). Offline par defaults.
+- **Invite code se sign-up:** संयोजक पैनल → **इनवाइट कोड**.
+  - 6 akshar ka code (0/O, 1/I/L nahi). Ek insaan ya poore SHG ke liye (kitni baar chalega: 1–200).
+  - Sirf seller/buyer ke liye bhi bana sakte hain, din ki seema, band karna, aur WhatsApp par bhejna.
+  - `inviteOnly` chalu ho to bina code khaata nahi banta (`INVITE_REQUIRED`). Galat/khatm/band code par
+    `INVALID_INVITE`. Kisi bhi sahi code se khaata **pilot** ban jaata hai. Coordinator ke banaye sellers bhi pilot hain.
+  - Code ka istemaal atomic hai: aakhri jagah par do log ek saath aayein to sirf ek ko milti hai (test hai).
+    Number pehle se registered ho to istemaal wapas ho jaata hai.
+  - `INVITE_ONLY=true` (env) shuru ki haalat hai; `render.yaml` mein pilot ke liye `true` hai.
+- **"क्या जवाब सही था?"** har saved jaanch ke baad: bade 👍 हाँ, सही / 👎 नहीं button (ek tap mein save), phir
+  chaahein to 🎤 bolkar ya likhkar baat (500 akshar).
+  - Diagnosis response mein ab `historyId` aata hai. Feedback `diagnosis_feedback` mein us jaanch se juda hai
+    (fasal, samasya, severity ke saath).
+  - Jawab badla ja sakta hai. Doosra phone kisi aur ki jaanch par jawab nahi de sakta.
+  - Export (Task 6) mein device id kabhi nahi jaata. "मेरा डेटा" mein dikhta hai aur mitane par mit jaata hai.
+- **मदद/शिकायत:** upar app bar mein 🛟 button → `#/help`.
+  - Vishay chunein (फसल, ऐप, ऑर्डर, पैसे, खाता, कुछ और), 🎤 bolein ya likhein.
+  - Bina khaate wale kisan chaahein to wapas phone ke liye number de sakte hain.
+  - Coordinator **मदद/शिकायत** tab mein dekhta hai: kaun (ya "बिना खाते के"), phone (tap karke call), aur "हल हो गया"
+    (audit). Per IP 20/ghanta.
+- **संयोजक पैनल** mein 4 naye tab: मदद/शिकायत, इनवाइट कोड, सुविधाएँ, बदलाव का रिकॉर्ड (audit log).
+
+**Decisions:**
+- "Voice feedback" = phone par hi awaaz se text (Web Speech API). **Audio kabhi upload ya save nahi hota**: kam data,
+  zyada privacy, aur coordinator ko padhna aasaan.
+- Pilot membership khaate par hai. Bina khaate wale kisan sirf `all` wale features dekhte hain.
+- App bar ke gol button 56px se 48px kiye, taaki 360px par teen button (मदद, खाता, सूचना) aa sakein (48px abhi bhi bade ungli ke liye theek hai).
+- AdminReports ka "run" helper ab sab tabs ke saath `adminAction.ts` mein share hai (dohrav hataya).

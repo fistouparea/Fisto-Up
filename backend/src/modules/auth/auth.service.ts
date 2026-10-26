@@ -17,6 +17,9 @@ export interface NewAccount {
   createdBy?: string;
   /** Coordinator-created sellers are verified right away (the coordinator met them). */
   verifiedBy?: string;
+  /** Pilot account (invite code or coordinator-created). */
+  pilot?: boolean;
+  inviteId?: string;
 }
 
 /** Accounts, PIN login with lockout, and session lookup. */
@@ -38,6 +41,8 @@ export class AuthService {
         name: account.name,
         deviceId: account.deviceId,
         createdBy: account.createdBy,
+        pilot: account.pilot ?? false,
+        inviteId: account.inviteId,
         ...(account.role === 'seller' && {
           seller: account.verifiedBy
             ? { status: 'verified', verifiedAt: this.now(), verifiedBy: account.verifiedBy }

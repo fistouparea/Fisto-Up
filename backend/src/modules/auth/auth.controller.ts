@@ -9,6 +9,15 @@ import type { UserDocument } from './user.model.js';
 import { UserModel } from './user.model.js';
 import { PushSubscriptionModel } from '../../models/PushSubscription.js';
 import { z } from 'zod';
+import { AppError } from '../../errors/AppError.js';
+import type { FeatureFlags } from '../flags/flag.service.js';
+import { inviteCodeSchema, redeemInvite, releaseInvite } from '../invites/invite.service.js';
+
+function parseInviteCode(code: string): string {
+  const parsed = inviteCodeSchema.safeParse(code);
+  if (!parsed.success) throw new AppError('INVALID_INVITE');
+  return parsed.data;
+}
 
 const logoutBodySchema = z.object({ pushEndpoint: z.url().max(1000).optional() });
 
@@ -16,20 +25,31 @@ export interface AuthControllerDeps {
   auth: AuthService;
   tokens: SessionTokens;
   cookieSecure: boolean;
+  flags: FeatureFlags;
 }
 
 type AccountResponse = Response<{ user: AccountView | null }>;
 
-export function createAuthController({ auth, tokens, cookieSecure }: AuthControllerDeps) {
+export function createAuthController({ auth, tokens, cookieSecure, flags }: AuthControllerDeps) {
   const startSession = async (res: AccountResponse, user: UserDocument) => {
     setSessionCookie(res, await tokens.sign({ userId: user._id.toString(), version: user.tokenVersion }), cookieSecure);
     res.json({ user: toAccountView(user) });
   };
 
+  /** While the pilot is invite-only, a valid invite code is needed; any valid code makes it a pilot account. */
   const register: RequestHandler = async (req, res: AccountResponse) => {
-    const body = parseOrThrow(registerBodySchema, req.body);
+    const { inviteCode, ...body } = parseOrThrow(registerBodySchema, req.body);
+    if (!inviteCode && (await flags.isOn('inviteOnly', undefined))) throw new AppError('INVITE_REQUIRED');
+    const inviteId = inviteCode ? await redeemInvite(parseInviteCode(inviteCode), body.role) : undefined;
+    let user: UserDocument;
+    try {
+      user = await auth.createAccount({ ...body, pilot: Boolean(inviteId), inviteId });
+    } catch (error) {
+      if (inviteId) await releaseInvite(inviteId);
+      throw error;
+    }
     res.status(201);
-    await startSession(res, await auth.createAccount(body));
+    await startSession(res, user);
   };
 
   const login: RequestHandler = async (req, res: AccountResponse) => {

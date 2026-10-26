@@ -9,6 +9,7 @@ export function toAuthUser(user: UserDocument): AuthUser {
     role: user.role,
     name: user.name,
     ...(user.seller && { sellerStatus: user.seller.status }),
+    ...(user.pilot && { pilot: true }),
   };
 }
 

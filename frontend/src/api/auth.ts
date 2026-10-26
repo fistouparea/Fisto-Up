@@ -21,6 +21,7 @@ export interface RegisterInput {
   name: string;
   role: 'seller' | 'buyer';
   buyerType?: BuyerType;
+  inviteCode?: string;
 }
 
 export async function register(input: RegisterInput): Promise<Account> {

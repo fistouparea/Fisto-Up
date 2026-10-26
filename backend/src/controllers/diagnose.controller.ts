@@ -34,9 +34,7 @@ export function createDiagnoseController(provider: AiProvider, history: HistoryR
     const result = await diagnosePhoto(provider, { image: req.file.buffer, mimeType, cropName: CROPS[crop] });
 
     // Only confident results are worth keeping; the photo itself is never saved.
-    if (result.status === 'ok' && deviceId) {
-      await recordDiagnosis(history, { deviceId, crop, diagnosis: result.diagnosis });
-    }
-    res.json(result);
+    const historyId = result.status === 'ok' && deviceId ? await recordDiagnosis(history, { deviceId, crop, diagnosis: result.diagnosis }) : null;
+    res.json(historyId && result.status === 'ok' ? { ...result, historyId } : result);
   };
 }

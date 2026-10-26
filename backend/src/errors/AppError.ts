@@ -22,6 +22,8 @@ export type ErrorCode =
   | 'CONFLICT'
   | 'NEEDS_REPLICA_SET'
   | 'ACTIVE_ORDERS'
+  | 'INVITE_REQUIRED'
+  | 'INVALID_INVITE'
   | 'INTERNAL';
 
 const HTTP_STATUS: Record<ErrorCode, number> = {
@@ -53,6 +55,10 @@ const HTTP_STATUS: Record<ErrorCode, number> = {
   NEEDS_REPLICA_SET: 503,
   /** Account deletion: orders that are still running must be finished or cancelled first. */
   ACTIVE_ORDERS: 409,
+  /** Pilot: sign-up needs an invite code (feature flag inviteOnly). */
+  INVITE_REQUIRED: 403,
+  /** Unknown, used up, expired or revoked invite code. */
+  INVALID_INVITE: 400,
   INTERNAL: 500,
 };
 

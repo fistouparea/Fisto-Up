@@ -8,6 +8,8 @@ import { startPhotoCleanup } from './jobs/photoCleanup.js';
 import { startNotificationScheduler } from './jobs/scheduler.js';
 import { createPhotoStorage } from './services/storage/createPhotoStorage.js';
 import { createReadinessCheck } from './observability/health.js';
+import { flagDefaults } from './config/featureFlags.js';
+import { FeatureFlags } from './modules/flags/flag.service.js';
 import { logger } from './observability/logger.js';
 import { flushSentry, initSentry } from './observability/sentry.js';
 import { createAiProvider } from './services/ai/createAiProvider.js';
@@ -49,6 +51,7 @@ const app = createApp({
   market: market ? { config: market, pushSender: vapid ? new WebPushSender(vapid) : null, photoStorage } : null,
   corsOrigins: env.CORS_ORIGIN,
   trustProxyHops: env.TRUST_PROXY,
+  flags: new FeatureFlags(flagDefaults(env.INVITE_ONLY)),
   readiness: createReadinessCheck({ mongoConfigured: Boolean(env.MONGO_URI), isShuttingDown: () => shuttingDown }),
 });
 

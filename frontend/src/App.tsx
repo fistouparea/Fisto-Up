@@ -31,6 +31,8 @@ import { WeatherPage } from './pages/WeatherPage';
 import { ConsentPage } from './pages/ConsentPage';
 import { LegalPage } from './pages/LegalPage';
 import { MyDataPage } from './pages/MyDataPage';
+import { HelpPage } from './pages/HelpPage';
+import { FlagsProvider } from './context/FlagsProvider';
 import { sendConsent } from './api/privacy';
 import { hasConsented, isConsentPending, markConsentSent, rememberConsent } from './utils/consentState';
 import { AccountPage } from './pages/market/AccountPage';
@@ -56,15 +58,17 @@ const ONBOARDING_FLAG = 'onboardingDone';
 export function App() {
   return (
     <AuthProvider>
-      <LangProvider>
-        <FarmProfileProvider>
-          <NotificationsProvider>
-            <MarketNotificationsProvider>
-              <AppShell />
-            </MarketNotificationsProvider>
-          </NotificationsProvider>
-        </FarmProfileProvider>
-      </LangProvider>
+      <FlagsProvider>
+        <LangProvider>
+          <FarmProfileProvider>
+            <NotificationsProvider>
+              <MarketNotificationsProvider>
+                <AppShell />
+              </MarketNotificationsProvider>
+            </NotificationsProvider>
+          </FarmProfileProvider>
+        </LangProvider>
+      </FlagsProvider>
     </AuthProvider>
   );
 }
@@ -211,6 +215,8 @@ function Page({ route, diagnoseKey }: { route: Route; diagnoseKey: number }) {
       return <LegalPage doc="terms" />;
     case 'myData':
       return <MyDataPage />;
+    case 'help':
+      return <HelpPage />;
     case 'buyerProfile':
       return <RequireRole roles={['buyer']}>{(user) => <BuyerProfilePage user={user} onSaved={savedProfile} />}</RequireRole>;
   }

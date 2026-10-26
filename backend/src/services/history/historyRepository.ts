@@ -5,7 +5,8 @@ import type { FollowUpAnswer, FollowUpDue, HistoryPage, HistoryRecord, NewHistor
  * Implementations throw AppError('HISTORY_UNAVAILABLE') when storage is unreachable.
  */
 export interface HistoryRepository {
-  save(entry: NewHistoryEntry): Promise<void>;
+  /** Returns the new record's id (used to link feedback to the diagnosis). */
+  save(entry: NewHistoryEntry): Promise<string>;
   /** Latest first. */
   list(deviceId: string, page: number, limit: number): Promise<HistoryPage>;
   /** Returns null if the record does not exist or belongs to another device. */

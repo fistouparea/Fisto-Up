@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { LuCheck, LuEye, LuEyeOff, LuFlag, LuPackage } from 'react-icons/lu';
-import { ApiError } from '../../api/client';
 import { fetchHiddenListings, fetchReports, hideListing, resolveReport, unhideListing, type AdminReport } from '../../api/admin';
 import { LoadState } from '../../components/admin/LoadState';
 import { ListingPhoto } from '../../components/market/ListingPhoto';
@@ -8,21 +7,12 @@ import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { TextField } from '../../components/ui/TextField';
-import { notifyError, notifySuccess } from '../../components/ui/notify';
 import { routes } from '../../hooks/useHashRoute';
 import { useLoad } from '../../hooks/useLoad';
+import { runAdminAction } from './adminAction';
 import { hi, roleLabels } from '../../strings/hi';
 import { formatDate } from '../../utils/formatDate';
 
-async function run(action: () => Promise<unknown>, message: string, after: () => void) {
-  try {
-    await action();
-    notifySuccess(message);
-    after();
-  } catch (error) {
-    notifyError(error instanceof ApiError ? error.code : 'UNKNOWN');
-  }
-}
 
 /** Open reports (flagged listings and order problems) and listings hidden by coordinators. */
 export function AdminReports() {
@@ -61,7 +51,7 @@ export function AdminReports() {
                   <div key={listing.id} className="flex items-center gap-3 rounded-3xl border border-line bg-surface p-3">
                     <ListingPhoto url={listing.photoUrls[0]} product={listing.product} className="size-16 shrink-0 rounded-2xl" />
                     <p className="min-w-0 flex-1 font-bold">{listing.title.hi}</p>
-                    <Button variant="secondary" size="md" fullWidth={false} icon={LuEye} onClick={() => void run(() => unhideListing(listing.id), hi.sell.saved, reloadAll)}>
+                    <Button variant="secondary" size="md" fullWidth={false} icon={LuEye} onClick={() => void runAdminAction(() => unhideListing(listing.id), hi.sell.saved, reloadAll)}>
                       {hi.admin.showListing}
                     </Button>
                   </div>
@@ -110,14 +100,14 @@ function ReportCard({ report, onChanged }: { report: AdminReport; onChanged: () 
             size="md"
             icon={LuEyeOff}
             disabled={hideReason.trim().length < 2}
-            onClick={() => report.listing && void run(() => hideListing(report.listing?.id ?? '', hideReason.trim()), hi.sell.saved, onChanged)}
+            onClick={() => report.listing && void runAdminAction(() => hideListing(report.listing?.id ?? '', hideReason.trim()), hi.sell.saved, onChanged)}
           >
             {hi.admin.hideListing}
           </Button>
         </div>
       )}
       <TextField label={hi.admin.resolution} value={resolution} onChange={(e) => setResolution(e.target.value)} />
-      <Button variant="accent" size="md" icon={LuCheck} onClick={() => void run(() => resolveReport(report.id, resolution.trim() || undefined), hi.admin.resolved, onChanged)}>
+      <Button variant="accent" size="md" icon={LuCheck} onClick={() => void runAdminAction(() => resolveReport(report.id, resolution.trim() || undefined), hi.admin.resolved, onChanged)}>
         {hi.admin.resolve}
       </Button>
     </article>

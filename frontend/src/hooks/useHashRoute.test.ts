@@ -32,6 +32,8 @@ describe('parseRoute', () => {
     ['#/privacy', { name: 'privacy' }],
     ['#/terms', { name: 'terms' }],
     ['#/my-data', { name: 'myData' }],
+    ['#/help', { name: 'help' }],
+    ['#/admin/invites', { name: 'admin', tab: 'invites' }],
   ])('parses "%s"', (hash, expected) => {
     expect(parseRoute(hash)).toEqual(expected);
   });

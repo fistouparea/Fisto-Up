@@ -9,6 +9,7 @@ import { PageHeader } from '../../components/ui/PageHeader';
 import { SelectCard } from '../../components/ui/SelectCard';
 import { PhoneField, PinField, TextField } from '../../components/ui/TextField';
 import { useAuth } from '../../hooks/useAuth';
+import { useFlags } from '../../hooks/useFlags';
 import { routes } from '../../hooks/useHashRoute';
 import { useSubmit } from '../../hooks/useSubmit';
 import { hi, marketErrorMessage } from '../../strings/hi';
@@ -23,6 +24,8 @@ export function RegisterPage() {
   const [phone, setPhone] = useState('');
   const [pin, setPin] = useState('');
   const [pinAgain, setPinAgain] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
+  const { inviteOnly } = useFlags();
   const [showErrors, setShowErrors] = useState(false);
   const { busy, errorCode, run } = useSubmit();
 
@@ -31,6 +34,7 @@ export function RegisterPage() {
     phone: /^[6-9]\d{9}$/.test(phone) ? undefined : hi.auth.phoneInvalid,
     pin: /^\d{4}$/.test(pin) ? undefined : hi.auth.pinInvalid,
     pinAgain: pin === pinAgain ? undefined : hi.auth.pinMismatch,
+    inviteCode: inviteOnly && inviteCode.replace(/[\s-]/g, '').length !== 6 ? hi.auth.inviteInvalid : undefined,
   };
 
   const submit = async (event: FormEvent) => {
@@ -38,7 +42,7 @@ export function RegisterPage() {
     setShowErrors(true);
     if (!role || Object.values(errors).some(Boolean)) return;
     const user = await run(() =>
-      register({ role, name: name.trim(), phone, pin, ...(role === 'buyer' && { buyerType }) }),
+      register({ role, name: name.trim(), phone, pin, ...(role === 'buyer' && { buyerType }), ...(inviteCode.trim() && { inviteCode: inviteCode.trim() }) }),
     );
     if (!user) return;
     // A new seller fills village, UPI ID and pickup place next.
@@ -89,6 +93,17 @@ export function RegisterPage() {
                 />
               </div>
             </>
+          )}
+          {inviteOnly && (
+            <TextField
+              label={hi.auth.inviteCode}
+              hint={hi.auth.inviteHint}
+              autoCapitalize="characters"
+              autoComplete="off"
+              value={inviteCode}
+              onChange={(event) => setInviteCode(event.target.value.toUpperCase())}
+              error={showErrors ? errors.inviteCode : undefined}
+            />
           )}
           <TextField
             label={hi.auth.name}

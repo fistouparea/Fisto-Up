@@ -19,6 +19,11 @@ import { createOrderRouter } from './orders/order.routes.js';
 import { createReportRouter } from './reports/report.routes.js';
 import { createAdminRouter } from './admin/admin.routes.js';
 import { createMyDataRouter } from './privacy/privacy.routes.js';
+import { createFlagRouter } from './flags/flag.routes.js';
+import { createHelpRouter } from './help/help.routes.js';
+import { helpDeviceData } from './help/help.service.js';
+import { feedbackDeviceData } from './feedback/feedback.service.js';
+import type { FeatureFlags } from './flags/flag.service.js';
 import type { PushSender } from '../services/push/pushSender.js';
 import { DatabasePhotoStorage, type PhotoStorage } from '../services/storage/photoStorage.js';
 
@@ -41,20 +46,22 @@ export const MARKET_PATHS = ['/auth', '/account', '/market', '/admin'];
 export interface MarketSharedDeps {
   ai: AiProvider;
   aiRateLimit: RequestHandler;
+  flags: FeatureFlags;
   /** Phase 2 mandi prices (optional) for the fair price suggestion. */
   mandi: MandiProvider | null;
 }
 
 export function createMarketRouter(
   { config, credentials = new PinCredentials(), pushSender = null, photoStorage = new DatabasePhotoStorage(), now }: MarketDependencies,
-  { ai, aiRateLimit, mandi }: MarketSharedDeps,
+  { ai, aiRateLimit, mandi, flags }: MarketSharedDeps,
 ): Router {
   const auth = new AuthService(credentials, now);
   const tokens = new SessionTokens(config.jwtSecret);
 
   const router = Router();
   router.use(MARKET_PATHS, cookieParser(), requireAppHeader, createSessionMiddleware(auth, tokens));
-  router.use(createAuthRouter({ auth, tokens, cookieSecure: config.cookieSecure }));
+  router.use(createAuthRouter({ auth, tokens, cookieSecure: config.cookieSecure, flags }));
+  router.use(createFlagRouter(flags));
   router.use(createAccountRouter());
   router.use(createListingRouter({ ai, aiRateLimit, photos: photoStorage }));
   router.use(createPricingRouter({ ai, mandi }, aiRateLimit));
@@ -63,8 +70,9 @@ export function createMarketRouter(
   router.use(createOrderRouter(orders));
   router.use(createReportRouter());
   router.use(createNotificationRouter(pushSender !== null));
-  router.use(createAdminRouter({ auth, orders, commissionBps: config.commissionBps }));
-  router.use(createMyDataRouter({ photos: photoStorage, cookieSecure: config.cookieSecure }));
+  router.use(createAdminRouter({ auth, orders, commissionBps: config.commissionBps, flags }));
+  router.use(createHelpRouter(flags));
+  router.use(createMyDataRouter({ photos: photoStorage, cookieSecure: config.cookieSecure, deviceData: [feedbackDeviceData, helpDeviceData] }));
   return router;
 }
 

@@ -9,6 +9,10 @@ import { AdminOrders } from './AdminOrders';
 import { AdminOverview } from './AdminOverview';
 import { AdminReports } from './AdminReports';
 import { AdminSellers } from './AdminSellers';
+import { AdminAudit } from './AdminAudit';
+import { AdminFlags } from './AdminFlags';
+import { AdminHelp } from './AdminHelp';
+import { AdminInvites } from './AdminInvites';
 
 /** Coordinator panel: wide on desktop, tabs scroll sideways on a phone. */
 export function AdminPage({ tab }: { tab: AdminTab }) {
@@ -62,5 +66,13 @@ function TabContent({ tab }: { tab: AdminTab }) {
       return <AdminLedger />;
     case 'newListing':
       return <AdminAssistedListing />;
+    case 'help':
+      return <AdminHelp />;
+    case 'invites':
+      return <AdminInvites />;
+    case 'flags':
+      return <AdminFlags />;
+    case 'audit':
+      return <AdminAudit />;
   }
 }

@@ -44,7 +44,7 @@ export async function exportPersonalData(deviceId: string, user: AuthUser | unde
     DiagnosisRecord.find({ deviceId: { $in: deviceIds } }, { _id: 0, deviceId: 0 }).sort({ createdAt: -1 }).lean().exec(),
     ConsentModel.find({ deviceId: { $in: deviceIds } }, { _id: 0, version: 1, lang: 1, acceptedAt: 1 }).sort({ acceptedAt: -1 }).lean().exec(),
     PushSubscriptionModel.countDocuments({ deviceId: { $in: deviceIds } }).exec(),
-    Promise.all(extraDeviceData.map(async (source) => [source.name, await source.export(deviceIds)] as const)),
+    Promise.all(extraDeviceData.map(async (source) => [source.name, await source.export({ deviceIds, userId: user?.id })] as const)),
   ]);
 
   return {
@@ -92,11 +92,17 @@ async function exportAccount(userId: string) {
 }
 
 /** Device-linked data of later features (feedback, events): how to export and erase it. */
+export interface DataScope {
+  deviceIds: string[];
+  /** The logged-in account, if any. */
+  userId?: string;
+}
+
 export interface DeviceDataSource {
   name: string;
-  export(deviceIds: string[]): Promise<unknown>;
+  export(scope: DataScope): Promise<unknown>;
   /** Deletes or anonymizes; returns how many records were touched. */
-  erase(deviceIds: string[]): Promise<number>;
+  erase(scope: DataScope): Promise<number>;
 }
 
 export interface DeletionResult {
@@ -131,7 +137,7 @@ export async function deletePersonalData(
     DiagnosisRecord.deleteMany({ deviceId: { $in: deviceIds } }).exec(),
     ConsentModel.deleteMany({ deviceId: { $in: deviceIds } }).exec(),
     PushSubscriptionModel.deleteMany({ deviceId: { $in: deviceIds } }).exec(),
-    ...extraDeviceData.map((source) => source.erase(deviceIds)),
+    ...extraDeviceData.map((source) => source.erase({ deviceIds, userId: user?.id })),
   ]);
   const device = {
     farmProfiles: profiles.deletedCount,

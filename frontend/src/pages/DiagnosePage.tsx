@@ -21,6 +21,7 @@ import { CropGrid } from '../components/CropGrid';
 import { PhotoActions, SquareButton } from '../components/PhotoActions';
 import { PhotoPreview } from '../components/PhotoPreview';
 import { ResultView } from '../components/ResultView';
+import { FeedbackCard } from '../components/FeedbackCard';
 import { SelectedCrop } from '../components/SelectedCrop';
 import { Button } from '../components/ui/Button';
 import { Callout } from '../components/ui/Callout';
@@ -41,7 +42,7 @@ type State =
   | { step: 'choose'; crop: CropId | null; preparing: boolean }
   | { step: 'preview'; crop: CropId; photo: Blob }
   | { step: 'checking'; crop: CropId; photo: Blob }
-  | { step: 'result'; crop: CropId; photo: Blob; diagnosis: Diagnosis }
+  | { step: 'result'; crop: CropId; photo: Blob; diagnosis: Diagnosis; historyId?: string }
   | { step: 'unclear'; crop: CropId; photo: Blob }
   | { step: 'error'; crop: CropId; photo: Blob | null; code: ErrorCode };
 
@@ -100,7 +101,7 @@ export function DiagnosePage() {
       if (response.status === 'ok') {
         notifySuccess(hi.toast.resultReady);
         setFlag(USED_ONCE_FLAG);
-        setState({ step: 'result', crop, photo, diagnosis: response.diagnosis });
+        setState({ step: 'result', crop, photo, diagnosis: response.diagnosis, historyId: response.historyId });
       } else {
         setState({ step: 'unclear', crop, photo });
       }
@@ -162,6 +163,7 @@ export function DiagnosePage() {
             <>
               <SelectedCrop crop={state.crop} photo={state.photo} />
               <ResultView diagnosis={state.diagnosis} />
+              {state.historyId && <FeedbackCard historyId={state.historyId} />}
               <ChatPanel crop={state.crop} diagnosis={state.diagnosis} />
               <Button icon={LuCamera} onClick={() => chooseAgain(null)}>
                 {hi.newCheck}

@@ -13,6 +13,9 @@ import { createProfileRouter } from './routes/profile.routes.js';
 import { createFarmAdviceRouter } from './routes/farmAdvice.routes.js';
 import { createPushRouter } from './routes/push.routes.js';
 import { createConsentRouter } from './modules/privacy/privacy.routes.js';
+import { FeatureFlags } from './modules/flags/flag.service.js';
+import { createFeedbackRouter } from './modules/feedback/feedback.routes.js';
+import { flagDefaults } from './config/featureFlags.js';
 import { createMarketRouter, createMarketUnavailableRouter, type MarketDependencies } from './modules/marketRouter.js';
 import type { AiProvider } from './services/ai/aiProvider.js';
 import type { FarmProfileRepository } from './services/farm/farmProfileRepository.js';
@@ -37,6 +40,8 @@ export interface AppDependencies {
   corsOrigins: string[];
   /** Reverse proxies in front of the app; 0 when clients connect directly. */
   trustProxyHops?: number;
+  /** Feature flags (defaults from config/env, coordinator overrides in MongoDB). */
+  flags?: FeatureFlags;
   /** Consent records need MongoDB. Default: on when the farm profile store is (tests turn it on explicitly). */
   consentStorage?: boolean;
   /** GET /ready: are the database and the server ready for traffic? Default: always ready (tests). */
@@ -55,6 +60,7 @@ export function createApp({
   trustProxyHops = 0,
   readiness = async () => ({ status: 'ok', checks: {} }),
   consentStorage = farmProfiles !== null || market !== null,
+  flags = new FeatureFlags(flagDefaults(undefined)),
 }: AppDependencies): Express {
   const app = express();
 
@@ -83,11 +89,12 @@ export function createApp({
   app.use('/api', createDiagnoseRouter(aiProvider, historyRepository, aiRateLimit));
   app.use('/api', createChatRouter(aiProvider, aiRateLimit));
   app.use('/api', createHistoryRouter(historyRepository));
+  app.use('/api', createFeedbackRouter(historyRepository, flags));
   app.use('/api', createProfileRouter(farmProfiles));
   app.use('/api', createFarmAdviceRouter({ farmProfiles, history: historyRepository, weather }, mandi));
   app.use('/api', createPushRouter(push.publicKey, push.subscriptions));
   app.use('/api', createConsentRouter(consentStorage));
-  app.use('/api', market ? createMarketRouter(market, { ai: aiProvider, aiRateLimit, mandi }) : createMarketUnavailableRouter());
+  app.use('/api', market ? createMarketRouter(market, { ai: aiProvider, aiRateLimit, mandi, flags }) : createMarketUnavailableRouter());
 
   app.use(notFoundHandler);
   app.use(errorHandler);

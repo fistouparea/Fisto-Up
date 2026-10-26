@@ -32,6 +32,8 @@ export const registerBodySchema = z.object({
   role: z.enum(SELF_SIGNUP_ROLES),
   buyerType: z.enum(BUYER_TYPES).optional(),
   deviceId: deviceIdSchema.optional(),
+  /** Pilot invite code; required while the inviteOnly flag is on. Checked in detail by the invite service. */
+  inviteCode: z.string().trim().max(20).optional(),
 });
 export type RegisterBody = z.infer<typeof registerBodySchema>;
 
@@ -48,6 +50,8 @@ export interface AuthUser {
   role: Role;
   name: string;
   sellerStatus?: SellerStatus;
+  /** Pilot account (feature flags in state "pilot" apply). */
+  pilot?: boolean;
 }
 
 export interface Place {
