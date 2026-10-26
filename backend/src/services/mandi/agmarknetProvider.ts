@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { MANDI_COMMODITIES, NEARBY_MANDIS } from '../../data/mandis.js';
 import type { CropId } from '../../types/diagnosis.js';
 import type { MandiPrice } from '../../types/mandi.js';
+import { fetchWithRetry } from '../../utils/http.js';
 
 /** "Current daily price of various commodities from various markets (Mandi)" on data.gov.in. */
 const API_URL = 'https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070';
@@ -27,6 +28,8 @@ export interface AgmarknetOptions {
   timeoutMs?: number;
   cacheTtlMs?: number;
   now?: () => Date;
+  /** Injected in tests to skip the wait before the retry. */
+  sleep?: (ms: number) => Promise<void>;
 }
 
 /** data.gov.in Agmarknet prices for Rajasthan, filtered to nearby mandis. Cached for 3 hours. */
@@ -58,7 +61,7 @@ export class AgmarknetProvider implements MandiProvider {
       limit: '1000',
       'filters[state.keyword]': 'Rajasthan',
     });
-    const response = await this.fetchFn(`${API_URL}?${params}`, { signal: AbortSignal.timeout(this.timeoutMs) });
+    const response = await fetchWithRetry(this.fetchFn, `${API_URL}?${params}`, { timeoutMs: this.timeoutMs, sleep: this.options.sleep });
     if (!response.ok) throw new Error(`Agmarknet HTTP ${response.status}`);
 
     const { records } = responseSchema.parse(await response.json());

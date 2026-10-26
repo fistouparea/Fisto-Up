@@ -9,6 +9,7 @@ import { UserModel } from '../auth/user.model.js';
 import type { OrderDocument } from '../orders/order.model.js';
 import type { OrderStatus } from '../orders/orderStateMachine.js';
 import { MarketNotificationModel } from './notification.model.js';
+import { logger } from '../../observability/logger.js';
 
 export interface PendingPush {
   userId: string;
@@ -77,7 +78,7 @@ export class MarketNotifier {
             if (result === 'gone') await PushSubscriptionModel.deleteOne({ endpoint: row.endpoint }).exec();
           }
         } catch (error) {
-          console.error('Market push failed:', error instanceof Error ? error.message : error);
+          logger.error({ err: error }, 'market push failed');
         }
       }),
     );

@@ -7,7 +7,7 @@ const bilingualSchema = new Schema({ hi: { type: String, default: '' }, en: { ty
 
 const listingSchema = new Schema(
   {
-    sellerId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    sellerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     /** Copy of the seller's status, so the public search needs no join. Updated when a coordinator decides. */
     sellerVerified: { type: Boolean, required: true, default: false },
     category: { type: String, enum: CATEGORIES, required: true },
@@ -52,6 +52,9 @@ const listingSchema = new Schema(
 
 listingSchema.index({ location: '2dsphere' });
 listingSchema.index({ status: 1, hidden: 1, sellerVerified: 1, category: 1, product: 1, createdAt: -1 });
+// "मेरी बिक्री" (newest first) and the platform price suggestion for one product + unit.
+listingSchema.index({ sellerId: 1, createdAt: -1 });
+listingSchema.index({ product: 1, unit: 1, createdAt: -1 });
 
 export const ListingModel = model('Listing', listingSchema, 'listings');
 export type ListingDocument = InstanceType<typeof ListingModel>;

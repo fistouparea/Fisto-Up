@@ -8,7 +8,7 @@ const commissionEntrySchema = new Schema(
     /** Unique: an order can never be charged twice. */
     orderId: { type: Schema.Types.ObjectId, ref: 'Order', required: true, unique: true },
     orderRef: { type: String, required: true },
-    sellerId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    sellerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     orderTotalPaise: { type: Number, required: true },
     /** Rate at completion time in basis points (300 = 3%), kept so later rate changes do not rewrite history. */
     rateBps: { type: Number, required: true },
@@ -23,5 +23,9 @@ const commissionEntrySchema = new Schema(
   },
   { timestamps: true, versionKey: false },
 );
+
+// Dues per seller ("वसूल किया") and the CSV export in completion order.
+commissionEntrySchema.index({ sellerId: 1, status: 1 });
+commissionEntrySchema.index({ completedAt: 1 });
 
 export const CommissionEntryModel = model('CommissionEntry', commissionEntrySchema, 'commission_ledger');

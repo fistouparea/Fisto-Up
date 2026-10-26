@@ -2,6 +2,7 @@ import type { Request } from 'express';
 import { z } from 'zod';
 import { currentUser } from '../auth/auth.middleware.js';
 import { AUDIT_ACTIONS, AuditLogModel, type AuditAction, type AuditTarget } from './audit.model.js';
+import { logger } from '../../observability/logger.js';
 
 export type AuditDetails = Record<string, string | number | boolean | null | undefined>;
 
@@ -22,9 +23,9 @@ export interface AuditEntryView {
 export async function audit(req: Request, action: AuditAction, target: { type: AuditTarget; id: string }, details?: AuditDetails): Promise<void> {
   const actor = currentUser(req);
   try {
-    await AuditLogModel.create({ actorId: actor.id, actorRole: actor.role, action, target, details });
+    await AuditLogModel.create({ actorId: actor.id, actorRole: actor.role, action, target, details, requestId: String(req.id) });
   } catch (error) {
-    console.error('audit log write failed', action, target, error);
+    logger.error({ err: error, action, target }, 'audit log write failed');
   }
 }
 

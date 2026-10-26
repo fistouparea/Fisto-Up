@@ -1,9 +1,11 @@
 import cors from 'cors';
-import express, { type Express } from 'express';
+import express, { type Express, type RequestHandler } from 'express';
 import helmet from 'helmet';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { createAiRateLimit, createApiRateLimits } from './middleware/rateLimit.js';
 import { API_CSP_DIRECTIVES } from './config/securityRules.js';
+import type { ReadinessCheck } from './observability/health.js';
+import { createRequestLogger } from './observability/requestLogger.js';
 import { createChatRouter } from './routes/chat.routes.js';
 import { createDiagnoseRouter } from './routes/diagnose.routes.js';
 import { createHistoryRouter } from './routes/history.routes.js';
@@ -34,6 +36,8 @@ export interface AppDependencies {
   corsOrigins: string[];
   /** Reverse proxies in front of the app; 0 when clients connect directly. */
   trustProxyHops?: number;
+  /** GET /ready: are the database and the server ready for traffic? Default: always ready (tests). */
+  readiness?: ReadinessCheck;
 }
 
 export function createApp({
@@ -46,20 +50,30 @@ export function createApp({
   market = null,
   corsOrigins,
   trustProxyHops = 0,
+  readiness = async () => ({ status: 'ok', checks: {} }),
 }: AppDependencies): Express {
   const app = express();
 
   app.disable('x-powered-by');
   app.set('trust proxy', trustProxyHops);
+  app.use(createRequestLogger());
   app.use(helmet({ contentSecurityPolicy: { useDefaults: false, directives: API_CSP_DIRECTIVES } }));
   // Only our own frontend origin(s) from CORS_ORIGIN. credentials: the login cookie, when the API runs on
   // another domain (VITE_API_BASE_URL). Other origins get no CORS headers, so browsers block their reads.
   app.use(cors({ origin: corsOrigins, methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'], credentials: true, maxAge: 600 }));
-  app.use('/api', createApiRateLimits());
 
-  app.get('/api/health', (_req, res) => {
-    res.json({ status: 'ok' });
+  // Liveness: the process answers. Readiness: it can serve traffic (database reachable, not shutting down).
+  // Not rate limited, so a busy hour never makes the platform think the app is dead.
+  const live: RequestHandler = (_req, res) => {
+    res.set('Cache-Control', 'no-store').json({ status: 'ok' });
+  };
+  app.get(['/health', '/api/health'], live);
+  app.get(['/ready', '/api/ready'], async (_req, res) => {
+    const report = await readiness();
+    res.status(report.status === 'ok' ? 200 : 503).set('Cache-Control', 'no-store').json(report);
   });
+
+  app.use('/api', createApiRateLimits());
 
   const aiRateLimit = createAiRateLimit();
   app.use('/api', createDiagnoseRouter(aiProvider, historyRepository, aiRateLimit));

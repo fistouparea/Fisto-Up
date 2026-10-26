@@ -13,8 +13,8 @@ const orderSchema = new Schema(
     /** Short code people can read out on the phone, e.g. "AG7K3P9Q". Also the UPI payment reference. */
     ref: { type: String, required: true, unique: true },
     listingId: { type: Schema.Types.ObjectId, ref: 'Listing', required: true },
-    sellerId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-    buyerId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    sellerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    buyerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     /** Copy of the listing at order time, so later edits do not change the order. */
     item: {
       type: new Schema(
@@ -66,6 +66,9 @@ const orderSchema = new Schema(
 );
 
 orderSchema.index({ status: 1, updatedAt: -1 });
+// "मेरे ऑर्डर" for buyers and sellers, newest change first.
+orderSchema.index({ buyerId: 1, updatedAt: -1 });
+orderSchema.index({ sellerId: 1, updatedAt: -1 });
 
 export const OrderModel = model('Order', orderSchema, 'orders');
 export type OrderDocument = InstanceType<typeof OrderModel>;

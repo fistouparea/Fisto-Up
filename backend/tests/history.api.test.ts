@@ -5,6 +5,7 @@ import { AppError } from '../src/errors/AppError.js';
 import type { HistoryRepository } from '../src/services/history/historyRepository.js';
 import { createFakeProvider, createTestApp, healthyDiagnosis, JPEG_BYTES } from './helpers.js';
 import { InMemoryHistoryRepository } from './fakes/inMemoryHistoryRepository.js';
+import { logger } from '../src/observability/logger.js';
 
 const DEVICE = randomUUID();
 const OTHER_DEVICE = randomUUID();
@@ -73,12 +74,12 @@ describe('saving diagnoses to history', () => {
   });
 
   it('still returns the diagnosis when the database is down, and logs the error', async () => {
-    const logSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const logSpy = vi.spyOn(logger, 'error').mockImplementation(() => undefined);
     const res = await diagnose(createTestApp(undefined, brokenHistory), { crop: 'bajra', deviceId: DEVICE });
 
     expect(res.status).toBe(200);
     expect(res.body.status).toBe('ok');
-    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('history'), expect.anything());
+    expect(logSpy).toHaveBeenCalledWith(expect.objectContaining({ err: expect.anything() }), expect.stringContaining('history'));
   });
 
   it('still returns the diagnosis when history is not configured', async () => {
@@ -145,7 +146,7 @@ describe('GET /api/history', () => {
   });
 
   it('returns HISTORY_UNAVAILABLE when the database is down or not configured', async () => {
-    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.spyOn(logger, 'error').mockImplementation(() => undefined);
     for (const repository of [brokenHistory, null]) {
       const res = await request(createTestApp(undefined, repository)).get('/api/history').query({ deviceId: DEVICE });
       expect(res.status).toBe(503);

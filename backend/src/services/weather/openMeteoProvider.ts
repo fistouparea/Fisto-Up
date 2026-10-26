@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { AppError } from '../../errors/AppError.js';
 import type { DayWeather, Forecast } from '../../types/weather.js';
 import { todayInIndia } from '../../utils/dates.js';
+import { fetchWithRetry } from '../../utils/http.js';
 import type { WeatherProvider } from './weatherProvider.js';
 
 const API_URL = 'https://api.open-meteo.com/v1/forecast';
@@ -41,6 +42,8 @@ export interface OpenMeteoOptions {
   timeoutMs?: number;
   cacheTtlMs?: number;
   now?: () => Date;
+  /** Injected in tests to skip the wait before the retry. */
+  sleep?: (ms: number) => Promise<void>;
 }
 
 /**
@@ -53,8 +56,10 @@ export class OpenMeteoProvider implements WeatherProvider {
   private readonly timeoutMs: number;
   private readonly cacheTtlMs: number;
   private readonly now: () => Date;
+  private readonly sleep: ((ms: number) => Promise<void>) | undefined;
 
   constructor(options: OpenMeteoOptions = {}) {
+    this.sleep = options.sleep;
     this.fetchFn = options.fetchFn ?? fetch;
     this.timeoutMs = options.timeoutMs ?? 8_000;
     this.cacheTtlMs = options.cacheTtlMs ?? 60 * 60 * 1000;
@@ -86,7 +91,7 @@ export class OpenMeteoProvider implements WeatherProvider {
       past_days: '7',
       forecast_days: '8',
     });
-    const response = await this.fetchFn(`${API_URL}?${params}`, { signal: AbortSignal.timeout(this.timeoutMs) });
+    const response = await fetchWithRetry(this.fetchFn, `${API_URL}?${params}`, { timeoutMs: this.timeoutMs, sleep: this.sleep });
     if (!response.ok) throw new Error(`Open-Meteo HTTP ${response.status}`);
     return responseSchema.parse(await response.json());
   }

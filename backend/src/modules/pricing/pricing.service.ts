@@ -5,6 +5,7 @@ import type { MandiProvider } from '../../services/mandi/agmarknetProvider.js';
 import type { MandiPrice } from '../../types/mandi.js';
 import { ListingModel } from '../listings/listing.model.js';
 import type { PriceSuggestion } from './pricing.types.js';
+import { logger } from '../../observability/logger.js';
 
 export interface PricingDeps {
   mandi: MandiProvider | null;
@@ -30,7 +31,7 @@ export async function suggestPrice(product: ProductId, unit: Unit, deps: Pricing
       const suggestion = await source();
       if (suggestion.source !== null) return suggestion;
     } catch (error) {
-      console.error('Price suggestion source failed:', error instanceof Error ? error.message : error);
+      logger.warn({ err: error }, 'price suggestion source failed');
     }
   }
   return { source: null };

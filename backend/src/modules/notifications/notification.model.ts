@@ -18,5 +18,7 @@ const marketNotificationSchema = new Schema(
 );
 
 marketNotificationSchema.index({ userId: 1, createdAt: -1 });
+// Unread badge count (polled every 30 s by every logged-in phone).
+marketNotificationSchema.index({ userId: 1, read: 1 });
 
 export const MarketNotificationModel = model('MarketNotification', marketNotificationSchema, 'market_notifications');

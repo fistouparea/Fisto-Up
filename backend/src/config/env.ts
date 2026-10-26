@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { COMMISSION_RULES, percentToBps } from './marketRules.js';
+import { LOG_LEVELS } from '../observability/logger.js';
 
 /** Optional value; an empty line in .env (e.g. "DATA_GOV_API_KEY=") counts as not set. */
 function optional<T extends z.ZodType>(schema: T) {
@@ -49,6 +50,14 @@ const envSchema = z.object({
   COMMISSION_PERCENT: optional(
     z.coerce.number().min(COMMISSION_RULES.minPercent).max(COMMISSION_RULES.maxPercent),
   ),
+  /** Log detail: info (default), warn, error, debug ... Tests default to silent. */
+  LOG_LEVEL: optional(z.enum(LOG_LEVELS)),
+  /** Sentry error tracking (optional, free tier): the backend project's DSN. Empty = off. */
+  SENTRY_DSN: optional(z.url()),
+  /** Shown in Sentry, e.g. "production" or "pilot". Defaults to NODE_ENV. */
+  SENTRY_ENVIRONMENT: optional(z.string().trim().max(40)),
+  /** Set by Render on every deploy; used as the release name in Sentry. */
+  RENDER_GIT_COMMIT: optional(z.string().trim().max(64)),
   /**
    * Frontend URL(s) allowed by CORS, comma-separated. Each must be a plain origin (`https://app.example.com`,
    * no path, no `*`). Required in production; development defaults to the Vite dev server.

@@ -1,6 +1,8 @@
 import type { ErrorRequestHandler, RequestHandler } from 'express';
 import { MulterError } from 'multer';
 import { AppError } from '../errors/AppError.js';
+import { logger } from '../observability/logger.js';
+import { captureServerError } from '../observability/sentry.js';
 
 export const notFoundHandler: RequestHandler = (_req, _res, next) => {
   next(new AppError('NOT_FOUND'));
@@ -11,7 +13,9 @@ export const errorHandler: ErrorRequestHandler = (error: unknown, req, res, _nex
   const appError = toAppError(error);
 
   if (appError.status >= 500) {
-    console.error(`[${req.method} ${req.path}] ${appError.code}:`, error);
+    // req.log carries the request id; the details stay on the server, the client only gets the code.
+    (req.log ?? logger).error({ err: error, code: appError.code }, 'request failed');
+    captureServerError(error, req);
   }
 
   res.status(appError.status).json({ error: { code: appError.code } });

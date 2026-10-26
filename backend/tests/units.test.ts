@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadEnv } from '../src/config/env.js';
 import { detectImageType } from '../src/middleware/validateImage.js';
-import { backoffDelay } from '../src/services/ai/retry.js';
+import { backoffDelay } from '../src/utils/retry.js';
 
 describe('detectImageType', () => {
   it('recognises JPEG, PNG and WebP by their bytes', () => {

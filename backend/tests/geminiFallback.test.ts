@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { loadEnv } from '../src/config/env.js';
 import { GeminiProvider } from '../src/services/ai/geminiProvider.js';
 import { bajraListingDraft, healthyDiagnosis, JPEG_BYTES } from './helpers.js';
+import { logger } from '../src/observability/logger.js';
 
 type GenerateContent = GoogleGenAI['models']['generateContent'];
 type Params = Parameters<GenerateContent>[0];
@@ -23,11 +24,11 @@ describe('Gemini fallback models', () => {
       if (params.model === 'main-model') throw busy();
       return ok(bajraListingDraft);
     });
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => undefined);
 
     await expect(provider(generate, ['backup-model']).draftListing(listingInput)).resolves.toEqual(bajraListingDraft);
     expect(modelsUsed(generate)).toEqual(['main-model', 'main-model', 'main-model', 'backup-model']);
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining('main-model'));
+    expect(warn).toHaveBeenCalledWith(expect.objectContaining({ model: 'main-model' }), expect.stringContaining('next model'));
   });
 
   it('moves on immediately after a timeout (no long retries on a hanging model)', async () => {
@@ -35,7 +36,7 @@ describe('Gemini fallback models', () => {
       if (params.model === 'main-model') throw Object.assign(new Error('This operation was aborted'), { name: 'AbortError' });
       return ok(healthyDiagnosis);
     });
-    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    vi.spyOn(logger, 'warn').mockImplementation(() => undefined);
 
     await expect(provider(generate, ['backup-model']).diagnose({ image: JPEG_BYTES, mimeType: 'image/jpeg', cropName: 'बाजरा' })).resolves.toEqual(
       healthyDiagnosis,
@@ -45,7 +46,7 @@ describe('Gemini fallback models', () => {
 
   it('also falls back when the main model answers with JSON that fails validation', async () => {
     const generate = vi.fn<GenerateContent>(async (params) => ok(params.model === 'main-model' ? { nonsense: true } : bajraListingDraft));
-    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    vi.spyOn(logger, 'warn').mockImplementation(() => undefined);
     await expect(provider(generate, ['backup-model']).draftListing(listingInput)).resolves.toEqual(bajraListingDraft);
   });
 
@@ -53,7 +54,7 @@ describe('Gemini fallback models', () => {
     const generate = vi.fn<GenerateContent>(async () => {
       throw busy();
     });
-    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    vi.spyOn(logger, 'warn').mockImplementation(() => undefined);
     await expect(provider(generate, ['backup-model']).draftListing(listingInput)).rejects.toMatchObject({ code: 'RATE_LIMITED' });
     expect(modelsUsed(generate)).toEqual(['main-model', 'main-model', 'main-model', 'backup-model', 'backup-model', 'backup-model']);
 

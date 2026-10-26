@@ -23,7 +23,8 @@ import {
 import { aiPriceEstimateSchema, type AiPriceEstimate } from '../../modules/pricing/pricing.types.js';
 import { UNIT_NAMES, type Unit } from '../../config/marketCatalog.js';
 import { buildChatSystemPrompt, buildDiagnosisUserPrompt, DIAGNOSIS_SYSTEM_PROMPT } from './prompt.js';
-import { withRetry } from './retry.js';
+import { withRetry } from '../../utils/retry.js';
+import { logger } from '../../observability/logger.js';
 
 /** HTTP statuses that mean "busy, try again later": rate limited or model overloaded. */
 const BUSY_STATUSES = new Set([429, 503]);
@@ -241,7 +242,7 @@ export class GeminiProvider implements AiProvider {
       } catch (error) {
         lastError = toAppError(error);
         if (model !== this.models.at(-1)) {
-          console.warn(`Gemini model ${model} failed (${lastError.code}), trying the next model`);
+          logger.warn({ model, code: lastError.code }, 'Gemini model failed, trying the next model');
         }
       }
     }

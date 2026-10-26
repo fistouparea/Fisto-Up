@@ -4,6 +4,7 @@ import type { PushSender } from '../services/push/pushSender.js';
 import type { PushSubscriptionRepository } from '../services/push/pushSubscriptionRepository.js';
 import type { AppNotification } from '../types/notifications.js';
 import type { StoredPushSubscription } from '../types/push.js';
+import { logger } from '../observability/logger.js';
 
 export interface NotificationJobDeps extends FarmSnapshotDeps {
   subscriptions: PushSubscriptionRepository;
@@ -28,7 +29,7 @@ export async function runNotificationJob(deps: NotificationJobDeps, now: Date = 
       await pushNewNotifications(deps, stored, now, result);
     } catch (error) {
       result.failed += 1;
-      console.error('Push job failed for one subscription:', error instanceof Error ? error.message : error);
+      logger.error({ err: error }, 'push job failed for one subscription');
     }
   }
   return result;

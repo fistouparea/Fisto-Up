@@ -809,3 +809,46 @@ banayein (local wali dobara use na karein).
 - Audit likhna fail ho to coordinator ka kaam undo nahi hota; error log hota hai (Sentry tak jaata hai).
 - Seller ka apna edit ya buyer ka order audit mein nahi jaata (woh coordinator ka kaam nahi). Order ki apni `history` pehle se hai.
 - Purane test `marketConfig.test.ts` mein production config ke saath `CORS_ORIGIN` joda (naya niyam); test kamzor nahi kiya.
+
+## Task 2 – Reliability aur observability
+
+**Kya bana:**
+- **pino logging** (`backend/src/observability/`): har log ek JSON line hai, jismein `reqId` hota hai. Har request ko
+  ek id milti hai (`X-Request-Id` header; nginx/Render se aayi sahi id rakhi jaati hai). Log mein sirf method, path
+  (bina query), status aur samay jaata hai. Headers, body aur query kabhi nahi.
+  - PIN, token, phone, photo wale fields `[redacted]` ho jaate hain. Error message ke andar ka phone number (jaise
+    MongoDB duplicate error) aur Mongo URI ka password bhi mask hota hai. Test hai.
+  - Development mein pino-pretty se padhne layak lines, production mein JSON. `LOG_LEVEL` se level badlein.
+- **Sentry (optional):** backend `SENTRY_DSN`, frontend `VITE_SENTRY_DSN`. Bina DSN ke kuch nahi bheja jaata.
+  - Sirf error, stack, method + path aur request id jaata hai. User, cookie, header, body, query nahi, aur phone mask hota hai.
+  - Frontend mein Sentry ka code alag file mein hai. Sirf DSN hone par, app khulne ke baad load hota hai
+    (sasta phone pehli screen ke liye iska boj nahi uthata).
+- **Error boundary:** poori app aur har screen ke liye. Crash par Hindi screen dikhti hai: "कुछ गड़बड़ हो गई।
+  आपकी जानकारी सुरक्षित है।", 🔊 button, "फिर से खोलें" aur "होम पर जाएँ". Screen badalne par apne-aap theek ho jaata hai,
+  aur neeche ka menu chalta rehta hai.
+- **Health:** `GET /health` (process zinda hai) aur `GET /ready` (MongoDB 2 second mein ping ka jawab de, aur server
+  band nahi ho raha). `/api/health` aur `/api/ready` bhi hain (nginx ke through). In par rate limit nahi lagta.
+- **Graceful shutdown:** SIGTERM par pehle `/ready` 503 deta hai, phir nayi requests band hoti hain, chalu requests
+  poori hoti hain, push job rukta hai, MongoDB aur Sentry band hote hain. 10 second mein na ho to zabardasti band.
+  Uncaught error par bhi log + shutdown.
+- **Timeouts + retry:**
+  - AI: pehle se tha (har attempt timeout, 429/503 par retry, fallback models).
+  - Mausam aur mandi: naya `fetchWithRetry` (`utils/http.ts`). Network error, 429 ya 5xx par ek retry hota hai.
+    Timeout par retry nahi hota (dheemi service ka do guna intezaar phone par bekaar hai).
+  - Web push: 429/5xx par ek retry. Server par request timeout 120 s, headers 30 s.
+- **Indexes:** orders (buyer/seller + updatedAt), listings (seller + createdAt, product + unit), notifications
+  (unread count), commission (seller + status, completedAt).
+  - `src/db/queryPlans.ts` mein 18 sabse aam queries hain. Test check karta hai ki koi bhi poora collection scan
+    nahi karti (COLLSCAN).
+  - `npm run check-indexes` asli database par yahi check karta hai.
+- **Slow queries:** 300 ms se dheemi har MongoDB command `slow database query` warning ke saath log hoti hai
+  (command, collection, samay; filter ki values nahi).
+
+**Decisions:**
+- `services/ai/retry.ts` ko `utils/retry.ts` mein le gaya, kyunki ab mausam, mandi aur push bhi use karte hain.
+- Do purane test `console.warn/error` par spy karte the. Ab logging pino se hoti hai, isliye wahi assertion logger
+  par hai (test kamzor nahi hua, bas log ka raasta badla).
+- Naye packages: `pino`, `pino-http` (JSON logging, request id), `pino-pretty` (sirf dev), `@sentry/node`,
+  `@sentry/react` (error tracking). Sab jaane-maane aur free.
+- Purane single-field indexes (orders.buyerId wagairah) compound index se badle. Pehle se chal rahe database mein
+  purane index bhi rahenge, jo nuksaan nahi karte.

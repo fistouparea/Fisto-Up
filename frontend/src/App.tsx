@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { LuCamera, LuHistory, LuHouse, LuShoppingBasket, LuSprout } from 'react-icons/lu';
 import { AppBar } from './components/AppBar';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { OfflineBanner } from './components/OfflineBanner';
 import { AppToaster } from './components/ui/AppToaster';
 import { BottomNav } from './components/ui/BottomNav';
@@ -89,7 +90,10 @@ function AppShell() {
       {/* Shopping screens use the width of a tablet/desktop; farmer screens stay phone-narrow. */}
       <main className={cn('mx-auto px-4 pt-4 pb-32', WIDE_ROUTES.has(route.name) ? 'max-w-5xl' : 'max-w-lg')}>
         <PageTransition pageKey={showOnboarding ? 'onboarding' : pageKey(route, diagnoseKey)}>
-          {showOnboarding ? <FarmSetupPage onDone={finishOnboarding} /> : <Page route={route} diagnoseKey={diagnoseKey} />}
+          {/* A crash inside one screen keeps the app bar and bottom navigation usable; changing screen resets it. */}
+          <ErrorBoundary key={showOnboarding ? 'onboarding' : pageKey(route, diagnoseKey)}>
+            {showOnboarding ? <FarmSetupPage onDone={finishOnboarding} /> : <Page route={route} diagnoseKey={diagnoseKey} />}
+          </ErrorBoundary>
         </PageTransition>
       </main>
       <BottomNav

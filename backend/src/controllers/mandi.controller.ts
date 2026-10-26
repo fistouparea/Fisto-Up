@@ -4,6 +4,7 @@ import type { MandiProvider } from '../services/mandi/agmarknetProvider.js';
 import { profileQuerySchema } from '../types/farm.js';
 import type { MandiResponse } from '../types/mandi.js';
 import { parseOrThrow } from '../utils/validation.js';
+import { logger } from '../observability/logger.js';
 
 /**
  * GET /api/mandi?deviceId — today's prices for the farmer's crops at nearby mandis.
@@ -21,7 +22,7 @@ export function createMandiController(farmProfiles: FarmProfileRepository | null
       const crops = profile?.crops.map((entry) => entry.crop) ?? [];
       res.json({ available: true, prices: crops.length > 0 ? await mandi.getPrices(crops) : [] });
     } catch (error) {
-      console.error('Mandi prices unavailable:', error instanceof Error ? error.message : error);
+      logger.warn({ err: error }, 'mandi prices unavailable');
       res.json({ available: false, prices: [] });
     }
   };

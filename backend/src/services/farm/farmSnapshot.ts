@@ -13,6 +13,7 @@ import { buildNotifications } from '../notifications/buildNotifications.js';
 import { loadForecastOrNull } from '../weather/loadForecast.js';
 import type { WeatherProvider } from '../weather/weatherProvider.js';
 import type { FarmProfileRepository } from './farmProfileRepository.js';
+import { logger } from '../../observability/logger.js';
 
 export interface FarmSnapshotDeps {
   farmProfiles: FarmProfileRepository;
@@ -66,7 +67,7 @@ async function loadFollowUps(history: HistoryRepository | null, deviceId: string
   try {
     return await history.listFollowUpsDue(deviceId, from, to);
   } catch (error) {
-    console.error('Follow-ups unavailable:', error instanceof Error ? error.message : error);
+    logger.error({ err: error }, 'follow-ups unavailable');
     return [];
   }
 }

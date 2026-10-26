@@ -31,6 +31,12 @@ export const hi = {
   toast: {
     resultReady: 'जाँच पूरी हुई',
   },
+  errorScreen: {
+    title: 'कुछ गड़बड़ हो गई।',
+    body: 'आपकी जानकारी सुरक्षित है। ऐप फिर से खोलें।',
+    reload: 'फिर से खोलें',
+    home: 'होम पर जाएँ',
+  },
   back: 'वापस',
   next: 'आगे',
   skip: 'छोड़ें',
