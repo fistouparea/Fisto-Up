@@ -53,6 +53,7 @@ const HelpPage = lazyNamed(() => import('./pages/HelpPage'), 'HelpPage');
 const SettingsPage = lazyNamed(() => import('./pages/SettingsPage'), 'SettingsPage');
 const SchemesPage = lazyNamed(() => import('./pages/SchemesPage'), 'SchemesPage');
 const MandiTripsPage = lazyNamed(() => import('./pages/MandiTripsPage'), 'MandiTripsPage');
+const DeliveryPage = lazyNamed(() => import('./pages/DeliveryPage'), 'DeliveryPage');
 const ServicesPage = lazyNamed(() => import('./pages/services/ServicesPage'), 'ServicesPage');
 const ServiceDetailPage = lazyNamed(() => import('./pages/services/ServiceDetailPage'), 'ServiceDetailPage');
 const NewServicePage = lazyNamed(() => import('./pages/services/NewServicePage'), 'NewServicePage');
@@ -149,13 +150,13 @@ function AppShell() {
           </ErrorBoundary>
         </PageTransition>
       </main>
-      {!showConsent && !showOnboarding && route.name !== 'admin' && (
+      {!showConsent && !showOnboarding && route.name !== 'admin' && route.name !== 'delivery' && (
         <>
           <VoiceFab />
           <AutoReader screenKey={screenKey} />
         </>
       )}
-      {!showConsent && (
+      {!showConsent && route.name !== 'delivery' && (
         <BottomNav
           label={hi.nav.label}
           items={[
@@ -187,7 +188,8 @@ function AppShell() {
   );
 }
 
-const LEGAL_ROUTES: ReadonlySet<Route['name']> = new Set(['privacy', 'terms']);
+/** Readable without the consent screen: policy pages, and the delivery person's link (not an app user). */
+const LEGAL_ROUTES: ReadonlySet<Route['name']> = new Set(['privacy', 'terms', 'delivery']);
 const WIDE_ROUTES: ReadonlySet<Route['name']> = new Set(['market', 'listing', 'admin']);
 const MARKET_ROUTES: ReadonlySet<Route['name']> = new Set(['market', 'listing', 'sell', 'sellNew', 'orders', 'order', 'admin']);
 
@@ -252,6 +254,8 @@ function Page({ route, diagnoseKey }: { route: Route; diagnoseKey: number }) {
       return <SchemesPage />;
     case 'mandiTrips':
       return <MandiTripsPage />;
+    case 'delivery':
+      return <DeliveryPage token={route.token} />;
     case 'services':
       return <ServicesPage key={`${route.kind}-${route.side}`} kind={route.kind} side={route.side} />;
     case 'serviceItem':

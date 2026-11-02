@@ -47,6 +47,8 @@ const ROUTES: { method: 'get' | 'post' | 'put' | 'patch'; path: string; roles: (
   { method: 'get', path: '/api/admin/schemes', roles: ['coordinator'] },
   { method: 'put', path: '/api/admin/schemes/pmfby', roles: ['coordinator'] },
   { method: 'get', path: '/api/admin/services', roles: ['coordinator'] },
+  { method: 'post', path: `/api/admin/orders/${ID}/delivery-link`, roles: ['coordinator'] },
+  { method: 'patch', path: `/api/admin/mandi-trips/${ID}`, roles: ['coordinator'] },
   { method: 'post', path: `/api/admin/services/${ID}/approve`, roles: ['coordinator'] },
   { method: 'post', path: `/api/admin/services/${ID}/reject`, roles: ['coordinator'] },
 ];

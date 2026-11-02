@@ -79,6 +79,8 @@ const listingPhotoSchema = new Schema(
     mimeType: { type: String, required: true },
     attached: { type: Boolean, required: true, default: false },
     listingId: { type: Schema.Types.ObjectId, ref: 'Listing' },
+    /** Delivery photo proof: private, only the order's buyer, seller and coordinators may open it. */
+    orderId: { type: Schema.Types.ObjectId, ref: 'Order' },
   },
   { timestamps: { createdAt: true, updatedAt: false }, versionKey: false },
 );

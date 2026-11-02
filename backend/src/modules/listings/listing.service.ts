@@ -13,6 +13,7 @@ import { isLicenceVerified, isSellerProfileComplete } from '../auth/accountView.
 import type { AuthUser } from '../auth/auth.types.js';
 import { UserModel, type UserDocument } from '../auth/user.model.js';
 import { ListingModel, ListingPhotoModel, type ListingDocument, type ListingPhotoDocument } from './listing.model.js';
+import { OrderModel } from '../orders/order.model.js';
 import type {
   AiListingDraft,
   CreateListingBody,
@@ -242,10 +243,18 @@ export async function findOwnListing(actor: AuthUser, listingId: string): Promis
   throw new AppError('FORBIDDEN');
 }
 
-/** Photos of saved listings are public. Unused uploads are visible only to their uploader. */
+/**
+ * Photos of saved listings are public. Unused uploads are visible only to their uploader. A delivery photo
+ * (orderId set) only to that order's buyer, seller and coordinators.
+ */
 export async function findPhoto(photoId: string, viewer: AuthUser | undefined) {
   const photo = isValidObjectId(photoId) ? await ListingPhotoModel.findById(photoId).exec() : null;
   if (!photo) return null;
+  if (photo.orderId) {
+    if (viewer?.role === 'coordinator') return photo;
+    const order = viewer ? await OrderModel.exists({ _id: photo.orderId, $or: [{ buyerId: viewer.id }, { sellerId: viewer.id }] }).exec() : null;
+    return order ? photo : null;
+  }
   if (!photo.attached && photo.ownerId.toString() !== viewer?.id && viewer?.role !== 'coordinator') return null;
   return photo;
 }

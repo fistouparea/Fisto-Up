@@ -34,6 +34,7 @@ export type Route =
   | { name: 'settings' }
   | { name: 'schemes' }
   | { name: 'mandiTrips' }
+  | { name: 'delivery'; token: string }
   | { name: 'services'; kind: ServiceKind; side: ServiceSide }
   | { name: 'serviceItem'; id: string }
   | { name: 'serviceBooking'; id: string }
@@ -110,6 +111,7 @@ export function parseRoute(hash: string): Route {
   if (section === 'settings') return { name: 'settings' };
   if (section === 'schemes') return { name: 'schemes' };
   if (section === 'mandi-trips') return { name: 'mandiTrips' };
+  if (section === 'delivery' && id) return { name: 'delivery', token: decodeURIComponent(id) };
   if (section === 'sell' && id === 'new') return { name: 'sellNew' };
   if (section === 'sell') return { name: 'sell' };
   if (section === 'login') return { name: 'login' };

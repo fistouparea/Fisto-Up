@@ -1,3 +1,4 @@
+import { DeliveryTimeline } from '../../components/delivery/DeliveryTimeline';
 import { LuArrowLeft, LuClipboardList, LuMapPin, LuPhone, LuRefreshCw, LuSearchX, LuTruck } from 'react-icons/lu';
 import type { Order, Place } from '../../api/marketTypes';
 import { ListingPhoto } from '../../components/market/ListingPhoto';
@@ -97,6 +98,7 @@ export function OrderPage({ id }: { id: string }) {
       </Card>
 
       <ContactCard order={order} text={text} />
+      <DeliveryTimeline events={order.deliveryEvents} />
       <Timeline order={order} text={text} />
       {order.viewerRole !== 'coordinator' && <ReportForm target={{ orderId: order.id }} text={text} />}
     </section>

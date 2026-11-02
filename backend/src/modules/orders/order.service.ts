@@ -22,6 +22,7 @@ import {
 } from './orderStateMachine.js';
 import { upiPayLink } from './upi.js';
 import { track } from '../metrics/events.js';
+import { deliveryTimeline } from '../delivery/delivery.service.js';
 
 export interface OrderServiceDeps {
   notifier: MarketNotifier;
@@ -273,6 +274,10 @@ export async function toOrderView(order: OrderDocument, viewer: AuthUser): Promi
     totalPaise: order.totalPaise,
     isPriceRequest: order.isPriceRequest ?? false,
     ...(order.referral && { referral: order.referral }),
+    deliveryEvents: deliveryTimeline(order),
+    ...(viewerRole === 'coordinator' && {
+      deliveryLinkActive: Boolean(order.deliveryLink && !order.deliveryLink.closedAt && order.deliveryLink.expiresAt > new Date()),
+    }),
     fulfilment: order.fulfilment,
     ...(order.deliveryAddress && { deliveryAddress: order.deliveryAddress }),
     paymentMethod: order.paymentMethod,

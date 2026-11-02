@@ -1,3 +1,4 @@
+import type { DeliveryEventView } from '../delivery/delivery.service.js';
 import { z } from 'zod';
 import type { ProductId, Unit } from '../../config/marketCatalog.js';
 import { LISTING_RULES, ORDER_RULES } from '../../config/marketRules.js';
@@ -66,6 +67,10 @@ export interface OrderView {
   pricePerUnitPaise: number;
   totalPaise: number;
   referral?: Referral;
+  /** What the delivery person reported, with photo proof links (private photos). */
+  deliveryEvents: DeliveryEventView[];
+  /** Coordinators: a delivery link is working right now. */
+  deliveryLinkActive?: boolean;
   isPriceRequest: boolean;
   fulfilment: Fulfilment;
   deliveryAddress?: string;

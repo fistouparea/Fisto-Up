@@ -1,3 +1,5 @@
+import { DeliveryLinkButton } from '../../components/delivery/DeliveryLinkButton';
+import { useFlags } from '../../hooks/useFlags';
 import { useState } from 'react';
 import { LuClipboardList, LuTruck } from 'react-icons/lu';
 import { ApiError } from '../../api/client';
@@ -61,6 +63,7 @@ export function AdminOrders() {
 }
 
 function BoardOrder({ order, onChanged }: { order: Order; onChanged: () => void }) {
+  const { deliveryTracking } = useFlags();
   const needsDelivery = order.fulfilment === 'delivery' && !FINISHED_ORDER_STATUSES.includes(order.status) && order.status !== 'requested';
   return (
     <article className="flex flex-col gap-3 rounded-3xl border border-line bg-surface-page p-2">
@@ -72,6 +75,7 @@ function BoardOrder({ order, onChanged }: { order: Order; onChanged: () => void 
         </div>
       )}
       {needsDelivery && <DeliveryPersonForm order={order} onSaved={onChanged} />}
+      {needsDelivery && deliveryTracking && <DeliveryLinkButton order={order} />}
     </article>
   );
 }

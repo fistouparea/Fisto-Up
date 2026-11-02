@@ -12,6 +12,8 @@ export function createMandiTripRouter({ flags, now }: { flags: FeatureFlags; now
   const pool = new MandiPool(now);
   const json = express.json({ limit: '8kb' });
   const id = (value: unknown) => String(value);
+  // Role first (a guest gets 401, not "feature off"), then the flag.
+  router.use('/admin/mandi-trips', requireRole('coordinator'));
   router.use(['/mandi-trips', '/admin/mandi-trips'], async (req, _res, next) => {
     if (!(await flags.isOn('mandiPool', req.user))) throw new AppError('FORBIDDEN', 'Feature off');
     next();

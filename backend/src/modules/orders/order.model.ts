@@ -2,6 +2,7 @@ import { model, Schema } from 'mongoose';
 import { PRODUCT_IDS, UNITS } from '../../config/marketCatalog.js';
 import { ROLES } from '../auth/auth.types.js';
 import { REFERRALS } from '../../config/inputRules.js';
+import { DELIVERY_STEPS } from '../../config/logisticsRules.js';
 import { FULFILMENTS, ORDER_STATUSES } from './orderStateMachine.js';
 
 export const PAYMENT_METHODS = ['upi', 'cash'] as const;
@@ -59,6 +60,22 @@ const orderSchema = new Schema(
     ],
     /** Arranged by the SHG coordinator. */
     deliveryPerson: { type: new Schema({ name: String, phone: String }, { _id: false }) },
+    /**
+     * The delivery person's no-login link: only the SHA-256 of the random token is stored. A new link replaces
+     * the old one; the link stops working after "delivered" (closedAt) or at expiresAt.
+     */
+    deliveryLink: {
+      type: new Schema({ tokenHash: { type: String, required: true }, expiresAt: { type: Date, required: true }, createdAt: { type: Date, required: true }, closedAt: Date }, { _id: false }),
+    },
+    /** What the delivery person reported (separate from the order status, which buyer/seller confirm). */
+    deliveryEvents: [
+      {
+        _id: false,
+        step: { type: String, enum: DELIVERY_STEPS, required: true },
+        at: { type: Date, required: true },
+        photoId: { type: Schema.Types.ObjectId, ref: 'ListingPhoto' },
+      },
+    ],
     rating: {
       type: new Schema({ stars: { type: Number, min: 1, max: 5, required: true }, comment: String, at: Date }, { _id: false }),
     },
@@ -72,6 +89,7 @@ orderSchema.index({ status: 1, updatedAt: -1 });
 // "मेरे ऑर्डर" for buyers and sellers, newest change first.
 orderSchema.index({ buyerId: 1, updatedAt: -1 });
 orderSchema.index({ sellerId: 1, updatedAt: -1 });
+orderSchema.index({ 'deliveryLink.tokenHash': 1 }, { unique: true, sparse: true });
 
 export const OrderModel = model('Order', orderSchema, 'orders');
 export type OrderDocument = InstanceType<typeof OrderModel>;

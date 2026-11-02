@@ -1,3 +1,4 @@
+import type { DeliveryEvent } from './delivery';
 import type { InputGenericId } from '../data/inputGenerics';
 /** Marketplace types. Mirror backend/src/modules/** types; keep the two in sync. Money is integer paise. */
 
@@ -282,6 +283,9 @@ export interface Order {
   seller: { name: string; village?: string };
   history: { status: OrderStatus; at: string; byRole: Role }[];
   deliveryPerson?: { name: string; phone: string };
+  /** What the delivery person reported (separate from the status). */
+  deliveryEvents: DeliveryEvent[];
+  deliveryLinkActive?: boolean;
   rating?: { stars: number; comment?: string };
   commissionPaise?: number;
   createdAt: string;
