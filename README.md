@@ -265,10 +265,16 @@ Creates (every demo PIN is **2580**):
 | 9000000105 | pending seller (गीता) |
 | 9000000201 | business buyer (होटल मरुधर) |
 | 9000000202 | household buyer |
+| 9000000106 | input dealer (खाद-बीज-दवाई, licence checked) |
+| 9000000203 | worker (मज़दूर, 18+ confirmed) |
 
 plus 12 listings with drawn demo photos (`backend/seed-assets/`), orders in every main state (two completed with
 commission and ratings, one collected), and one open report. Running it again removes only earlier demo data
 (`demo: true`); real accounts are never touched.
+Phase 5/6 demo data (`backend/src/scripts/seedPhase5.ts`): input dealer products + one kit-referral order, 2 machines with
+calendars and bookings, a worker and a matching work need, an approved cow and a goat waiting for approval, an open mandi
+trip with 2 farmers and a cancelled one, and a farm profile + 2 saved checks on the household buyer's phone
+(device id `00000000-0000-4000-8000-000000000202`, linked on login). Schemes come from `backend/src/data/schemes.ts`.
 
 ### MongoDB replica set (for npm dev)
 

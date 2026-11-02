@@ -16,6 +16,10 @@ import { setSellerStatus } from '../modules/sellers/seller.service.js';
 import { ServiceBookingModel, ServiceDayLockModel, ServiceListingModel } from '../modules/services/service.model.js';
 import { ServiceEngine } from '../modules/services/service.service.js';
 import { addDays, todayInIndia } from '../utils/dates.js';
+import { MandiTripModel } from '../modules/mandiPool/mandiTrip.model.js';
+import { MandiPool } from '../modules/mandiPool/mandiTrip.service.js';
+import { FarmProfileModel } from '../models/FarmProfile.js';
+import { DiagnosisRecord } from '../models/DiagnosisRecord.js';
 
 export interface SeedContext {
   auth: AuthService;
@@ -40,12 +44,20 @@ export async function seedPhase5(ctx: SeedContext): Promise<void> {
   await seedEquipment(ctx);
   await seedLabour(ctx);
   await seedLivestock(ctx);
+  await seedMandiTrips(ctx);
+  await seedAdvisor(ctx);
 }
+
+/** The household buyer's phone: a farm profile and two saved checks, so the advisor screens have data. */
+export const DEMO_DEVICE_ID = '00000000-0000-4000-8000-000000000202';
 
 /** Removes Phase 5 demo records of the demo accounts (called before seeding again). */
 export async function removePhase5Demo(userIds: Types.ObjectId[]): Promise<void> {
   const listings = await ServiceListingModel.find({ ownerId: { $in: userIds } }, { _id: 1 }).lean().exec();
   await Promise.all([
+    MandiTripModel.deleteMany({ demo: true }).exec(),
+    FarmProfileModel.deleteMany({ deviceId: DEMO_DEVICE_ID }).exec(),
+    DiagnosisRecord.deleteMany({ deviceId: DEMO_DEVICE_ID }).exec(),
     ServiceDayLockModel.deleteMany({ listingId: { $in: listings.map((listing) => listing._id) } }).exec(),
     ServiceBookingModel.deleteMany({ $or: [{ ownerId: { $in: userIds } }, { requesterId: { $in: userIds } }] }).exec(),
     ServiceListingModel.deleteMany({ ownerId: { $in: userIds } }).exec(),
@@ -200,4 +212,65 @@ async function seedLivestock({ sellers, coordinator }: SeedContext): Promise<voi
     availableDates: [],
     details: { breed: 'सिरोही', ageYears: 1.5, vaccinations: 'PPR – डेमो', purpose: 'breeding', count: 2 },
   });
+}
+
+/** Mandi trips: one open trip with two farmers already in, one cancelled (to show both states). */
+async function seedMandiTrips({ coordinator, family, sellers }: SeedContext): Promise<void> {
+  const pool = new MandiPool();
+  const open = await pool.create(coordinator, {
+    mandi: 'चूरू कृषि उपज मंडी',
+    date: addDays(todayInIndia(), 3),
+    tehsil: 'चूरू',
+    pickupPoint: 'घांघू बस स्टैंड, सुबह 6 बजे',
+    vehicle: 'पिकअप (डेमो)',
+    capacityQuintal: 40,
+    costPerQuintalPaise: 40_00,
+  });
+  await pool.join(family, open._id.toString(), { crop: 'bajra', quantityQuintal: 8 });
+  const rameshId = sellers.get('ramesh');
+  if (rameshId) await pool.join(asUser(rameshId, 'रमेश जाट'), open._id.toString(), { crop: 'guar', quantityQuintal: 12 });
+  const cancelled = await pool.create(coordinator, {
+    mandi: 'सरदारशहर मंडी',
+    date: addDays(todayInIndia(), 6),
+    tehsil: 'सरदारशहर',
+    pickupPoint: 'बीनासर चौक',
+    vehicle: 'ट्रैक्टर-ट्रॉली (डेमो)',
+    capacityQuintal: 25,
+  });
+  await pool.setStatus(cancelled._id.toString(), 'cancelled');
+  await MandiTripModel.updateMany({ _id: { $in: [open._id, cancelled._id] } }, { $set: { demo: true } }).exec();
+}
+
+/** Advisor: farm profile + two checks on the household buyer's phone (linked to the account). */
+async function seedAdvisor({ family }: SeedContext): Promise<void> {
+  await UserModel.updateOne({ _id: family.id }, { $set: { deviceId: DEMO_DEVICE_ID } }).exec();
+  await FarmProfileModel.create({
+    deviceId: DEMO_DEVICE_ID,
+    location: { lat: 28.08, lon: 74.62, source: 'list', district: 'चूरू', tehsil: 'रतनगढ़' },
+    crops: [
+      { crop: 'bajra', sowingDate: addDays(todayInIndia(), -80) },
+      { crop: 'chana', sowingDate: addDays(todayInIndia(), -10) },
+    ],
+    fieldSizeBigha: 6,
+    irrigation: 'tubewell',
+  });
+  await DiagnosisRecord.create([
+    {
+      deviceId: DEMO_DEVICE_ID,
+      crop: 'bajra',
+      diagnosis: {
+        problem_name: 'पत्तों पर झुलसा (डेमो)',
+        explanation: 'ज़्यादा नमी से फफूंद लगी है।',
+        desi_upay: ['नीम के तेल का छिड़काव करें।'],
+        dawai: [{ name: 'मैंकोजेब', kaise_use_karein: 'शाम को छिड़कें। पैकेट पर लिखी मात्रा के अनुसार ही डालें।' }],
+        savdhani: ['छिड़काव करते समय दस्ताने और मास्क पहनें।'],
+        severity: 'mild',
+      },
+    },
+    {
+      deviceId: DEMO_DEVICE_ID,
+      crop: 'chana',
+      diagnosis: { problem_name: 'पौधा स्वस्थ है (डेमो)', explanation: '', desi_upay: ['समय पर निराई करें।'], dawai: [], savdhani: [], severity: 'healthy' },
+    },
+  ]);
 }
