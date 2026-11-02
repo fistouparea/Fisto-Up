@@ -26,6 +26,7 @@ export const AUDIT_ACTIONS = [
   'service.booking',
   'mandiTrip.create',
   'mandiTrip.status',
+  'mandiTrip.update',
   'order.deliveryLink',
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

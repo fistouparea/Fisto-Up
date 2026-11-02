@@ -1,8 +1,8 @@
 import { model, Schema } from 'mongoose';
 import { CROPS } from '../../types/diagnosis.js';
 
-export const TRIP_STATUSES = ['open', 'closed', 'cancelled'] as const;
-export type TripStatus = (typeof TRIP_STATUSES)[number];
+import { TRIP_STATUSES } from '../../config/logisticsRules.js';
+export { TRIP_STATUSES, type TripStatus } from '../../config/logisticsRules.js';
 
 /**
  * "साथ में मंडी चलें": a coordinator plans one shared vehicle to a mandi on a date; farmers of the area join with

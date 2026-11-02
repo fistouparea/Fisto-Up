@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { SERVICE_KINDS, type ServiceKind, type ServiceSide } from '../data/serviceKinds';
 
-export const ADMIN_TABS = ['overview', 'pilot', 'sellers', 'orders', 'reports', 'help', 'ledger', 'newListing', 'invites', 'flags', 'audit', 'schemes', 'services'] as const;
+export const ADMIN_TABS = ['overview', 'pilot', 'sellers', 'orders', 'reports', 'help', 'ledger', 'newListing', 'invites', 'flags', 'audit', 'schemes', 'services', 'trips'] as const;
 export type AdminTab = (typeof ADMIN_TABS)[number];
 
 export type Route =

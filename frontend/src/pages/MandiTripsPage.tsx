@@ -66,7 +66,12 @@ function TripCard({ trip, onChanged }: { trip: MandiTrip; onChanged: () => void 
       <p className="font-bold">
         {hi.mandiTrips.left}: {left} / {trip.capacityQuintal} {hi.mandiTrips.quintal} · {trip.members} {hi.mandiTrips.members}
       </p>
-      {trip.status !== 'open' && <p className="font-bold text-warning-800">{hi.mandiTrips.closed}</p>}
+      {trip.status !== 'open' && (
+        <p className="font-bold text-warning-800">
+          {hi.mandiTrips.status[trip.status]}
+          {trip.status === 'closed' && ` – ${hi.mandiTrips.closed}`}
+        </p>
+      )}
       {trip.status === 'open' &&
         (!user ? (
           <Button variant="accent" size="md" className="mt-3" onClick={() => goToLogin()}>

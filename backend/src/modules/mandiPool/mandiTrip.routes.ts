@@ -4,7 +4,7 @@ import { parseOrThrow } from '../../utils/validation.js';
 import { audit } from '../audit/audit.service.js';
 import { currentUser, requireRole, requireUser } from '../auth/auth.middleware.js';
 import type { FeatureFlags } from '../flags/flag.service.js';
-import { createTripSchema, joinTripSchema, MandiPool, toTripView, tripStatusSchema, type TripView } from './mandiTrip.service.js';
+import { createTripSchema, joinTripSchema, MandiPool, toTripView, tripStatusSchema, updateTripSchema, type TripView } from './mandiTrip.service.js';
 
 /** "साथ में मंडी चलें": coordinators plan trips; logged-in farmers join or leave. */
 export function createMandiTripRouter({ flags, now }: { flags: FeatureFlags; now?: () => Date }): Router {
@@ -39,6 +39,12 @@ export function createMandiTripRouter({ flags, now }: { flags: FeatureFlags; now
     const trip = await pool.create(currentUser(req), parseOrThrow(createTripSchema, req.body));
     await audit(req, 'mandiTrip.create', { type: 'mandiTrip', id: trip._id.toString() }, { mandi: trip.mandi, date: trip.date });
     res.status(201).json({ trip: await toTripView(trip, req.user, { withMembers: true }) });
+  });
+  router.patch('/admin/mandi-trips/:id', requireRole('coordinator'), json, async (req, res: Response<{ trip: TripView }>) => {
+    const change = parseOrThrow(updateTripSchema, req.body);
+    const trip = await pool.update(id(req.params.id), change);
+    await audit(req, 'mandiTrip.update', { type: 'mandiTrip', id: trip._id.toString() }, { fields: Object.keys(change).join(',') });
+    res.json({ trip: await toTripView(trip, req.user, { withMembers: true }) });
   });
   router.post('/admin/mandi-trips/:id/status', requireRole('coordinator'), json, async (req, res: Response<{ trip: TripView }>) => {
     const { status } = parseOrThrow(tripStatusSchema, req.body);

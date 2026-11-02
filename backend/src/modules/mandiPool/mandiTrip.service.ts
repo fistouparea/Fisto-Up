@@ -1,6 +1,7 @@
 import { isValidObjectId, Types } from 'mongoose';
 import { z } from 'zod';
-import { MANDI_POOL_RULES } from '../../config/logisticsRules.js';
+import { MANDI_POOL_RULES, TRIP_MESSAGES, TRIP_STATUSES, TRIP_TRANSITIONS } from '../../config/logisticsRules.js';
+import { MarketNotificationModel } from '../notifications/notification.model.js';
 import { AppError } from '../../errors/AppError.js';
 import { cropIdSchema, type CropId } from '../../types/diagnosis.js';
 import { addDays, todayInIndia } from '../../utils/dates.js';
@@ -21,7 +22,9 @@ export const createTripSchema = z.object({
   note: z.string().trim().max(300).optional(),
 });
 export const joinTripSchema = z.object({ crop: cropIdSchema, quantityQuintal: z.number().int().min(1).max(MANDI_POOL_RULES.maxQuantityPerMember) });
-export const tripStatusSchema = z.object({ status: z.enum(['closed', 'cancelled']) });
+export const tripStatusSchema = z.object({ status: z.enum(TRIP_STATUSES) });
+/** Coordinator corrections; capacity can never go below what farmers already booked. */
+export const updateTripSchema = createTripSchema.partial().refine((body) => Object.keys(body).length > 0, 'nothing to change');
 
 export interface TripView {
   id: string;
@@ -107,9 +110,29 @@ export class MandiPool {
     return updated;
   }
 
-  async setStatus(tripId: string, status: 'closed' | 'cancelled'): Promise<MandiTripDocument> {
-    const updated = isValidObjectId(tripId) ? await MandiTripModel.findOneAndUpdate({ _id: tripId, status: 'open' }, { $set: { status } }, { returnDocument: 'after' }).exec() : null;
-    if (!updated) throw new AppError('INVALID_TRANSITION', 'Trip not open');
+  /** One step in TRIP_TRANSITIONS (checked against the current state atomically); every member is told. */
+  async setStatus(tripId: string, status: TripStatus): Promise<MandiTripDocument> {
+    const trip = await this.find(tripId);
+    if (!TRIP_TRANSITIONS[trip.status].includes(status)) throw new AppError('INVALID_TRANSITION');
+    const updated = await MandiTripModel.findOneAndUpdate({ _id: trip._id, status: trip.status }, { $set: { status } }, { returnDocument: 'after' }).exec();
+    if (!updated) throw new AppError('INVALID_TRANSITION', 'Trip changed meanwhile');
+    await notifyMembers(updated, status === 'open' ? TRIP_MESSAGES.reopened : TRIP_MESSAGES[status]);
+    return updated;
+  }
+
+  /** Date, place, vehicle or capacity changed: only before departure; members are told. */
+  async update(tripId: string, change: z.infer<typeof updateTripSchema>): Promise<MandiTripDocument> {
+    const trip = await this.find(tripId);
+    if (trip.status !== 'open' && trip.status !== 'closed') throw new AppError('INVALID_TRANSITION', 'Trip already left or cancelled');
+    const today = todayInIndia(this.now());
+    if (change.date && (change.date < today || change.date > addDays(today, MANDI_POOL_RULES.maxDaysAhead))) throw new AppError('INVALID_INPUT', 'Date out of range');
+    const updated = await MandiTripModel.findOneAndUpdate(
+      { _id: trip._id, status: trip.status, ...(change.capacityQuintal !== undefined && { bookedQuintal: { $lte: change.capacityQuintal } }) },
+      { $set: change },
+      { returnDocument: 'after' },
+    ).exec();
+    if (!updated) throw new AppError('CONFLICT', 'Capacity below what is booked, or trip changed');
+    await notifyMembers(updated, TRIP_MESSAGES.changed);
     return updated;
   }
 
@@ -118,6 +141,12 @@ export class MandiPool {
     if (!trip) throw new AppError('NOT_FOUND');
     return trip;
   }
+}
+
+async function notifyMembers(trip: MandiTripDocument, body: string): Promise<void> {
+  if (trip.members.length === 0) return;
+  const title = `${trip.mandi} · ${trip.date}`;
+  await MarketNotificationModel.insertMany(trip.members.map((member) => ({ userId: member.userId, kind: 'mandiTrip', title, body, href: '#/mandi-trips' })));
 }
 
 /** Members' names and phones only in the coordinator panel (they arrange the vehicle and call everyone). */
