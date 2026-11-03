@@ -1,3 +1,5 @@
+import { ComplaintForm } from '../../components/complaints/ComplaintForm';
+import { useFlags } from '../../hooks/useFlags';
 import type { ReactNode } from 'react';
 import { LuArrowLeft, LuInfo, LuMapPin, LuPhoneOff, LuRefreshCw, LuSearchX, LuShare2, LuUsers } from 'react-icons/lu';
 import { LangToggle } from '../../components/market/LangToggle';
@@ -27,6 +29,7 @@ interface ListingDetailPageProps {
 export function ListingDetailPage({ id, actions }: ListingDetailPageProps) {
   const { lang, t, tOrders } = useLang();
   const { user } = useAuth();
+  const { complaints } = useFlags();
   const { listing, loading, errorCode, retry } = useListing(id);
   const back = (
     <Button variant="ghost" size="md" fullWidth={false} icon={LuArrowLeft} onClick={() => navigateTo(routes.market)}>
@@ -130,7 +133,7 @@ export function ListingDetailPage({ id, actions }: ListingDetailPageProps) {
           </p>
         </section>
 
-        {user && user.role !== 'coordinator' && <ReportForm target={{ listingId: listing.id }} text={tOrders} />}
+        {user && user.role !== 'coordinator' && (complaints ? <ComplaintForm target={{ kind: 'listing', id: listing.id }} /> : <ReportForm target={{ listingId: listing.id }} text={tOrders} />)}
         <a
           href={whatsappShareUrl(shareText)}
           target="_blank"

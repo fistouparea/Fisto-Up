@@ -14,6 +14,7 @@ import type { AuthUser } from '../auth/auth.types.js';
 import { UserModel, type UserDocument } from '../auth/user.model.js';
 import { ListingModel, ListingPhotoModel, type ListingDocument, type ListingPhotoDocument } from './listing.model.js';
 import { OrderModel } from '../orders/order.model.js';
+import { ReportModel } from '../reports/report.model.js';
 import type {
   AiListingDraft,
   CreateListingBody,
@@ -250,6 +251,11 @@ export async function findOwnListing(actor: AuthUser, listingId: string): Promis
 export async function findPhoto(photoId: string, viewer: AuthUser | undefined) {
   const photo = isValidObjectId(photoId) ? await ListingPhotoModel.findById(photoId).exec() : null;
   if (!photo) return null;
+  if (photo.complaintId) {
+    if (viewer?.role === 'coordinator') return photo;
+    const complaint = viewer ? await ReportModel.exists({ _id: photo.complaintId, $or: [{ reporterId: viewer.id }, { againstUserId: viewer.id }] }).exec() : null;
+    return complaint ? photo : null;
+  }
   if (photo.orderId) {
     if (viewer?.role === 'coordinator') return photo;
     const order = viewer ? await OrderModel.exists({ _id: photo.orderId, $or: [{ buyerId: viewer.id }, { sellerId: viewer.id }] }).exec() : null;

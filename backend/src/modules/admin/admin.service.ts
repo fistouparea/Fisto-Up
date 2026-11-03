@@ -1,6 +1,7 @@
 import { isValidObjectId } from 'mongoose';
 import { z } from 'zod';
 import { AppError } from '../../errors/AppError.js';
+import type { ComplaintStatus } from '../../config/complaintRules.js';
 import { escapeRegex } from '../listings/listing.search.js';
 import { isLicenceVerified, isSellerProfileComplete, sellerRating, toPlace } from '../auth/accountView.js';
 import type { AuthService } from '../auth/auth.service.js';
@@ -68,6 +69,8 @@ export interface AdminSellerView {
   rating: { average: number | null; count: number };
   createdAt: Date;
   assisted: boolean;
+  /** Repeated valid complaints: review this seller. */
+  flaggedForReview?: { at: Date; complaints: number };
 }
 
 export async function listSellers(query: z.infer<typeof sellerListQuerySchema>): Promise<AdminSellerView[]> {
@@ -112,6 +115,7 @@ export function toAdminSeller(user: UserDocument, listings = 0): AdminSellerView
     rating: sellerRating(seller ?? { ratingSum: 0, ratingCount: 0 }),
     createdAt: user.createdAt,
     assisted: Boolean(user.createdBy),
+    ...(user.flaggedForReview && { flaggedForReview: { at: user.flaggedForReview.at, complaints: user.flaggedForReview.complaints } }),
   };
 }
 
@@ -143,7 +147,7 @@ export interface AdminReportView {
   id: string;
   reason: ReportReason;
   text?: string;
-  status: 'open' | 'resolved';
+  status: ComplaintStatus;
   reporter: { name: string; role: string };
   orderId?: string;
   listing?: { id: string; title: string; hidden: boolean; sellerName: string };

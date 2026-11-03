@@ -18,6 +18,7 @@ import { AdminInvites } from './AdminInvites';
 import { AdminSchemes } from './AdminSchemes';
 import { AdminServices } from './AdminServices';
 import { AdminMandiTrips } from './AdminMandiTrips';
+import { AdminComplaints } from './AdminComplaints';
 
 /** Coordinator panel: wide on desktop, tabs scroll sideways on a phone. */
 export function AdminPage({ tab }: { tab: AdminTab }) {
@@ -88,5 +89,7 @@ function TabContent({ tab }: { tab: AdminTab }) {
       return <AdminServices />;
     case 'trips':
       return <AdminMandiTrips />;
+    case 'complaints':
+      return <AdminComplaints />;
   }
 }

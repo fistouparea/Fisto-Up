@@ -1,3 +1,5 @@
+import { LuFlag } from 'react-icons/lu';
+import { useFlags } from '../../hooks/useFlags';
 import { LuClipboardList, LuShieldCheck, LuLogIn, LuLogOut, LuPencil, LuPhone, LuUserPlus, LuUserRound } from 'react-icons/lu';
 import { MyDataLink } from '../../components/MyDataLink';
 import { SellerStatusCallout } from '../../components/market/SellerStatusCallout';
@@ -15,6 +17,7 @@ import { navigateTo } from '../../utils/navigate';
 
 export function AccountPage() {
   const { user, logout } = useAuth();
+  const { complaints } = useFlags();
 
   if (user === undefined) return <Skeleton className="h-64" />;
   if (user === null) {
@@ -76,6 +79,11 @@ export function AccountPage() {
       {user.role !== 'coordinator' && (
         <Button variant="secondary" icon={LuClipboardList} onClick={() => navigateTo(routes.orders)}>
           {hi.orders.open}
+        </Button>
+      )}
+      {complaints && user.role !== 'coordinator' && (
+        <Button variant="secondary" icon={LuFlag} onClick={() => navigateTo(routes.complaints)}>
+          {hi.complaints.title}
         </Button>
       )}
       {editRoute && (

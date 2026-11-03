@@ -81,6 +81,8 @@ const listingPhotoSchema = new Schema(
     listingId: { type: Schema.Types.ObjectId, ref: 'Listing' },
     /** Delivery photo proof: private, only the order's buyer, seller and coordinators may open it. */
     orderId: { type: Schema.Types.ObjectId, ref: 'Order' },
+    /** Complaint photo: private, only the complaint's people and coordinators. */
+    complaintId: { type: Schema.Types.ObjectId, ref: 'Report' },
   },
   { timestamps: { createdAt: true, updatedAt: false }, versionKey: false },
 );

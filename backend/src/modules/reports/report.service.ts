@@ -8,6 +8,7 @@ import { ListingModel } from '../listings/listing.model.js';
 import { MarketNotificationModel } from '../notifications/notification.model.js';
 import { OrderModel } from '../orders/order.model.js';
 import { REPORT_REASONS, ReportModel } from './report.model.js';
+import { COMPLAINT_RULES } from '../../config/complaintRules.js';
 
 export const reportBodySchema = z
   .object({
@@ -33,13 +34,21 @@ export async function createReport(reporter: AuthUser, body: ReportBody): Promis
     throw new AppError('NOT_FOUND');
   }
 
+  // The same record as the new complaint flow (modules/complaints): it appears in the coordinator queue too.
+  const listing = listingId ? await ListingModel.findById(listingId, { sellerId: 1 }).lean().exec() : null;
+  const order = body.orderId ? await OrderModel.findById(body.orderId, { buyerId: 1, sellerId: 1 }).lean().exec() : null;
+  const againstUserId = order ? (order.buyerId.equals(reporter.id) ? order.sellerId : order.buyerId) : listing?.sellerId;
+  const now = new Date();
   const report = await ReportModel.create({
     reporterId: reporter.id,
     reporterRole: reporter.role,
     orderId: body.orderId,
     listingId,
+    ...(againstUserId && !againstUserId.equals(reporter.id) && { againstUserId }),
     reason: body.reason,
     text: body.text,
+    slaDueAt: new Date(now.getTime() + COMPLAINT_RULES.slaHours * 3_600_000),
+    statusHistory: [{ status: 'open', at: now, byUserId: reporter.id }],
   });
 
   const coordinators = await UserModel.find({ role: 'coordinator' }).exec();

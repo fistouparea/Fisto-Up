@@ -1,3 +1,5 @@
+import { ComplaintForm } from '../../components/complaints/ComplaintForm';
+import { useFlags } from '../../hooks/useFlags';
 import { DeliveryTimeline } from '../../components/delivery/DeliveryTimeline';
 import { LuArrowLeft, LuClipboardList, LuMapPin, LuPhone, LuRefreshCw, LuSearchX, LuTruck } from 'react-icons/lu';
 import type { Order, Place } from '../../api/marketTypes';
@@ -25,6 +27,7 @@ import { navigateTo } from '../../utils/navigate';
 export function OrderPage({ id }: { id: string }) {
   const { lang, tOrders } = useLang();
   const { order, setOrder, errorCode, retry } = useOrder(id);
+  const { complaints } = useFlags();
   const back = (
     <Button variant="ghost" size="md" fullWidth={false} icon={LuArrowLeft} onClick={() => navigateTo(routes.orders)}>
       {hi.orders.title}
@@ -100,7 +103,7 @@ export function OrderPage({ id }: { id: string }) {
       <ContactCard order={order} text={text} />
       <DeliveryTimeline events={order.deliveryEvents} />
       <Timeline order={order} text={text} />
-      {order.viewerRole !== 'coordinator' && <ReportForm target={{ orderId: order.id }} text={text} />}
+      {order.viewerRole !== 'coordinator' && (complaints ? <ComplaintForm target={{ kind: 'order', id: order.id }} /> : <ReportForm target={{ orderId: order.id }} text={text} />)}
     </section>
   );
 }

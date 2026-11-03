@@ -20,6 +20,8 @@ import { MandiTripModel } from '../modules/mandiPool/mandiTrip.model.js';
 import { MandiPool } from '../modules/mandiPool/mandiTrip.service.js';
 import { FarmProfileModel } from '../models/FarmProfile.js';
 import { DiagnosisRecord } from '../models/DiagnosisRecord.js';
+import { Complaints } from '../modules/complaints/complaint.service.js';
+import { ReportModel } from '../modules/reports/report.model.js';
 
 export interface SeedContext {
   auth: AuthService;
@@ -46,6 +48,7 @@ export async function seedPhase5(ctx: SeedContext): Promise<void> {
   await seedLivestock(ctx);
   await seedMandiTrips(ctx);
   await seedAdvisor(ctx);
+  await seedComplaint(ctx);
 }
 
 /** The household buyer's phone: a farm profile and two saved checks, so the advisor screens have data. */
@@ -273,4 +276,15 @@ async function seedAdvisor({ family }: SeedContext): Promise<void> {
       diagnosis: { problem_name: 'पौधा स्वस्थ है (डेमो)', explanation: '', desi_upay: ['समय पर निराई करें।'], dawai: [], savdhani: [], severity: 'healthy' },
     },
   ]);
+}
+
+/** Complaints: the household buyer complains about the tractor booking; the coordinator is working on it. */
+async function seedComplaint({ family, coordinator }: SeedContext): Promise<void> {
+  const booking = await ServiceBookingModel.findOne({ requesterId: family.id }).exec();
+  if (!booking) return;
+  const complaints = new Complaints();
+  const complaint = await complaints.create(family, { target: { kind: 'booking', id: booking._id.toString() }, category: 'not_delivered', text: 'ट्रैक्टर तय समय पर नहीं आया (डेमो शिकायत)' });
+  await complaints.addMessage(coordinator, complaint._id.toString(), 'रमेश जी से बात कर रहे हैं, कल तक जवाब देंगे।');
+  await complaints.transition(coordinator, complaint._id.toString(), 'in_progress');
+  await ReportModel.updateOne({ _id: complaint._id }, { $set: { demo: true } }).exec();
 }

@@ -23,6 +23,7 @@ export interface AdminSeller {
   rating: { average: number | null; count: number };
   createdAt: string;
   assisted: boolean;
+  flaggedForReview?: { at: string; complaints: number };
 }
 
 export interface AdminReport {

@@ -24,6 +24,7 @@ export const FEATURE_FLAGS = {
   livestock: { default: 'pilot', description: 'पशु (गाय, बकरी, ऊँट): संयोजक की मंज़ूरी के बाद' },
   mandiPool: { default: 'pilot', description: 'साथ में मंडी चलें (एक गाड़ी में मंडी)' },
   deliveryTracking: { default: 'pilot', description: 'डिलीवरी ट्रैकिंग: डिलीवरी वाले का लिंक, खरीदार-विक्रेता को टाइमलाइन' },
+  complaints: { default: 'pilot', description: 'शिकायत और विवाद: ऑर्डर, बुकिंग, लिस्टिंग पर एक शिकायत, संयोजक की कतार' },
   aiKit: { default: 'pilot', description: 'जाँच के बाद "ज़रूरी सामान" और खाद-बीज-दवाई की साझेदार दुकानें' },
 } as const satisfies Record<string, { default: FlagState; description: string }>;
 

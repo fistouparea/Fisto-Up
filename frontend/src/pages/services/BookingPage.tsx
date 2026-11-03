@@ -1,3 +1,5 @@
+import { ComplaintForm } from '../../components/complaints/ComplaintForm';
+import { useFlags } from '../../hooks/useFlags';
 import { useState } from 'react';
 import { LuCalendarDays, LuCircleCheckBig, LuCircleX, LuPhone, LuX } from 'react-icons/lu';
 import { ApiError } from '../../api/client';
@@ -34,6 +36,7 @@ export function BookingPage({ id }: { id: string }) {
 
 function BookingView({ booking, onChanged }: { booking: Booking; onChanged: () => void }) {
   const [busy, setBusy] = useState(false);
+  const { complaints } = useFlags();
   const phone = booking.contact?.ownerPhone ?? booking.contact?.requesterPhone;
   const act = async (action: () => Promise<Booking>, done: string) => {
     setBusy(true);
@@ -96,6 +99,7 @@ function BookingView({ booking, onChanged }: { booking: Booking; onChanged: () =
           <StarPicker label={hi.services.rate} disabled={busy} onPick={(stars) => void act(() => rateBooking(booking.id, stars), hi.services.rated)} />
         </Card>
       )}
+      {complaints && booking.viewerRole !== 'coordinator' && <ComplaintForm target={{ kind: 'booking', id: booking.id }} />}
       <p className="text-base text-ink-500">{hi.services.noPayment}</p>
     </section>
   );

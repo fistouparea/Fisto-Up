@@ -28,6 +28,10 @@ export const AUDIT_ACTIONS = [
   'mandiTrip.status',
   'mandiTrip.update',
   'order.deliveryLink',
+  'complaint.status',
+  'complaint.message',
+  'complaint.flagSeller',
+  'user.clearFlag',
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
 

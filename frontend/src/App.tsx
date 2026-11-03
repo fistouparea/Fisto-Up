@@ -54,6 +54,8 @@ const SettingsPage = lazyNamed(() => import('./pages/SettingsPage'), 'SettingsPa
 const SchemesPage = lazyNamed(() => import('./pages/SchemesPage'), 'SchemesPage');
 const MandiTripsPage = lazyNamed(() => import('./pages/MandiTripsPage'), 'MandiTripsPage');
 const DeliveryPage = lazyNamed(() => import('./pages/DeliveryPage'), 'DeliveryPage');
+const ComplaintsPage = lazyNamed(() => import('./pages/complaints/ComplaintsPage'), 'ComplaintsPage');
+const ComplaintPage = lazyNamed(() => import('./pages/complaints/ComplaintPage'), 'ComplaintPage');
 const ServicesPage = lazyNamed(() => import('./pages/services/ServicesPage'), 'ServicesPage');
 const ServiceDetailPage = lazyNamed(() => import('./pages/services/ServiceDetailPage'), 'ServiceDetailPage');
 const NewServicePage = lazyNamed(() => import('./pages/services/NewServicePage'), 'NewServicePage');
@@ -256,6 +258,10 @@ function Page({ route, diagnoseKey }: { route: Route; diagnoseKey: number }) {
       return <MandiTripsPage />;
     case 'delivery':
       return <DeliveryPage token={route.token} />;
+    case 'complaints':
+      return <RequireRole>{() => <ComplaintsPage />}</RequireRole>;
+    case 'complaint':
+      return <RequireRole>{() => <ComplaintPage id={route.id} />}</RequireRole>;
     case 'services':
       return <ServicesPage key={`${route.kind}-${route.side}`} kind={route.kind} side={route.side} />;
     case 'serviceItem':
@@ -279,6 +285,6 @@ function pageKey(route: Route, diagnoseKey: number): string {
   if (route.name === 'order') return `order-${route.id}`;
   if (route.name === 'admin') return `admin-${route.tab}`;
   if (route.name === 'services' || route.name === 'serviceNew') return `${route.name}-${route.kind}-${route.side}`;
-  if (route.name === 'serviceItem' || route.name === 'serviceBooking') return `${route.name}-${route.id}`;
+  if (route.name === 'serviceItem' || route.name === 'serviceBooking' || route.name === 'complaint') return `${route.name}-${route.id}`;
   return route.name;
 }

@@ -66,6 +66,8 @@ const userSchema = new Schema(
     /** Pilot account: signed up with an invite code or created by a coordinator. Sees "pilot" feature flags. */
     pilot: { type: Boolean, default: false },
     inviteId: { type: Schema.Types.ObjectId, ref: 'InviteCode' },
+    /** Repeated valid complaints (config/complaintRules.ts): a coordinator should look at this seller/owner. */
+    flaggedForReview: { type: new Schema({ at: { type: Date, required: true }, complaints: { type: Number, required: true } }, { _id: false }) },
     /** Set when the person deleted their account ("मेरा डेटा"): the row stays empty for order records. */
     deletedAt: Date,
     /** Demo data from the seed script (removed and recreated on every seed run). */

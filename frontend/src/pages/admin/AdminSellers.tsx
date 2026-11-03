@@ -1,3 +1,4 @@
+import { clearReviewFlag } from '../../api/complaints';
 import { useState, type FormEvent } from 'react';
 import { LuBadgeCheck, LuCircleX, LuPhone, LuSearch, LuUserPlus, LuX } from 'react-icons/lu';
 import { ApiError } from '../../api/client';
@@ -111,6 +112,7 @@ function SellerRow({ seller, onChanged }: { seller: AdminSeller; onChanged: () =
         <h3 className="text-xl font-bold">{seller.name}</h3>
         <Badge tone={tone} label={sellerStatusLabels[seller.status]} />
         {seller.assisted && <Badge tone="neutral" label={hi.admin.assisted} />}
+        {seller.flaggedForReview && <Badge tone="danger" label={`${hi.complaints.admin.flagBadge} (${seller.flaggedForReview.complaints})`} />}
         {seller.kind === 'input_dealer' && <Badge tone="neutral" label={hi.sellerKinds.input_dealer} />}
       </div>
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 text-base">
@@ -147,6 +149,11 @@ function SellerRow({ seller, onChanged }: { seller: AdminSeller; onChanged: () =
         <dd>{formatDate(seller.createdAt)}</dd>
       </dl>
       {!seller.profileComplete && <p className="font-bold text-warning-800">{hi.admin.profileIncomplete}</p>}
+      {seller.flaggedForReview && (
+        <Button variant="secondary" size="md" disabled={busy} onClick={() => void act(() => clearReviewFlag(seller.id), hi.complaints.admin.clearFlag)}>
+          {hi.complaints.admin.clearFlag}
+        </Button>
+      )}
       {seller.rejectReason && <p className="text-danger-800">{seller.rejectReason}</p>}
 
       {rejecting ? (

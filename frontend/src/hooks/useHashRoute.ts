@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { SERVICE_KINDS, type ServiceKind, type ServiceSide } from '../data/serviceKinds';
 
-export const ADMIN_TABS = ['overview', 'pilot', 'sellers', 'orders', 'reports', 'help', 'ledger', 'newListing', 'invites', 'flags', 'audit', 'schemes', 'services', 'trips'] as const;
+export const ADMIN_TABS = ['overview', 'pilot', 'sellers', 'orders', 'reports', 'help', 'ledger', 'newListing', 'invites', 'flags', 'audit', 'schemes', 'services', 'trips', 'complaints'] as const;
 export type AdminTab = (typeof ADMIN_TABS)[number];
 
 export type Route =
@@ -35,6 +35,8 @@ export type Route =
   | { name: 'schemes' }
   | { name: 'mandiTrips' }
   | { name: 'delivery'; token: string }
+  | { name: 'complaints' }
+  | { name: 'complaint'; id: string }
   | { name: 'services'; kind: ServiceKind; side: ServiceSide }
   | { name: 'serviceItem'; id: string }
   | { name: 'serviceBooking'; id: string }
@@ -70,6 +72,8 @@ export const routes = {
   settings: '#/settings',
   schemes: '#/schemes',
   mandiTrips: '#/mandi-trips',
+  complaints: '#/complaints',
+  complaint: (id: string) => `#/complaints/${encodeURIComponent(id)}`,
   services: (kind: ServiceKind, side: ServiceSide = 'offer') => (side === 'offer' ? `#/services/${kind}` : `#/services/${kind}/need`),
   serviceItem: (id: string) => `#/services/item/${encodeURIComponent(id)}`,
   serviceBooking: (id: string) => `#/services/booking/${encodeURIComponent(id)}`,
@@ -112,6 +116,8 @@ export function parseRoute(hash: string): Route {
   if (section === 'schemes') return { name: 'schemes' };
   if (section === 'mandi-trips') return { name: 'mandiTrips' };
   if (section === 'delivery' && id) return { name: 'delivery', token: decodeURIComponent(id) };
+  if (section === 'complaints' && id) return { name: 'complaint', id: decodeURIComponent(id) };
+  if (section === 'complaints') return { name: 'complaints' };
   if (section === 'sell' && id === 'new') return { name: 'sellNew' };
   if (section === 'sell') return { name: 'sell' };
   if (section === 'login') return { name: 'login' };

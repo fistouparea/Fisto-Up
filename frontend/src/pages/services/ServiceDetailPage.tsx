@@ -1,3 +1,5 @@
+import { ComplaintForm } from '../../components/complaints/ComplaintForm';
+import { useFlags } from '../../hooks/useFlags';
 import { useState } from 'react';
 import { LuCalendarDays, LuLogIn, LuMapPin, LuPause, LuPlay, LuScale, LuSend, LuUsers } from 'react-icons/lu';
 import { ApiError } from '../../api/client';
@@ -27,6 +29,7 @@ import { navigateTo } from '../../utils/navigate';
 export function ServiceDetailPage({ id }: { id: string }) {
   const { data, errorCode, reload } = useLoad(() => fetchService(id), [id]);
   const { user } = useAuth();
+  const { complaints } = useFlags();
   if (errorCode) return <EmptyState icon={LuMapPin} tone="warning" message={marketErrorMessage(errorCode)} />;
   if (!data) return <Skeleton className="h-64" />;
   const isOwner = Boolean(user && (user.id === data.owner.id || user.role === 'coordinator') && data.status);
@@ -34,6 +37,7 @@ export function ServiceDetailPage({ id }: { id: string }) {
     <section className="flex flex-col gap-4">
       <ListingFacts listing={data} />
       {isOwner ? <OwnerTools listing={data} onChanged={reload} /> : <BookingForm listing={data} loggedIn={Boolean(user)} />}
+      {complaints && user && !isOwner && <ComplaintForm target={{ kind: 'serviceListing', id: data.id }} />}
     </section>
   );
 }
