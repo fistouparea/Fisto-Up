@@ -19,6 +19,7 @@
     "src",
     "tests",
     "vitest.config.ts",
-    "loadtest"
+    "loadtest",
+    "e2e"
   ]
 }

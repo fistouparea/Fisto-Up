@@ -52,6 +52,8 @@ function QueueItem({ complaint, onChanged }: { complaint: Complaint; onChanged: 
       onChanged();
     } catch (error) {
       notifyError(error instanceof ApiError ? error.code : 'UNKNOWN');
+    } finally {
+      // The card stays on screen after "काम शुरू" (in progress): its buttons must work again.
       setBusy(false);
     }
   };

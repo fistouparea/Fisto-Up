@@ -5,7 +5,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist', 'dev-dist'] },
+  { ignores: ['dist', 'dev-dist', 'playwright-report', 'test-results'] },
   js.configs.recommended,
   ...tseslint.configs.strict,
   reactHooks.configs.flat.recommended,
@@ -13,6 +13,11 @@ export default tseslint.config(
     // Service worker script (plain JS, runs in the worker scope).
     files: ['public/**/*.js'],
     languageOptions: { globals: globals.serviceworker },
+  },
+  {
+    // Playwright end-to-end journeys (run in Node).
+    files: ['e2e/**/*.ts', 'screens/**/*.ts', 'playwright*.config.ts'],
+    languageOptions: { globals: globals.node },
   },
   {
     files: ['src/**/*.{ts,tsx}'],

@@ -1,6 +1,7 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
+// vitest/config's defineConfig is Vite's, plus the `test` section.
+import { defineConfig } from 'vitest/config';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
@@ -50,5 +51,9 @@ export default defineConfig({
     proxy: { '/api': 'http://localhost:4000' },
     // Allows a free Cloudflare HTTPS tunnel, needed to test "install app" on a phone.
     allowedHosts: ['.trycloudflare.com'],
+  },
+  test: {
+    // Unit tests only; the Playwright journeys in e2e/ run with `npm run e2e`.
+    include: ['src/**/*.test.{ts,tsx}'],
   },
 });

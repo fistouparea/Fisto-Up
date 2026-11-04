@@ -2,3 +2,7 @@ node_modules
 dist
 dev-dist
 .env
+e2e
+playwright-report
+test-results
+screens

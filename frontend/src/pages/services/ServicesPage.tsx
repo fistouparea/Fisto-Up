@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LuClipboardList, LuPlus, LuScale } from 'react-icons/lu';
+import { LuClipboardList, LuMapPinned, LuPlus, LuScale } from 'react-icons/lu';
 import { searchServices } from '../../api/services';
 import { ServiceCard } from '../../components/services/ServiceCard';
 import { Button } from '../../components/ui/Button';
@@ -26,7 +26,9 @@ export function ServicesPage({ kind, side }: { kind: ServiceKind; side: ServiceS
   const { profile } = useFarmProfile();
   const [typeId, setTypeId] = useState<string | undefined>();
   const [date, setDate] = useState<string | undefined>();
-  const location = profile?.location;
+  /** Nothing within the default radius: the farmer can look everywhere (sorted without distance). */
+  const [anywhere, setAnywhere] = useState(false);
+  const location = anywhere ? undefined : profile?.location;
   const on = flags[info.flag];
   const { data, errorCode } = useLoad(
     () =>
@@ -82,7 +84,15 @@ export function ServicesPage({ kind, side }: { kind: ServiceKind; side: ServiceS
       {!location && <p className="text-base text-ink-500">{hi.services.location}</p>}
       {data === undefined && !errorCode && <Skeleton className="h-48" />}
       {errorCode && data === undefined && <EmptyState icon={info.icon} tone="warning" message={hi.schemes.loadFailed} />}
-      {data?.length === 0 && <EmptyState icon={info.icon} message={text.empty} />}
+      {data?.length === 0 && (
+        <EmptyState icon={info.icon} message={text.empty}>
+          {location && (
+            <Button variant="secondary" icon={LuMapPinned} onClick={() => setAnywhere(true)}>
+              {hi.services.lookEverywhere}
+            </Button>
+          )}
+        </EmptyState>
+      )}
       <div className="flex flex-col gap-3">
         {data?.map((listing) => (
           <ServiceCard key={listing.id} listing={listing} />

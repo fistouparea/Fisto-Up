@@ -963,6 +963,7 @@ export const hiStrings = {
     price: 'भाव (₹)',
     per: 'प्रति',
     kmAway: 'किमी दूर',
+    lookEverywhere: 'दूर के भी देखें',
     owner: 'किसका',
     village: 'गाँव',
     place: 'जगह (तहसील)',

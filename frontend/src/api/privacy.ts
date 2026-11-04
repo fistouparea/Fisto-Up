@@ -1,8 +1,8 @@
+import { CONSENT_VERSION } from '../data/consentVersion';
 import { getDeviceId } from '../utils/deviceId';
 import { isRecord, postJson, requestApi } from './client';
 
-/** Must match backend/src/config/privacy.ts. A new version asks every phone for consent again. */
-export const CONSENT_VERSION = '2026-10-pilot-1';
+export { CONSENT_VERSION };
 
 export async function sendConsent(lang: 'hi' | 'en'): Promise<void> {
   await postJson('/api/consent', { deviceId: getDeviceId(), version: CONSENT_VERSION, lang }, isRecord);
