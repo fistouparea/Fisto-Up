@@ -349,7 +349,11 @@ Details, decisions and what is not finished: CHANGES.md → "Phase 5". Every fea
 | हिंदी / English / राजस्थानी | `#/settings` | `frontend/src/strings/{hi,enApp,en,raj}.ts`, `data/dialectGlossary.ts` |
 | सरकारी योजनाएँ | `#/schemes`, admin → योजनाएँ | `data/schemes.ts` (only verified facts; rest "verify") |
 | Machines / workers / animals | `#/services/<equipment|labour|livestock>`, `#/services/my` | `config/serviceKinds.ts`, `modules/services/bookingStateMachine.ts` |
-| साथ में मंडी चलें | `#/mandi-trips` (coordinators create trips via `POST /api/admin/mandi-trips`) | `config/logisticsRules.ts` |
+| साथ में मंडी चलें | `#/mandi-trips`, admin → मंडी गाड़ी | `config/logisticsRules.ts` |
+| Delivery tracking (Phase 6) | admin → ऑर्डर → डिलीवरी वाले का लिंक, `#/delivery/<token>` (no login) | `config/logisticsRules.ts` |
+| शिकायत (Phase 6) | "शिकायत करें" on orders/bookings/listings, `#/complaints`, admin → शिकायत कतार | `config/complaintRules.ts` |
+
+Launch steps and phone tests: [LAUNCH_CHECKLIST.md](LAUNCH_CHECKLIST.md).
 
 ## Rules an expert can edit (⚠️ verify with KVK)
 
@@ -488,6 +492,10 @@ Every prompt has a version (`services/ai/promptVersions.ts`): after changing a p
 | `npm test`          | Run tests (no API key needed)   |
 | `npm run lint`      | ESLint                          |
 | `npm run typecheck` | TypeScript check                |
+
+All gates for both apps in one go: `scripts/check-all.sh`. End-to-end journeys (Playwright, 360 px, fake AI, in-memory
+database filled by the seed): `cd frontend && npm run e2e` (first time: `npx playwright install chromium`).
+360 px screenshots of the Phase 5/6 screens: `cd frontend && npx playwright test -c playwright.screens.config.ts`.
 
 Backend only: `npm run check-indexes` (frequent queries use an index), `npm run eval` (AI quality report),
 `npm run prompts:snapshot` (after changing a prompt), `npm run loadtest` (100/500 connections, AI mocked).

@@ -1325,3 +1325,128 @@ dono apps mein clean; frontend build pass; `npm audit` (frontend, i18next instal
 5. **Machine:** होम → किराए पर मशीन → tractor → din chunein → बुकिंग माँगें; 9000000101 (रमेश) se → हाँ → dono ko number.
 6. **Majdoor:** 9000000203 se apni listing kholein → "आपके लिए मिलान". 18+ tick ke bina listing nahi banti.
 7. **Pashu:** pashu daalein → "मंज़ूरी बाकी" → sanyojak "मशीन/पशु मंज़ूरी" → मंज़ूर → sabko dikhta hai.
+
+---
+
+# Phase 6 – Baaki kaam poora + quality aur polish
+
+Phase 5 ka bacha kaam (mandi gaadi ka sanyojak screen, delivery tracking, shikayat) poora hua, phir E2E tests,
+screenshots ki jaanch aur poore app ka polish. Har task ka alag commit hai:
+
+```
+4731c2c Task 1: seed end-to-end jaancha; mandi trip + advisor ka demo data
+aba5738 Task 2: mandi gaadi – sanyojak screen
+ca1f026 Fix: database wale tests ka timeout 20 s (sirf timeout, koi check kamzor nahi)
+a1266ca Task 3: delivery tracking (bina login ka surakshit link)
+7c34fbd Task 4: shikayat aur vivaad
+aeebb31 Task 5: Playwright E2E (7 safar) + CI
+b44f55b Task 6: 360px screenshots + unse mile fixes
+da13319 Task 7: polish (accessibility, offline/error, Hindi, bundle, dead code)
+```
+
+**Status (aakhri run):** backend **549 tests pass** (Phase 5 ke baad 528), frontend **146 unit tests pass**,
+**E2E 8 safar pass – lagatar 2 baar** (7 journeys + accessibility). Lint, type-check, build dono apps mein clean.
+Sab gates ek command se: `scripts/check-all.sh`. E2E: `cd frontend && npm run e2e`.
+
+## Har task mein kya bana
+
+### Task 1 – Seed
+- `npm run seed` ek naye (throwaway, memory) database par 2 baar chalaya: koi error nahi, doosri baar ginti wahi.
+- Naya demo data: ek khuli + ek radd mandi gaadi (2 kisan jude), aur 9000000202 (अनीता) ke phone par खेत की जानकारी
+  + 2 purani जाँच (login par account se jud jaati hain). Ek demo shikayat bhi (Task 4).
+- Pehle (Phase 5) seed test time-out hua tha: wajah test chalane ka tareeka tha, seed nahi.
+
+### Task 2 – Mandi gaadi: sanyojak screen (`#/admin/trips`)
+- Gaadi banana, badalna (kshamta jude maal se kam nahi), radd karna; kaun juda, kaunsi fasal, kitna quintal, phone.
+- Halat: जगह है → भर गई / गाड़ी निकल गई → सफ़र पूरा, ya रद्द (`TRIP_TRANSITIONS`, `config/logisticsRules.ts`).
+- Jude kisano ko har badlaav, radd, nikalne aur poora hone par suchna.
+
+### Task 3 – Delivery tracking
+- Sanyojak order par delivery wala chunkar **link banata hai**: 192-bit random token, server par sirf uska SHA-256,
+  sirf usi ek order ke liye, 14 din, naya link purana band kar deta hai, audit log mein token kabhi nahi.
+  "कॉपी करें" ya seedha WhatsApp.
+- Delivery wale ka page (`#/delivery/<token>`, bina login, bina sahmati screen): bade button
+  **सामान उठा लिया → रास्ते में → पहुँचा दिया**, photo (zaroori nahi) PhotoStorage se. Delivery ke baad link band.
+- Kharidar aur vikreta ko har kadam par suchna + order par **"डिलीवरी कहाँ तक पहुँची"** timeline. Photo private
+  (sirf us order ke log aur sanyojak). Order ki apni halat kharidar/vikreta hi pakki karte hain.
+
+### Task 4 – Shikayat aur vivaad
+- **Ek hi shikayat flow** order, booking (machine/majdoor/pashu), bazaar listing aur service listing ke liye:
+  wajah, bolkar/likhkar, photo (private). Order/booking par sirf dono taraf ke log; shikayat doosri taraf ke khilaaf.
+- Sanyojak **"शिकायत कतार"**: नई → काम चल रहा है → हल हुई / बंद (फ़ैसले का नोट zaroori), **48 ghante ka SLA**
+  ("जवाब का समय निकल गया" dikhta hai), teeno ke beech संदेश. Har kadam par dono ko suchna.
+- **90 din mein 3 sahi shikayat** → vikreta par "बार-बार शिकायत" ka nishaan (ek baar), sanyojak jaanch ke baad hatata hai.
+- Purana "समस्या बताएँ" bhi isi kataar mein aata hai. Niyam: `backend/src/config/complaintRules.ts`. मेरा डेटा mein bhi.
+
+### Task 5 – E2E tests (Playwright, 360px phone)
+- 7 zaroori safar + 8va accessibility (neeche). Asli app, **fake AI/mausam**, memory database jo **asli seed script**
+  se bharta hai (`backend/e2e/server.ts`). Strings asli `hi.ts` se, isliye text badle to test bhi saath badlega.
+- CI mein naya job **"e2e"** (fail hone par report upload). Koi auto-retry nahi (flaky test chhupe nahi).
+- **E2E se mile asli bugs (app theek kiya):**
+  - Shikayat kataar: "काम शुरू करें" ke baad card ke saare button hamesha ke liye band ho jaate the.
+  - Kisan ke 30 km mein machine na ho to aage ka koi raasta nahi tha → **"दूर के भी देखें"**.
+  - Login/bazaar screens par rate-limit par photo-jaanch wala text ("बहुत लोग जाँच करवा रहे हैं") aata tha → sahi text.
+- **Test ki galtiyan (test theek kiya, koi check kamzor nahi):** pehle se khuli screen par jaane par page reload;
+  login ke baad app bar mein khata dikhne tak ruko (doosre phone par login account ka phone-id le kar reload karta hai);
+  service worker sirf offline wale safar mein; seller ka "नया ऑर्डर आया!" alert "बाद में" se band; har test phone ka
+  apna IP (pehle sab ek IP se the, to per-IP limit lag jaati thi); dheeme machine ke liye zyada samay.
+- Note: is laptop par doosre kaam (Docker, MySQL) se load 40–67 tak gaya; tab ke fail sab samay/port ki wajah se the.
+  Ek baar mera hi purana run chal raha tha aur ports par takra raha tha – use roka, phir 2 baar lagatar sab pass.
+
+### Task 6 – Screenshots aur unse mile fixes
+- `docs/screenshots/p6-01 … p6-37`: normal, khaali, error, offline, success halat
+  (`cd frontend && npx playwright test -c playwright.screens.config.ts`).
+- Review mein mila aur theek kiya:
+  - **पशु ka icon "Beef" (maans ka tukda) tha** → ab panje ka nishaan. (Gaay/oont ki screen par bilkul galat tha.)
+  - Form screens par bada 🎤 **mukhya button ("लिस्टिंग डालें", "जाँच करें") ke upar** aa jaata tha → ab uske upar khisakta hai;
+    kisan screens ke neeche zyada jagah, taaki aakhri 🔊 mic ke neeche na chhupe.
+  - **Offline par pilot suvidhaayein "बंद" dikhti thin** → aakhri feature flags phone par yaad rehte hain; योजनाएँ offline khulti hain.
+  - "नहीं मिली" screens par **"वापस"** button.
+  - Shikayat list, sanyojak ke yojana/mandi card: badge ki wajah se title ek-ek shabd mein toot raha tha → badge title ke neeche.
+  - Detail screen ke header se extra icon hataya (lambe title 4 line mein jaate the); delivery wale ke page par sirf brand.
+- Bacha hua samjhauta: lambe form par 🎤 beech ke content ke upar tair sakta hai (content scroll hota hai) – mukhya button ab kabhi nahi dhakta.
+
+### Task 7 – Polish
+- **Accessibility:** axe (WCAG 2.1 A/AA) 24 mukhya screens par (kisan, kharidar, sanyojak) = **0 violations**
+  (E2E safar 8). Labour tabs ka galat `role="tablist"` theek. Keyboard focus ring pehle se hai.
+- **Har kisan screen:** icon + chhota Hindi naam + 🔊 (PageHeader), khaali halat, error + "फिर से कोशिश करें",
+  offline: योजनाएँ aur मंडी गाड़ी phone par saved copy se; machine/majdoor/pashu offline par sahi "इंटरनेट नहीं" sandesh.
+- **Hindi ek jaisi:** फोन / हफ़्ते / साफ ab har jagah ek hi tarah; nukta ka Unicode har file mein ek hi roop.
+  English: yojana, services, mandi gaadi, delivery, shikayat; Rajasthani: inke mukhya label (draft). Test: en/raj mein
+  sirf wahi keys jo Hindi mein hain.
+- **Bundle (gzip, ek hi tool se Phase 4 commit bhi build karke mapa):**
+
+  | | Phase 4 | Ab |
+  | --- | ---: | ---: |
+  | Main JS | 94.9 KB | **94.5 KB** |
+  | Pehli load kul JS | 147.9 KB | **146.1 KB** |
+
+  Kaise: i18next + English/Rajasthani sirf tab download jab woh bhasha chuni jaaye (Hindi default, react-i18next
+  wahi); voice mode ka code sirf flag on hone par; sanyojak ke text (`strings/hiAdmin.ts`), Phase 5/6 feature text
+  (`strings/hiFeatures.ts`, `hiF`) aur privacy/terms (`strings/legalHi.ts`) apni screens ke saath.
+- **Lighthouse mobile** (slow 4G + 4× CPU, `vite preview`): **92–93 / 100 / 96** (Phase 4: 91 / 100 / 96).
+- **Dead code hataya:** `cropsInField`, `MAX_JSON_BODY`, `VerifiedIcon`, `BOOKING_TERMINAL`, 5 bekaar types. Koi TODO nahi bacha.
+  Har runtime dependency istemaal mein hai.
+
+## Decisions (khud liye)
+- Naye flags `complaints`, `deliveryTracking`, `mandiPool` bhi default **pilot**.
+- Delivery wale ke kadam order ki halat nahi badalte (kharidar "सामान मिल गया" dabata hai) – galti se paise/commission na chale.
+- Delivery photo vikreta ke naam par save (account mitane par saath mitti hai); shikayat photo private.
+- Shikayat ke liye naya collection nahi: purane `reports` ko badhaya, taaki ek kataar rahe aur purane tests chalein.
+- Test timeout 5 s → 20 s (sirf database wale tests ke liye zaroori tha); E2E: expect 30 s, test 3 min, retries 0.
+- Nayi dev dependencies (sirf testing): `@playwright/test` 1.61.1 (laptop par pehle se Chromium tha), `@axe-core/playwright`.
+- Offline ke liye aakhri flags phone par: ek phone par do log hon to doosre ko pehle wale ke flag thodi der dikh sakte hain;
+  server har request par khud jaanchta hai, isliye sirf dikhne ka farq.
+
+## Kya bacha / dhyaan dein (sach)
+- `npm audit` (frontend): PWA build tools (workbox-build → glob/deepmerge) mein **moderate** advisories. Ye sirf build
+  ke samay chalte hain, phone par nahi jaate. Ilaaj sirf `vite-plugin-pwa` ka purana version hai – jaan-boojhkar
+  **nahi kiya**. CI ka `--audit-level=high` pass hai.
+- Mic/awaaz (बोलकर चलाएँ) headless browser mein test nahi hoti – phone par jaanchein.
+- Asli Gemini, asli SMS/WhatsApp, asli phone par delivery link – sab mock/laptop par hi jaanche.
+- Pehli baar app khulte hi (service worker install) koi form bhejein to screen ek baar dobara khul sakti hai – sirf pehle
+  kuch second; E2E mein isliye SW sirf offline safar mein.
+- Language English/Rajasthani chuni ho to app khulte waqt pal bhar Hindi dikhti hai (translation download hone tak).
+
+## Phone test
+Poori step-by-step list: **LAUNCH_CHECKLIST.md** (section 3).
