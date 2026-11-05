@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="hi"><head><meta charset="utf-8"><title>AgriAI – 4 hafte ka pilot plan</title>
+<link rel="stylesheet" href="../assets/print.css">
+<style> td, th { font-size: 10pt; } .w { width: 18%; } h2 { page-break-after: avoid; } </style>
+</head><body>
+<h1>AgriAI – 4 hafte ka pilot plan (Churu)</h1>
+<p><b>Kaun:</b> 20–50 kisan, 2–3 SHG group (har group ki 1 संयोजक didi), 1 project lead (aap), KVK expert (salaah).
+<b>Kahan:</b> Churu ke 2–3 gaanv (jaise Ratangarh, Sardarshahar, Churu tehsil). <b>Kab:</b> Hafte 0 (taiyari) + 4 hafte.</p>
+<div class="note"><b>Pilot ka sawaal:</b> kya kisan khud photo jaanch, mausam/paani ki salaah aur bechne ke liye app use karte hain, aur kya
+isse unka faayda hota hai? Jawab Pilot Dashboard ki ginti + kisanon ki baat (feedback form) se milega.</div>
+
+<h2>Kaun kya karega</h2>
+<table>
+<tr><th class="w">Kaun</th><th>Zimmedari</th></tr>
+<tr><td>Project lead (aap)</td><td>Deploy, invite codes, didi ki training, har somvaar review, KVK se baat, bug/fix, faisla (continue/stop).</td></tr>
+<tr><td>SHG didi (संयोजक)</td><td>Camp, kisan joda, seller verify, madad se listing, orders/delivery, shikayat 48 ghante, mandi gaadi, commission; roz ka checklist.</td></tr>
+<tr><td>KVK expert</td><td>Pilot se pehle 100 photos ka review (1-kvk-review); hafte 2 aur 4 mein AI ke jawab ka sample check.</td></tr>
+<tr><td>Kisan</td><td>Photo jaanch, mausam/paani dekhna, 👍/👎, bechna; feedback form (hafte 2 aur 4).</td></tr>
+</table>
+
+<h2>Hafte 0 – taiyari (pilot se pehle)</h2>
+<ul>
+<li>LAUNCH_CHECKLIST.md ke deploy steps; HTTPS link; <code>npm run seed</code> production mein <b>kabhi nahi</b>.</li>
+<li>KVK review pass (accuracy ≥ 70%, unclear refused 100%, banned dawai 0). Fail ho to pilot aage badhayein.</li>
+<li>Coordinator accounts; har SHG/gaanv ka invite code; flags: pilot features "सिर्फ़ पायलट".</li>
+<li>Didi training (3-coordinator manual, 2 ghante) + ek poora test order ₹1–10 + ek mandi gaadi test.</li>
+<li>Print: farmer guide (har kisan 1), poster (gaanv mein 2–3), consent form (har kisan), feedback form (×2), daily checklist (didi, 30 copy).</li>
+</ul>
+
+<h2>Camp ka format (har gaanv, 2–3 ghante, 10–20 kisan)</h2>
+<table>
+<tr><th class="w">Samay</th><th>Kya</th></tr>
+<tr><td>15 min</td><td>Parichay: app kya karta hai (poster). Saaf batayein: AI galti kar sakta hai, dawai se pehle KVK; photo nahi rakhte.</td></tr>
+<tr><td>15 min</td><td><b>Consent form</b> padh kar sunayein → hastakshar/angootha. Na kahe to bhi camp mein baith sakte hain.</td></tr>
+<tr><td>30 min</td><td>Har kisan ke phone par: link/QR → होम स्क्रीन पर जोड़ें → invite code se khaata → मेरा खेत (fasal, gaanv). 4–5 kisan par ek madadgaar.</td></tr>
+<tr><td>30 min</td><td>Khet ya gamle ke patte par <b>photo jaanch</b> khud karein; 🎤 "मौसम बताओ"; पानी की सलाह; 👍/👎.</td></tr>
+<tr><td>20 min</td><td>Bechne wale kisan: बेचें (photo + bolkar). Mandi gaadi ka intro.</td></tr>
+<tr><td>10 min</td><td>Didi ka number guide par likhein; sawaal; agle hafte ki tareekh.</td></tr>
+</table>
+<p class="small">Saath le jaayein: 2 charged demo phone, power bank, mobile hotspot, printouts, pen, angoothe ki syaahi, attendance sheet.</p>
+
+<h2>Hafte-wise</h2>
+<table>
+<tr><th class="w">Hafta</th><th>Kaam</th><th>Kaun</th></tr>
+<tr><td>1 – Shuruaat</td><td>Gaanv 1 aur 2 mein camp. Har kisan ko 2 din baad phone ("app khula?"). Sellers verify. Pehli mandi gaadi tay karein.</td><td>Didi, lead</td></tr>
+<tr><td>2 – Aadat</td><td>Gaanv 3 camp. Jo kisan 7 din se nahi aaye unse milna. Feedback form #1. KVK sample check (10 jawab). Pehle orders + delivery link.</td><td>Didi, KVK</td></tr>
+<tr><td>3 – Bazaar</td><td>Bechne par zor: madad se listing, buyers (hotel/ghar) se order, mandi gaadi #2. Shikayat SLA check. Commission vasooli.</td><td>Didi</td></tr>
+<tr><td>4 – Nateeja</td><td>Feedback form #2, "क्या फसल ठीक हुई?" follow-up. KVK sample #2. Dashboard CSV, commission CSV. Final review + faisla.</td><td>Sab</td></tr>
+</table>
+
+<h2>Kya data ikattha karein</h2>
+<ul>
+<li><b>Pilot Dashboard</b> (संयोजक पैनल → पायलट डैशबोर्ड, sirf ginti) + CSV har somvaar.</li>
+<li><b>Commission CSV</b> (कमीशन tab), shikayat kataar ki ginti (khuli / samay nikla).</li>
+<li><b>Feedback form</b> (kagaz, hafte 2 aur 4) – likh kar excel mein, naam ke bina (sirf form number).</li>
+<li>KVK sample check: 10 jawab, सही / गलत / आंशिक.</li>
+<li>Didi ki diary (daily checklist ki "baatein"). <b>Kabhi nahi:</b> kisan ka number/naam kisi report mein.</li>
+</ul>
+
+<h2>Success metrics (4 hafte ke ant mein)</h2>
+<table>
+<tr><th>Metric (dashboard ka naam)</th><th>Target</th><th>Kam se kam (warna rukein/sochein)</th></tr>
+<tr><td>Jude kisan (camp + consent)</td><td>40</td><td>20</td></tr>
+<tr><td>इस हफ़्ते सक्रिय किसान (hafte 4)</td><td>joode hue ka 50% (jaise 20/40)</td><td>25%</td></tr>
+<tr><td>हर हफ़्ते जाँच – कुल 4 hafte</td><td>120</td><td>50</td></tr>
+<tr><td>फोटो साफ नहीं (unclear) ka hissa</td><td>&lt; 25%</td><td>&lt; 40%</td></tr>
+<tr><td>AI के जवाब पर 👍</td><td>≥ 70%</td><td>≥ 55%</td></tr>
+<tr><td>क्या फसल ठीक हुई? → ठीक हुई</td><td>≥ 50% jawab dene walon mein</td><td>≥ 30%</td></tr>
+<tr><td>KVK sample: सही + आंशिक</td><td>≥ 80%</td><td>≥ 70%; banned dawai = 0 (hamesha)</td></tr>
+<tr><td>नई लिस्टिंग (4 hafte)</td><td>25</td><td>10</td></tr>
+<tr><td>पूरे ऑर्डर</td><td>15</td><td>5</td></tr>
+<tr><td>कुल बिक्री</td><td>₹50,000</td><td>₹10,000</td></tr>
+<tr><td>किसान का भाव बनाम मंडी भाव</td><td>bika (औसत) ≥ मंडी भाव</td><td>mandi se 5% se zyada kam nahi</td></tr>
+<tr><td>Mandi gaadi trip poori</td><td>3</td><td>1</td></tr>
+<tr><td>Shikayat 48 ghante mein pehla jawab</td><td>100%</td><td>90%</td></tr>
+<tr><td>Feedback: "dost ko bataunga" (हाँ)</td><td>≥ 70%</td><td>≥ 50%</td></tr>
+</table>
+
+<h2 class="break">Weekly review template (har somvaar, 30 min)</h2>
+<p>Hafta: <span class="line" style="min-width:20mm"></span> Tareekh: <span class="line" style="min-width:35mm"></span> Kaun the: <span class="line"></span></p>
+<table>
+<tr><th>Metric</th><th>Is hafte</th><th>Pichhle hafte</th><th>Target</th><th>Theek? ✓/✗</th></tr>
+<tr><td>Sakriya kisan</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Jaanch (जवाब मिला / फोटो साफ नहीं)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>👍 %</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Nayi listing / naye order / poore order</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Bikri ₹ / commission ₹ / vasool ₹</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Shikayat: nayi / samay par jawab / khuli</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Mandi gaadi trip</td><td></td><td></td><td></td><td></td></tr>
+</table>
+<p><b>3 achhi baatein:</b></p><div class="box" style="height:18mm"></div>
+<p><b>3 dikkatein (aur kiski zimmedari):</b></p><div class="box" style="height:18mm"></div>
+<p><b>Agle hafte ke 3 kaam:</b></p><div class="box" style="height:18mm"></div>
+<p><b>Koi safety baat?</b> (galat/khatarnaak dawai ki salaah, dhokha, data leak) <span class="check"></span> Nahi <span class="check"></span> Haan → turant "Stop" niyam dekhein.</p>
+
+<h2>Continue / stop ka faisla</h2>
+<table>
+<tr><th class="w">Faisla</th><th>Kab</th></tr>
+<tr><td><b>Turant rokein</b> (kisi bhi din)</td><td>App ne banned/red-label dawai ya exact khatarnaak matra batayi aur kisan ne use ki; kisan ka data leak; paise ka dhokha jo app ke kaaran hua. → flag band karein (सुविधाएँ), sabko batayein, theek karke hi dobara.</td></tr>
+<tr><td><b>Badhayein (scale)</b></td><td>Hafte 4 mein zyadatar metrics "Target" par, aur sab "Kam se kam" se upar; KVK sahmat.</td></tr>
+<tr><td><b>Sudhaar kar 4 hafte aur</b></td><td>Metrics "Kam se kam" aur "Target" ke beech; ya ek hissa (jaise bazaar) kamzor → sirf us par kaam.</td></tr>
+<tr><td><b>Rokein aur sochein</b></td><td>Sakriya kisan &lt; 25% ya 👍 &lt; 55% ya KVK sahi &lt; 70%: kisan use nahi kar rahe ya jawab bharosemand nahi.</td></tr>
+</table>
+</body></html>
