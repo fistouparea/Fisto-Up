@@ -100,3 +100,34 @@ input dealer 9000000106, होटल (buyer) 9000000201, अनीता (buyer
     संदेश → काम शुरू → note ke saath हल हुई → kisan ko faisla. Ek seller par 3 sahi shikayat → "बार-बार शिकायत" badge.
 13. **Offline:** app ek baar online kholein → airplane mode → app kholein → purani jaankari + banner.
 14. **मेरा डेटा:** मेरा खेत → मेरा डेटा → download → (test account par) mitayein.
+
+---
+
+## 4. Launch Kit (`launch-kit/`) – pilot ke liye kaagaz aur scripts
+
+Har `.html` source hai, uske bagal ki `.pdf` print ke liye (A4). HTML badla to PDF dobara banayein:
+`cd frontend && npm run launch-kit:pdf`. Guide ki phone photos dobara lene ke liye:
+`cd frontend && npx playwright test -c playwright.screens.config.ts launchKit` (→ `launch-kit/assets/shots/`).
+
+| File | Kya hai | Kya karein |
+| --- | --- | --- |
+| `1-kvk-review/PHOTO-GUIDE.md` | KVK ke saath 100 labelled photos lene aur nateeje app mein daalne ki guide (Hinglish) | Pilot se pehle KVK visit ka plan isi se |
+| `1-kvk-review/expert-review.pdf` (+ `.html`, `.csv`) | Saare AI prompts + agro niyam (236), khaali "sahi/sudhaar" column | Print karke KVK expert se bharwayein; `npm run kvk:rules` se naya banta hai |
+| `backend: npm run kvk:sheet` | `eval/photos` ki har photo par AI ka jawab → `1-kvk-review/out/review-sheet-<date>.csv` (expert columns ke saath) | Excel mein kholkar expert ke saath सही / गलत / आंशिक bharein |
+| `2-farmer-guide/farmer-guide.pdf` | 6 page, Hindi, photo-pehle: kholna, home screen, photo jaanch, bolkar, mausam/paani, bechna, mandi gaadi | Har kisan ko 1 copy (camp mein); peeche didi ka naam/number likhein |
+| `2-farmer-guide/poster.pdf` | 1 page poster, QR ki jagah khaali | Asli app link ka QR chipka kar gaanv/SHG/KVK mein lagayein |
+| `3-coordinator/coordinator-manual.pdf` | SHG didi ki training (Hinglish, screenshots): verify, madad se listing, orders, delivery link, shikayat, mandi gaadi, commission, dashboard, invite code | Training (2 ghante) mein saath padhein, demo phone par karwayein |
+| `3-coordinator/daily-checklist.pdf` | Roz ka 1-page checklist | Har didi ko ~30 copy |
+| `4-pilot/pilot-plan.pdf` | 4 hafte ka plan: kaun kya, camp format, data, target numbers, weekly review template, stop/continue niyam | Pilot ka "rulebook"; har somvaar review page print karein |
+| `4-pilot/consent-form.pdf` | Hindi sahmati patra (hastakshar/angootha) | Har kisan ka 1, camp mein padh kar sunayein; didi ke paas surakshit |
+| `4-pilot/feedback-form.pdf` | Hindi feedback (12 sawaal, bina naam) | Hafta 2 aur 4 mein har kisan se; Excel mein bharein |
+| `5-demo/demo-script.pdf` | 5 minute demo (Hinglish): samay, bolne ki baat, exact click, backup, sawaal-jawab | Demo se pehle 2 baar practice |
+| `backend: npm run demo:reset` | Demo database khaali karke saaf demo data (seed) + pilot suvidhaayein on | Sirf `agriai_demo…` naam wale DB par chalta hai (`DEMO_MONGO_URI`), production mein mana karta hai |
+| `assets/` | `print.css`, Mukta font, guide ki phone photos | Badlav ki zaroorat nahi |
+
+Launch Kit ke dauraan app ka koi feature nahi badla aur koi bug nahi mila. Naya code sirf scripts: `kvk:sheet`,
+`kvk:rules`, `demo:reset` (tests: `backend/tests/kvkReview.test.ts`, `backend/tests/demoGuard.test.ts`).
+
+- [ ] Poster/guide par asli app link + QR + didi ka number daalein, phir print.
+- [ ] KVK review (1) pass hone ke baad hi pilot camp (4).
+- [ ] Demo se pehle `npm run demo:reset` aur ek practice run (5).
