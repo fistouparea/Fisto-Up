@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="hi"><head><meta charset="utf-8"><title>AgriAI – 5 minute demo script</title>
+<link rel="stylesheet" href="../assets/print.css">
+<style> td, th { font-size: 10.5pt; } td.t { width: 13mm; font-weight: 700; white-space: nowrap; } td.c { width: 47%; } h2 { page-break-after: avoid; } code { font-size: 9.5pt; } </style>
+</head><body>
+<h1>AgriAI – 5 minute demo (judges / district administration)</h1>
+<p>Bolne wali baat <b>"quotes"</b> mein, click <code>monospace</code> mein. Sab demo PIN <b>2580</b>. Demo ek phone (ya laptop par 360 px Chrome) par, screen projector/TV par mirror.</p>
+
+<h2>Demo se 30 min pehle (taiyari)</h2>
+<ol>
+<li>MongoDB replica set chalu (README → "MongoDB replica set"). <code>backend/.env</code> mein Gemini key + <code>DEMO_MONGO_URI=mongodb://localhost:27017/agriai_demo?replicaSet=rs0</code>.</li>
+<li><code>cd backend && npm run demo:reset</code> → "Demo taiyaar" dikhe. (Sirf <code>agriai_demo…</code> database reset hota hai; production/asli database par ye script mana kar deta hai.)</li>
+<li>Backend ko demo database par chalayein: <code>MONGO_URI=$DEMO_MONGO_URI npm run dev</code> ya <code>.env</code> mein MONGO_URI = demo URI. Frontend: <code>cd frontend && npm run dev</code>. Phone ke liye HTTPS tunnel (mic ke liye zaroori).</li>
+<li>3 tab/profile pehle se login: <b>A</b> अनीता (kisan) <code>9000000202</code>, <b>B</b> रमेश (seller) <code>9000000101</code>, <b>C</b> संयोजक <code>9000000001</code>.</li>
+<li>Phone gallery mein 2 photo: <code>backend/seed-assets/bajra.jpg</code> (ya asli beemar patta) aur ek <b>gaay/mitti</b> ki photo (unclear dikhane ke liye).</li>
+<li>Ek baar poora demo chalayein, phir dobara <code>npm run demo:reset</code>. Volume on (🔊). Backup: <code>docs/screenshots/</code> laptop par khula rakhein.</li>
+</ol>
+
+<h2>Script (5:00)</h2>
+<table>
+<tr><th>Samay</th><th>Kya bolein</th><th>Kya click karein</th></tr>
+<tr><td class="t">0:00</td><td>"Churu ka kisan: paani kam, garmi zyada, beemari ka pata der se chalta hai, aur mandi mein bhaav kam milta hai. AgriAI ek muft Hindi app hai – photo, aawaz aur SHG didi ke saath."</td><td class="c">Tab A: <code>होम</code> dikhayein – naam, aaj ka mausam, चेतावनी card.</td></tr>
+<tr><td class="t">0:30</td><td>"Kisan fasal chunta hai, beemar patte ki photo leta hai."</td><td class="c"><code>जाँच</code> → <code>बाजरा</code> → <code>गैलरी</code> → bajra photo → <code>जाँच करें</code>.</td></tr>
+<tr><td class="t">1:00</td><td>"Jawab aasan Hindi mein: kya beemari, kyun, desi upaay, aur dawai sirf generic naam se. Har jawab KVK se poochhne ko kehta hai. Banned dawai kabhi nahi – ye niyam code mein hai, test se pakke."</td><td class="c">Result scroll: समस्या, देसी उपाय, दवाई, सावधानी → <code>🔊 पूरा सुनें</code> (5 sec) → <code>ज़रूरी सामान</code> card (licensed dealer).</td></tr>
+<tr><td class="t">1:45</td><td>"Agar photo saaf nahi ya paudha hi nahi – app andaaza nahi lagata, nayi photo maangta hai."</td><td class="c"><code>फिर से</code> → gaay/mitti photo → <code>जाँच करें</code> → "फोटो साफ नहीं" screen.</td></tr>
+<tr><td class="t">2:10</td><td>"Jo padh nahi sakte, bolkar chalaate hain."</td><td class="c">Peela <code>🎤</code> → bolein <b>"मौसम बताओ"</b> → मौसम screen → <code>पानी</code>: "मिट्टी देखें" salaah.</td></tr>
+<tr><td class="t">2:40</td><td>"Ab bechna. Seller sirf photo leta hai aur bolta hai – AI listing bana deta hai aur mandi bhaav ke hisaab se bhaav sujhata hai."</td><td class="c">Tab B: <code>बाज़ार</code> → <code>बेचें</code> → photo → text/🎤: <b>"दस क्विंटल बाजरा, पच्चीस सौ रुपये क्विंटल"</b> → <code>आगे</code> → bhaav sujhaav dikhayein → <code>पक्का करें, बेचें</code>.</td></tr>
+<tr><td class="t">3:20</td><td>"Paise seedhe kisan ko, UPI ya nakad. Hum sirf poore order par chhota commission lete hain."</td><td class="c">Tab B: ऑर्डर alert/list – ek order <code>स्वीकार करें</code> (ya bas dikhayein).</td></tr>
+<tr><td class="t">3:40</td><td>"Gaanv ki SHG didi coordinator hai: seller verify karti hai, shikayat 48 ghante mein suljhaati hai, saath mein mandi gaadi lagaati hai."</td><td class="c">Tab C: 🛡️ <code>संयोजक पैनल</code> → <code>शिकायत कतार</code> (1 sec) → <code>मंडी गाड़ी</code> (jude kisan, quintal).</td></tr>
+<tr><td class="t">4:15</td><td>"Pilot ko hum naap kar chalaate hain – sirf ginti, kisi kisan ka naam nahi."</td><td class="c"><code>पायलट डैशबोर्ड</code>: सक्रिय किसान, हर हफ़्ते जाँच, 👍, किसान का भाव बनाम मंडी भाव.</td></tr>
+<tr><td class="t">4:35</td><td>"Bharosa: AI ko sirf photo aur fasal ka naam jaata hai, kisan ka naam/number nahi; photo hum rakhte nahi; kisan 'मेरा डेटा' se apna data mita sakta hai. Free services par chalta hai, internet na ho tab bhi purani jaankari dikhti hai. Agla kadam: Churu ke 2–3 SHG ke saath 4 hafte ka pilot – 40 kisan. Humein chahiye: KVK ka expert review aur gaanv/SHG se jod."</td><td class="c">Tab A: <code>मेरा खेत</code> → <code>मेरा डेटा</code> (1 sec). Phir home screen par rukein.</td></tr>
+</table>
+
+<h2>Agar kuch atak jaaye</h2>
+<table>
+<tr><th>Dikkat</th><th>Kya karein</th></tr>
+<tr><td>Gemini/internet slow (&gt; 15 sec)</td><td>"Gaanv ka 2G bhi chalta hai, bas thoda waqt" – aur <code>docs/screenshots/05-result-mild.png</code> dikhayein.</td></tr>
+<tr><td>Mic kaam nahi kar raha</td><td>HTTPS nahi hai ya permission nahi – text box mein likh dein, bolein "bolkar bhi hota hai".</td></tr>
+<tr><td>Login gaya / data gadbad</td><td><code>npm run demo:reset</code> (20–30 sec), dobara login (PIN 2580).</td></tr>
+<tr><td>Koi suvidha nahi dikh rahi</td><td>demo:reset pilot suvidhaayein chalu karta hai; nahi to Tab C → <code>सुविधाएँ</code> → "सबके लिए".</td></tr>
+</table>
+
+<h2>Sawaal-jawab (taiyaar jawab)</h2>
+<ul>
+<li><b>AI galat ho to?</b> Kam bharosa ya kharab photo = jawab nahi. Dawai generic naam, banned list block, har jawab par KVK line; KVK expert review pilot se pehle (launch-kit/1-kvk-review).</li>
+<li><b>Data kahan?</b> MongoDB (India region), photo store nahi, consent screen, "मेरा डेटा" download/delete.</li>
+<li><b>Kharcha?</b> Free tiers (Render, Atlas M0, Gemini free quota) – pilot ke liye ₹0 server; commission 3% se aage ka kharcha.</li>
+<li><b>Kisan phone nahi chala sakta?</b> SHG didi "मदद से लिस्टिंग" + bolkar chalana + 🔊 padhkar sunana.</li>
+</ul>
+</body></html>
