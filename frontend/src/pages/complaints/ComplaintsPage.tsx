@@ -8,6 +8,7 @@ import { useFlags } from '../../hooks/useFlags';
 import { routes } from '../../hooks/useHashRoute';
 import { useLoad } from '../../hooks/useLoad';
 import { hi, marketErrorMessage } from '../../strings/hi';
+import { hiF } from '../../strings/hiFeatures';
 
 /** "मेरी शिकायतें": complaints I made and complaints about me. */
 export function ComplaintsPage() {
@@ -15,11 +16,11 @@ export function ComplaintsPage() {
   const { data, errorCode } = useLoad(() => (complaints ? fetchMyComplaints() : Promise.resolve([])), [complaints]);
   return (
     <section className="flex flex-col gap-4">
-      <PageHeader title={hi.complaints.title} icon={LuFlag} />
-      {!complaints && <EmptyState icon={LuFlag} message={hi.schemes.off} />}
+      <PageHeader title={hiF.complaints.title} icon={LuFlag} />
+      {!complaints && <EmptyState icon={LuFlag} message={hiF.schemes.off} />}
       {complaints && errorCode && <EmptyState icon={LuFlag} tone="warning" message={marketErrorMessage(errorCode)} />}
       {complaints && !errorCode && data === undefined && <Skeleton className="h-48" />}
-      {data?.length === 0 && complaints && <EmptyState icon={LuFlag} message={hi.complaints.empty} />}
+      {data?.length === 0 && complaints && <EmptyState icon={LuFlag} message={hiF.complaints.empty} />}
       <ul className="flex flex-col gap-2">
         {data?.map((complaint) => (
           <li key={complaint.id}>
@@ -29,9 +30,9 @@ export function ComplaintsPage() {
               <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
                 <span className="block font-bold">{complaint.target.title}</span>
                 <span className="block text-sm text-ink-500">
-                  {hi.orders.reasons[complaint.category]} · {complaint.viewerRole === 'against' ? hi.complaints.aboutMe : hi.complaints.byMe}
+                  {hi.orders.reasons[complaint.category]} · {complaint.viewerRole === 'against' ? hiF.complaints.aboutMe : hiF.complaints.byMe}
                 </span>
-                <Badge tone={complaint.status === 'resolved' ? 'success' : complaint.status === 'rejected' ? 'neutral' : 'warning'} label={hi.complaints.status[complaint.status]} />
+                <Badge tone={complaint.status === 'resolved' ? 'success' : complaint.status === 'rejected' ? 'neutral' : 'warning'} label={hiF.complaints.status[complaint.status]} />
               </span>
             </a>
           </li>

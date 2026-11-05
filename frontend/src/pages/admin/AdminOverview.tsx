@@ -4,10 +4,10 @@ import { LoadState } from '../../components/admin/LoadState';
 import { StatTile } from '../../components/admin/StatTile';
 import { routes } from '../../hooks/useHashRoute';
 import { useLoad } from '../../hooks/useLoad';
-import { hi } from '../../strings/hi';
+import { hiAdmin } from '../../strings/hiAdmin';
 import { formatRupees } from '../../utils/money';
 
-const text = hi.admin.stats;
+const text = hiAdmin.stats;
 
 export function AdminOverview() {
   const { data, errorCode, reload } = useLoad(fetchStats, []);

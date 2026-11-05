@@ -10,7 +10,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { TextField } from '../../components/ui/TextField';
 import { notifyError, notifySuccess } from '../../components/ui/notify';
 import { useLoad } from '../../hooks/useLoad';
-import { hi } from '../../strings/hi';
+import { hiF } from '../../strings/hiFeatures';
 
 /** Coordinator queue: open and in-progress complaints, most urgent SLA first; message both sides; close with a note. */
 export function AdminComplaints() {
@@ -19,15 +19,15 @@ export function AdminComplaints() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap gap-2">
-        <Chip label={hi.complaints.admin.active} selected={!status} onClick={() => setStatus(undefined)} />
+        <Chip label={hiF.complaints.admin.active} selected={!status} onClick={() => setStatus(undefined)} />
         {COMPLAINT_STATUSES.map((item) => (
-          <Chip key={item} label={hi.complaints.status[item]} selected={status === item} onClick={() => setStatus(item)} />
+          <Chip key={item} label={hiF.complaints.status[item]} selected={status === item} onClick={() => setStatus(item)} />
         ))}
       </div>
       <LoadState data={data} errorCode={errorCode} reload={reload}>
         {(items) =>
           items.length === 0 ? (
-            <EmptyState icon={LuFlag} message={hi.complaints.admin.empty} />
+            <EmptyState icon={LuFlag} message={hiF.complaints.admin.empty} />
           ) : (
             <div className="grid gap-6 lg:grid-cols-2">
               {items.map((complaint) => (
@@ -48,7 +48,7 @@ function QueueItem({ complaint, onChanged }: { complaint: Complaint; onChanged: 
     setBusy(true);
     try {
       const { flagged } = await setComplaintStatus(complaint.id, to, to === 'in_progress' ? undefined : resolution.trim());
-      notifySuccess(flagged ? hi.complaints.admin.flagged : hi.complaints.status[to]);
+      notifySuccess(flagged ? hiF.complaints.admin.flagged : hiF.complaints.status[to]);
       onChanged();
     } catch (error) {
       notifyError(error instanceof ApiError ? error.code : 'UNKNOWN');
@@ -63,16 +63,16 @@ function QueueItem({ complaint, onChanged }: { complaint: Complaint; onChanged: 
       <ComplaintThread complaint={complaint} onChanged={onChanged} />
       {complaint.allowedNext.includes('in_progress') && (
         <Button variant="secondary" size="md" disabled={busy} onClick={() => void step('in_progress')}>
-          {hi.complaints.admin.take}
+          {hiF.complaints.admin.take}
         </Button>
       )}
       {closing.length > 0 && (
         <>
-          <TextField label={hi.complaints.admin.note} value={resolution} maxLength={500} onChange={(event) => setResolution(event.target.value)} />
+          <TextField label={hiF.complaints.admin.note} value={resolution} maxLength={500} onChange={(event) => setResolution(event.target.value)} />
           <div className="grid grid-cols-2 gap-2">
             {closing.map((to) => (
               <Button key={to} variant={to === 'resolved' ? 'accent' : 'ghost'} size="md" disabled={busy || resolution.trim().length < 3} onClick={() => void step(to)}>
-                {hi.complaints.admin.to[to as 'resolved' | 'rejected']}
+                {hiF.complaints.admin.to[to as 'resolved' | 'rejected']}
               </Button>
             ))}
           </div>

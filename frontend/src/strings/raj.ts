@@ -1,5 +1,6 @@
 import type { ErrorCode } from '../api/types';
 import type { hiStrings } from './hi';
+import type { hiFeatureStrings } from './hiFeatures';
 import type { PartialText } from './live';
 
 /**
@@ -8,7 +9,7 @@ import type { PartialText } from './live';
  * translated here shows in Hindi. Medicine names, numbers and safety texts (dawai warning, KVK) are kept close
  * to Hindi on purpose, so the safety meaning never changes. Please check every line with farmers before launch.
  */
-export const rajApp: PartialText<typeof hiStrings> = {
+export const rajApp: PartialText<typeof hiStrings & typeof hiFeatureStrings> = {
   appTagline: 'फसल री फोटू सूं बीमारी अर इलाज जाणो',
   nav: { label: 'मुख्य मेन्यू', home: 'घर', newCheck: 'जाँच', history: 'म्हारी जाँच', market: 'बजार' },
   steps: { label: 'जाँच रा कदम', crop: 'फसल चुणो', photo: 'फोटू लो', answer: 'जवाब' },
@@ -51,6 +52,7 @@ export const rajApp: PartialText<typeof hiStrings> = {
   notifications: { title: 'सूचना', empty: 'अबार कोई नुवीं सूचना कोनी।' },
   followUp: { question: 'कांई फसल ठीक होगी?', better: 'ठीक होगी', same: 'बियांई है', worse: 'और खराब' },
   home: {
+    tiles: { schemes: 'सरकारी योजनावां', equipment: 'भाड़ै री मसीन', labour: 'मजूर / काम', livestock: 'पसु खरीदो-बेचो', mandiTrips: 'साथै मंडी' },
     greeting: 'राम राम सा',
     photoCheck: 'फोटू सूं जाँच',
     photoCheckHint: 'बीमार पौधै री फोटू लो',
@@ -109,6 +111,19 @@ export const rajApp: PartialText<typeof hiStrings> = {
     noProducts: 'नजीक री साझेदार दुकान में अबार कोनी मिल्यो। कोई भी दुकान सूं ओ नाम मांगो।',
     partner: 'साझेदार दुकान',
   },
+  schemes: { title: 'म्हारै सारू योजनावां', homeButton: 'सरकारी योजनावां', checkOfficial: 'आ सिर्फ जाणकारी है। पक्को करण सारू आधिकारिक साइट/ई-मित्र पर देखो।' },
+  services: {
+    kinds: {
+      equipment: { title: 'भाड़ै री मसीन', home: 'भाड़ै री मसीन' },
+      labour: { title: 'मजूर', home: 'मजूर / काम' },
+      livestock: { title: 'पसु', home: 'पसु खरीदो-बेचो' },
+    },
+    lookEverywhere: 'दूर रा भी देखो',
+    request: 'बुकिंग मांगो',
+    steps: { accepted: 'हां, मंजूर', rejected: 'ना, मना करो' },
+  },
+  mandiTrips: { title: 'साथै मंडी चालां', home: 'साथै मंडी', join: 'म्हारो माल भी ले चालो', leave: 'म्हैं कोनी जाऊं' },
+  complaints: { title: 'म्हारी सिकायतां', raise: 'सिकायत करो', describe: 'कांई होयो? बोलो या लिखो' },
   tryAgain: 'पाछा कोसिस करो',
 };
 

@@ -39,7 +39,6 @@ export const registerBodySchema = z.object({
   /** Pilot invite code; required while the inviteOnly flag is on. Checked in detail by the invite service. */
   inviteCode: z.string().trim().max(20).optional(),
 });
-export type RegisterBody = z.infer<typeof registerBodySchema>;
 
 export const loginBodySchema = z.object({
   phone: phoneSchema,

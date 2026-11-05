@@ -10,6 +10,7 @@ import { TextField } from '../../components/ui/TextField';
 import { notifyError, notifySuccess } from '../../components/ui/notify';
 import { useLoad } from '../../hooks/useLoad';
 import { hi } from '../../strings/hi';
+import { hiF } from '../../strings/hiFeatures';
 
 const lines = (text: string) => text.split('\n').map((line) => line.trim()).filter(Boolean);
 
@@ -18,7 +19,7 @@ export function AdminSchemes() {
   const { data, errorCode, reload } = useLoad(fetchAdminSchemes, []);
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-base text-ink-700">{hi.schemes.admin.intro}</p>
+      <p className="text-base text-ink-700">{hiF.schemes.admin.intro}</p>
       <LoadState data={data} errorCode={errorCode} reload={reload}>
         {(items) => (
           <div className="grid gap-4 md:grid-cols-2">
@@ -60,7 +61,7 @@ function SchemeEditor({ scheme, onSaved }: { scheme: Scheme; onSaved: () => void
         ...(form.last_verified && { last_verified: form.last_verified }),
         status: form.status,
       });
-      notifySuccess(hi.schemes.admin.saved);
+      notifySuccess(hiF.schemes.admin.saved);
       setEditing(false);
       onSaved();
     } catch (error) {
@@ -75,29 +76,29 @@ function SchemeEditor({ scheme, onSaved }: { scheme: Scheme; onSaved: () => void
       {/* Title on its own line: next to a badge long scheme names broke into one word per line at 360 px. */}
       <div className="flex flex-col items-start gap-2">
         <h3 className="text-lg font-bold">{scheme.name}</h3>
-        <Badge tone={scheme.status === 'verified' ? 'success' : 'warning'} label={scheme.status === 'verified' ? hi.schemes.verified : hi.schemes.verifyBadge} />
+        <Badge tone={scheme.status === 'verified' ? 'success' : 'warning'} label={scheme.status === 'verified' ? hiF.schemes.verified : hiF.schemes.verifyBadge} />
       </div>
       <p className="text-sm text-ink-500">
-        {hi.schemes.lastVerified}: {scheme.last_verified ?? '—'} · {scheme.source_url}
+        {hiF.schemes.lastVerified}: {scheme.last_verified ?? '—'} · {scheme.source_url}
       </p>
       {!editing ? (
         <Button variant="secondary" size="md" icon={LuPencil} onClick={() => setEditing(true)}>
-          {hi.schemes.admin.edit}
+          {hiF.schemes.admin.edit}
         </Button>
       ) : (
         <div className="flex flex-col gap-3">
-          <Area label={hi.schemes.admin.summary} value={form.summary} onChange={(summary) => set({ summary })} />
-          <Area label={hi.schemes.admin.whoCanApply} value={form.whoCanApply} onChange={(whoCanApply) => set({ whoCanApply })} />
-          <Area label={hi.schemes.admin.documents} value={form.documents} onChange={(documents) => set({ documents })} />
-          <TextField label={hi.schemes.officialSite} value={form.officialLink} onChange={(e) => set({ officialLink: e.target.value })} />
-          <TextField label={hi.schemes.helpline} value={form.helpline} inputMode="tel" onChange={(e) => set({ helpline: e.target.value })} />
-          <TextField label={hi.schemes.admin.source} value={form.source_url} onChange={(e) => set({ source_url: e.target.value })} />
-          <TextField label={hi.schemes.lastVerified} type="date" value={form.last_verified} onChange={(e) => set({ last_verified: e.target.value })} />
+          <Area label={hiF.schemes.admin.summary} value={form.summary} onChange={(summary) => set({ summary })} />
+          <Area label={hiF.schemes.admin.whoCanApply} value={form.whoCanApply} onChange={(whoCanApply) => set({ whoCanApply })} />
+          <Area label={hiF.schemes.admin.documents} value={form.documents} onChange={(documents) => set({ documents })} />
+          <TextField label={hiF.schemes.officialSite} value={form.officialLink} onChange={(e) => set({ officialLink: e.target.value })} />
+          <TextField label={hiF.schemes.helpline} value={form.helpline} inputMode="tel" onChange={(e) => set({ helpline: e.target.value })} />
+          <TextField label={hiF.schemes.admin.source} value={form.source_url} onChange={(e) => set({ source_url: e.target.value })} />
+          <TextField label={hiF.schemes.lastVerified} type="date" value={form.last_verified} onChange={(e) => set({ last_verified: e.target.value })} />
           <div className="flex flex-wrap gap-2">
-            <Chip label={hi.schemes.verified} selected={form.status === 'verified'} onClick={() => set({ status: 'verified' })} />
-            <Chip label={hi.schemes.verifyBadge} selected={form.status === 'verify'} onClick={() => set({ status: 'verify' })} />
+            <Chip label={hiF.schemes.verified} selected={form.status === 'verified'} onClick={() => set({ status: 'verified' })} />
+            <Chip label={hiF.schemes.verifyBadge} selected={form.status === 'verify'} onClick={() => set({ status: 'verify' })} />
           </div>
-          <p className="text-sm text-ink-500">{hi.schemes.admin.rule}</p>
+          <p className="text-sm text-ink-500">{hiF.schemes.admin.rule}</p>
           <div className="grid grid-cols-2 gap-2">
             <Button variant="accent" size="md" icon={LuSave} disabled={busy} onClick={() => void save()}>
               {hi.save}

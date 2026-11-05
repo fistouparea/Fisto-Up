@@ -1,4 +1,3 @@
-import type { WaterTipId } from '../config/agroRules.js';
 import type { CropId } from './diagnosis.js';
 
 export type WaterStatus =
@@ -20,9 +19,4 @@ export interface WaterAdvice {
   inDays?: number;
   /** One short Hindi reason. */
   reason: string;
-}
-
-export interface WaterGuidance {
-  advice: WaterAdvice[];
-  tips: { id: WaterTipId; text: string }[];
 }

@@ -1,6 +1,7 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
 import { cropLabels } from '../src/strings/hi';
+import { hiF } from '../src/strings/hiFeatures';
 import { closeOrderAlerts, hi, loggedIn, newPhone, PHONES, pickPhoto } from '../e2e/fixtures';
 
 const OUT = fileURLToPath(new URL('../../docs/screenshots/', import.meta.url));
@@ -71,7 +72,7 @@ test('Phase 5/6 screens', async ({ browser }) => {
   const farmer = await loggedIn(browser, PHONES.household);
   await farmer.page.goto('/#/services/equipment');
   await shot(farmer.page, 'equipment-none-nearby');
-  await farmer.page.getByRole('button', { name: hi.services.lookEverywhere }).click();
+  await farmer.page.getByRole('button', { name: hiF.services.lookEverywhere }).click();
   await farmer.page.getByRole('link', { name: /महिंद्रा 575 ट्रैक्टर/ }).click();
   await shot(farmer.page, 'equipment-detail-booking');
   await farmer.page.goto('/#/services/my');
@@ -99,7 +100,7 @@ test('Phase 5/6 screens', async ({ browser }) => {
   }
   await farmer.page.goto('/#/market');
   await farmer.page.getByRole('link', { name: /हरा मूंग/ }).first().click();
-  await farmer.page.getByRole('button', { name: hi.complaints.raise }).click();
+  await farmer.page.getByRole('button', { name: hiF.complaints.raise }).click();
   await shot(farmer.page, 'complaint-form');
 
   // --- Worker: labour matches ---
@@ -153,8 +154,8 @@ test('Phase 5/6 screens', async ({ browser }) => {
     const delivery = await deliveryPhone.newPage();
     await delivery.goto(`/#/delivery/${token}`);
     await shot(delivery, 'delivery-page');
-    await delivery.getByRole('button', { name: hi.delivery.buttons.picked, exact: true }).click();
-    await delivery.getByRole('button', { name: hi.delivery.buttons.on_the_way, exact: true }).click();
+    await delivery.getByRole('button', { name: hiF.delivery.buttons.picked, exact: true }).click();
+    await delivery.getByRole('button', { name: hiF.delivery.buttons.on_the_way, exact: true }).click();
     await shot(delivery, 'delivery-on-the-way');
     await coordinator.page.goto(`/#/orders/${onTheWay.id}`);
     await shot(coordinator.page, 'order-delivery-timeline');

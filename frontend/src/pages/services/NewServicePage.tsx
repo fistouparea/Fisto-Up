@@ -19,6 +19,7 @@ import { PRICE_UNIT_LABELS, SERVICE_KIND_INFO, type PriceUnit, type ServiceKind,
 import { routes } from '../../hooks/useHashRoute';
 import { useSubmit } from '../../hooks/useSubmit';
 import { hi, marketErrorMessage } from '../../strings/hi';
+import { hiF } from '../../strings/hiFeatures';
 import { addDays, todayInIndia } from '../../utils/indiaDate';
 import { rupeesToPaise } from '../../utils/money';
 import { navigateTo } from '../../utils/navigate';
@@ -74,23 +75,23 @@ export function NewServicePage({ kind, side, user }: { kind: ServiceKind; side: 
       }),
     );
     if (!created) return;
-    notifySuccess(hi.services.published);
+    notifySuccess(hiF.services.published);
     navigateTo(routes.serviceItem(created.id));
   };
 
-  const heading = kind === 'labour' ? (side === 'need' ? hi.services.labourAddNeed : hi.services.kinds.labour.add) : hi.services.kinds[kind].add;
+  const heading = kind === 'labour' ? (side === 'need' ? hiF.services.labourAddNeed : hiF.services.kinds.labour.add) : hiF.services.kinds[kind].add;
   return (
     <form className="flex flex-col gap-5" onSubmit={(event) => void submit(event)} noValidate>
       <PageHeader title={heading} icon={info.icon} />
-      {info.needsApproval && <Callout tone="cream" icon={info.icon} text={hi.services.pendingApproval} />}
-      {kind === 'livestock' && <Callout tone="warning" icon={info.icon} text={hi.services.livestock.legal} />}
+      {info.needsApproval && <Callout tone="cream" icon={info.icon} text={hiF.services.pendingApproval} />}
+      {kind === 'livestock' && <Callout tone="warning" icon={info.icon} text={hiF.services.livestock.legal} />}
       <PhotoUpload photoIds={photoIds} max={info.maxPhotos} onChange={setPhotoIds} />
       <Fields side={side} value={fields} onChange={setFields} showErrors={showErrors} />
-      <TextField label={hi.services.title} hint={hi.services.titleHint} value={title} maxLength={100} onChange={(e) => setTitle(e.target.value)} error={showErrors ? errors.title : undefined} />
-      <VoiceTextBox id="service-description" label={hi.services.describe} value={description} onChange={setDescription} maxLength={500} />
+      <TextField label={hiF.services.title} hint={hiF.services.titleHint} value={title} maxLength={100} onChange={(e) => setTitle(e.target.value)} error={showErrors ? errors.title : undefined} />
+      <VoiceTextBox id="service-description" label={hiF.services.describe} value={description} onChange={setDescription} maxLength={500} />
       <div className="flex flex-col gap-2">
         <TextField
-          label={kind === 'labour' ? hi.services.labour.wage : hi.services.price}
+          label={kind === 'labour' ? hiF.services.labour.wage : hiF.services.price}
           inputMode="decimal"
           prefix="₹"
           value={priceInput}
@@ -100,25 +101,25 @@ export function NewServicePage({ kind, side, user }: { kind: ServiceKind; side: 
         />
         <div className="flex flex-wrap gap-2">
           {info.priceUnits.map((unit) => (
-            <Chip key={unit} label={`${hi.services.per} ${PRICE_UNIT_LABELS[unit]}`} selected={priceUnit === unit} onClick={() => setPriceUnit(unit)} />
+            <Chip key={unit} label={`${hiF.services.per} ${PRICE_UNIT_LABELS[unit]}`} selected={priceUnit === unit} onClick={() => setPriceUnit(unit)} />
           ))}
         </div>
       </div>
       {info.bookedByDate && (
         <div className="flex flex-col gap-2">
-          <h3 className="text-lg font-bold">{hi.services.calendar}</h3>
-          <p className="text-base text-ink-500">{hi.services.calendarHint}</p>
-          <DayPicker days={days} selected={dates} onChange={setDates} label={hi.services.calendar} />
+          <h3 className="text-lg font-bold">{hiF.services.calendar}</h3>
+          <p className="text-base text-ink-500">{hiF.services.calendarHint}</p>
+          <DayPicker days={days} selected={dates} onChange={setDates} label={hiF.services.calendar} />
         </div>
       )}
-      <TextField label={hi.services.village} value={village} maxLength={60} onChange={(e) => setVillage(e.target.value)} error={showErrors ? errors.village : undefined} />
-      <h3 className="text-lg font-bold">{hi.services.place}</h3>
+      <TextField label={hiF.services.village} value={village} maxLength={60} onChange={(e) => setVillage(e.target.value)} error={showErrors ? errors.village : undefined} />
+      <h3 className="text-lg font-bold">{hiF.services.place}</h3>
       <TehsilPicker value={place} onChange={setPlace} />
       {showErrors && (errors.place || kindError) && <p className="font-bold text-danger-700">{errors.place ?? kindError}</p>}
       {errorCode && <Callout tone="danger" icon={info.icon} text={marketErrorMessage(errorCode)} />}
       <StickyActions>
         <Button type="submit" variant="accent" size="hero" icon={LuCircleCheckBig} disabled={busy}>
-          {hi.services.publish}
+          {hiF.services.publish}
         </Button>
       </StickyActions>
     </form>

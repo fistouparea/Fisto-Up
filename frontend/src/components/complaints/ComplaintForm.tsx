@@ -5,6 +5,7 @@ import { raiseComplaint, uploadComplaintPhoto, type ComplaintTargetKind } from '
 import type { ReportReason } from '../../api/marketTypes';
 import { routes } from '../../hooks/useHashRoute';
 import { hi } from '../../strings/hi';
+import { hiF } from '../../strings/hiFeatures';
 import { compressImage } from '../../utils/compressImage';
 import { navigateTo } from '../../utils/navigate';
 import { PhotoActions } from '../PhotoActions';
@@ -33,7 +34,7 @@ export function ComplaintForm({ target }: { target: { kind: ComplaintTargetKind;
   if (!open) {
     return (
       <Button variant="ghost" size="md" icon={LuFlag} onClick={() => setOpen(true)}>
-        {hi.complaints.raise}
+        {hiF.complaints.raise}
       </Button>
     );
   }
@@ -44,7 +45,7 @@ export function ComplaintForm({ target }: { target: { kind: ComplaintTargetKind;
     try {
       const photoId = photo ? await uploadComplaintPhoto(photo) : undefined;
       const complaint = await raiseComplaint({ target, category, text: text.trim(), ...(photoId && { photoId }) });
-      notifySuccess(hi.complaints.sent);
+      notifySuccess(hiF.complaints.sent);
       navigateTo(routes.complaint(complaint.id));
     } catch (error) {
       notifyError(error instanceof ApiError ? error.code : 'UNKNOWN');
@@ -52,7 +53,7 @@ export function ComplaintForm({ target }: { target: { kind: ComplaintTargetKind;
     }
   };
   return (
-    <section className="flex flex-col gap-3 rounded-3xl border-2 border-danger-200 bg-surface p-4" aria-label={hi.complaints.raise}>
+    <section className="flex flex-col gap-3 rounded-3xl border-2 border-danger-200 bg-surface p-4" aria-label={hiF.complaints.raise}>
       <h3 className="text-xl font-bold">{hi.orders.reportTitle}</h3>
       <div className="flex flex-wrap gap-2">
         {REASONS[target.kind].map((reason) => (
@@ -60,9 +61,9 @@ export function ComplaintForm({ target }: { target: { kind: ComplaintTargetKind;
         ))}
       </div>
       {showErrors && !category && <p className="font-bold text-danger-700">{hi.orders.reportTitle}</p>}
-      <VoiceTextBox id={`complaint-${target.id}`} label={hi.complaints.describe} value={text} onChange={setText} maxLength={1000} />
+      <VoiceTextBox id={`complaint-${target.id}`} label={hiF.complaints.describe} value={text} onChange={setText} maxLength={1000} />
       {showErrors && text.trim().length < 3 && <p className="font-bold text-danger-700">{hi.help.messageShort}</p>}
-      <p className="text-lg font-bold">{hi.complaints.photo}</p>
+      <p className="text-lg font-bold">{hiF.complaints.photo}</p>
       {photo ? <PhotoPreview photo={photo} size="small" /> : <div className="flex gap-3"><PhotoActions onPick={(file) => void compressImage(file).then(setPhoto, () => notifyError('PHOTO_READ_FAILED'))} /></div>}
       <Button variant="danger" size="lg" icon={LuSend} disabled={busy} onClick={() => void send()}>
         {hi.orders.reportSend}

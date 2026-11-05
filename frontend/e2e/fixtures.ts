@@ -23,12 +23,17 @@ export const SNAP_LIST_TITLE = 'साफ़ बाजरा – 10 क्वि
 
 export const CROP_PHOTO = fileURLToPath(new URL('./crop-photo.jpg', import.meta.url));
 
+let phoneCount = 0;
+
 /**
  * A new phone that already agreed to the privacy notice (the consent screen has its own test).
  * The service worker is off (see playwright.config.ts) unless `serviceWorkers: 'allow'` (the offline journey).
  */
 export async function newPhone(browser: Browser, { serviceWorkers = 'block' }: { serviceWorkers?: 'allow' | 'block' } = {}): Promise<{ context: BrowserContext; page: Page }> {
-  const context = await browser.newContext({ serviceWorkers });
+  // Every phone has its own address, as in real life; the per-IP limits (config/securityRules.ts) then apply
+  // per phone. The E2E server trusts one proxy hop (vite preview), like production behind nginx.
+  phoneCount += 1;
+  const context = await browser.newContext({ serviceWorkers, extraHTTPHeaders: { 'X-Forwarded-For': `10.20.${Math.floor(phoneCount / 250)}.${(phoneCount % 250) + 1}` } });
   await context.addInitScript((version) => {
     localStorage.setItem('agriai.consent.accepted', version);
   }, CONSENT_VERSION);

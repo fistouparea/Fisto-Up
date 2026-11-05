@@ -14,6 +14,8 @@ import { PhoneField, PinField, TextField } from '../../components/ui/TextField';
 import { notifyError, notifySuccess } from '../../components/ui/notify';
 import { useLoad } from '../../hooks/useLoad';
 import { hi, marketErrorMessage, sellerStatusLabels } from '../../strings/hi';
+import { hiF } from '../../strings/hiFeatures';
+import { hiAdmin } from '../../strings/hiAdmin';
 import { formatDate } from '../../utils/formatDate';
 
 const FILTERS: (SellerStatus | undefined)[] = ['pending', undefined, 'verified', 'rejected'];
@@ -29,7 +31,7 @@ export function AdminSellers() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap gap-2">
         {FILTERS.map((filter) => (
-          <Chip key={filter ?? 'all'} label={filter ? sellerStatusLabels[filter] : hi.admin.all} selected={status === filter} onClick={() => setStatus(filter)} />
+          <Chip key={filter ?? 'all'} label={filter ? sellerStatusLabels[filter] : hiAdmin.all} selected={status === filter} onClick={() => setStatus(filter)} />
         ))}
       </div>
       <form
@@ -41,13 +43,13 @@ export function AdminSellers() {
         }}
       >
         <input
-          aria-label={hi.admin.search}
-          placeholder={hi.admin.search}
+          aria-label={hiAdmin.search}
+          placeholder={hiAdmin.search}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           className="min-h-14 min-w-0 flex-1 rounded-2xl border-2 border-line bg-surface px-4 text-lg focus:border-primary-700 focus:outline-none"
         />
-        <button type="submit" aria-label={hi.admin.search} className="flex size-14 items-center justify-center rounded-2xl bg-primary-700 text-white">
+        <button type="submit" aria-label={hiAdmin.search} className="flex size-14 items-center justify-center rounded-2xl bg-primary-700 text-white">
           <LuSearch aria-hidden="true" className="size-6" />
         </button>
       </form>
@@ -63,14 +65,14 @@ export function AdminSellers() {
         />
       ) : (
         <Button variant="secondary" icon={LuUserPlus} onClick={() => setAdding(true)}>
-          {hi.admin.addSeller}
+          {hiAdmin.addSeller}
         </Button>
       )}
 
       <LoadState data={data} errorCode={errorCode} reload={reload}>
         {(sellers) =>
           sellers.length === 0 ? (
-            <EmptyState icon={LuUserPlus} message={hi.admin.noSellers} />
+            <EmptyState icon={LuUserPlus} message={hiAdmin.noSellers} />
           ) : (
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
               {sellers.map((seller) => (
@@ -111,8 +113,8 @@ function SellerRow({ seller, onChanged }: { seller: AdminSeller; onChanged: () =
       <div className="flex flex-wrap items-center gap-2">
         <h3 className="text-xl font-bold">{seller.name}</h3>
         <Badge tone={tone} label={sellerStatusLabels[seller.status]} />
-        {seller.assisted && <Badge tone="neutral" label={hi.admin.assisted} />}
-        {seller.flaggedForReview && <Badge tone="danger" label={`${hi.complaints.admin.flagBadge} (${seller.flaggedForReview.complaints})`} />}
+        {seller.assisted && <Badge tone="neutral" label={hiAdmin.assisted} />}
+        {seller.flaggedForReview && <Badge tone="danger" label={`${hiF.complaints.admin.flagBadge} (${seller.flaggedForReview.complaints})`} />}
         {seller.kind === 'input_dealer' && <Badge tone="neutral" label={hi.sellerKinds.input_dealer} />}
       </div>
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 text-base">
@@ -143,30 +145,30 @@ function SellerRow({ seller, onChanged }: { seller: AdminSeller; onChanged: () =
         <dd className="break-all">{seller.upiId ?? '—'}</dd>
         <dt className="text-ink-500">{hi.sellerProfile.pickup}</dt>
         <dd>{place || '—'}</dd>
-        <dt className="text-ink-500">{hi.admin.listingsCount}</dt>
+        <dt className="text-ink-500">{hiAdmin.listingsCount}</dt>
         <dd>{seller.listings}</dd>
-        <dt className="text-ink-500">{hi.admin.joined}</dt>
+        <dt className="text-ink-500">{hiAdmin.joined}</dt>
         <dd>{formatDate(seller.createdAt)}</dd>
       </dl>
-      {!seller.profileComplete && <p className="font-bold text-warning-800">{hi.admin.profileIncomplete}</p>}
+      {!seller.profileComplete && <p className="font-bold text-warning-800">{hiAdmin.profileIncomplete}</p>}
       {seller.flaggedForReview && (
-        <Button variant="secondary" size="md" disabled={busy} onClick={() => void act(() => clearReviewFlag(seller.id), hi.complaints.admin.clearFlag)}>
-          {hi.complaints.admin.clearFlag}
+        <Button variant="secondary" size="md" disabled={busy} onClick={() => void act(() => clearReviewFlag(seller.id), hiF.complaints.admin.clearFlag)}>
+          {hiF.complaints.admin.clearFlag}
         </Button>
       )}
       {seller.rejectReason && <p className="text-danger-800">{seller.rejectReason}</p>}
 
       {rejecting ? (
         <div className="flex flex-col gap-2">
-          <TextField label={hi.admin.rejectReason} value={reason} maxLength={300} onChange={(event) => setReason(event.target.value)} />
+          <TextField label={hiAdmin.rejectReason} value={reason} maxLength={300} onChange={(event) => setReason(event.target.value)} />
           <div className="grid grid-cols-2 gap-2">
             <Button
               variant="danger"
               size="md"
               disabled={busy || reason.trim().length < 2}
-              onClick={() => void act(() => rejectSeller(seller.id, reason.trim()), hi.admin.rejected)}
+              onClick={() => void act(() => rejectSeller(seller.id, reason.trim()), hiAdmin.rejected)}
             >
-              {hi.admin.reject}
+              {hiAdmin.reject}
             </Button>
             <Button variant="secondary" size="md" icon={LuX} onClick={() => setRejecting(false)}>
               {hi.sell.actions.cancel}
@@ -187,14 +189,14 @@ function SellerRow({ seller, onChanged }: { seller: AdminSeller; onChanged: () =
               size="md"
               icon={LuBadgeCheck}
               disabled={busy || !seller.profileComplete || (seller.kind === 'input_dealer' && !licenceChecked)}
-              onClick={() => void act(() => verifySeller(seller.id, seller.kind === 'input_dealer' && licenceChecked), hi.admin.verified)}
+              onClick={() => void act(() => verifySeller(seller.id, seller.kind === 'input_dealer' && licenceChecked), hiAdmin.verified)}
             >
-              {hi.admin.verify}
+              {hiAdmin.verify}
             </Button>
           )}
           {seller.status !== 'rejected' && (
             <Button variant="ghost" size="md" icon={LuCircleX} disabled={busy} onClick={() => setRejecting(true)}>
-              {hi.admin.reject}
+              {hiAdmin.reject}
             </Button>
           )}
         </div>
@@ -223,7 +225,7 @@ function AddSellerForm({ onClose, onAdded }: { onClose: () => void; onAdded: () 
     setBusy(true);
     try {
       await createSeller({ name: name.trim(), phone, pin, village: village.trim(), upiId: upiId.trim(), pickup, ...(shgName.trim() && { shgName: shgName.trim() }) });
-      notifySuccess(hi.admin.sellerAdded);
+      notifySuccess(hiAdmin.sellerAdded);
       onAdded();
     } catch (failure) {
       setError(marketErrorMessage(failure instanceof ApiError ? failure.code : 'UNKNOWN'));
@@ -234,12 +236,12 @@ function AddSellerForm({ onClose, onAdded }: { onClose: () => void; onAdded: () 
   return (
     <form onSubmit={(event) => void submit(event)} className="flex flex-col gap-3 rounded-3xl border-2 border-primary-200 bg-surface p-4" noValidate>
       <div className="flex items-center justify-between">
-        <h3 className="text-xl font-bold">{hi.admin.addSeller}</h3>
+        <h3 className="text-xl font-bold">{hiAdmin.addSeller}</h3>
         <button type="button" onClick={onClose} aria-label={hi.sell.actions.cancel} className="flex size-12 items-center justify-center rounded-full hover:bg-primary-50">
           <LuX aria-hidden="true" className="size-6" />
         </button>
       </div>
-      <p className="text-base text-ink-500">{hi.admin.addSellerHint}</p>
+      <p className="text-base text-ink-500">{hiAdmin.addSellerHint}</p>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <TextField label={hi.sellerProfile.name} value={name} onChange={(e) => setName(e.target.value)} />
         <PhoneField label={hi.auth.phone} value={phone} onChange={(e) => setPhone(e.target.value)} />
@@ -252,7 +254,7 @@ function AddSellerForm({ onClose, onAdded }: { onClose: () => void; onAdded: () 
       <TehsilPicker value={pickup} onChange={setPickup} />
       {error && <p className="font-bold text-danger-700">{error}</p>}
       <Button type="submit" variant="accent" icon={LuUserPlus} disabled={busy}>
-        {hi.admin.addSeller}
+        {hiAdmin.addSeller}
       </Button>
     </form>
   );

@@ -8,7 +8,8 @@ import { Skeleton } from '../../components/ui/Skeleton';
 import { SERVICE_KIND_INFO } from '../../data/serviceKinds';
 import { routes } from '../../hooks/useHashRoute';
 import { useLoad } from '../../hooks/useLoad';
-import { hi } from '../../strings/hi';
+import { marketErrorMessage } from '../../strings/hi';
+import { hiF } from '../../strings/hiFeatures';
 import { shortDate } from '../../utils/dayLabel';
 
 /** "मेरी लिस्टिंग और बुकिंग": what I offer (with approval state) and every booking I asked for or got. */
@@ -17,12 +18,14 @@ export function MyServicesPage() {
   const bookings = useLoad(fetchBookings, []);
   return (
     <section className="flex flex-col gap-4">
-      <PageHeader title={hi.services.mine} icon={LuClipboardList} />
-      <h3 className="text-xl font-bold">{hi.services.myBookings}</h3>
-      {bookings.data === undefined ? (
+      <PageHeader title={hiF.services.mine} icon={LuClipboardList} />
+      <h3 className="text-xl font-bold">{hiF.services.myBookings}</h3>
+      {bookings.data === undefined && bookings.errorCode ? (
+        <EmptyState icon={LuCalendarDays} tone="warning" message={marketErrorMessage(bookings.errorCode)} />
+      ) : bookings.data === undefined ? (
         <Skeleton className="h-24" />
       ) : bookings.data.length === 0 ? (
-        <EmptyState icon={LuCalendarDays} message={hi.services.noBookings} />
+        <EmptyState icon={LuCalendarDays} message={hiF.services.noBookings} />
       ) : (
         <ul className="flex flex-col gap-2">
           {bookings.data.map((booking) => (
@@ -30,11 +33,13 @@ export function MyServicesPage() {
           ))}
         </ul>
       )}
-      <h3 className="text-xl font-bold">{hi.services.myListings}</h3>
-      {listings.data === undefined ? (
+      <h3 className="text-xl font-bold">{hiF.services.myListings}</h3>
+      {listings.data === undefined && listings.errorCode ? (
+        <EmptyState icon={LuClipboardList} tone="warning" message={marketErrorMessage(listings.errorCode)} />
+      ) : listings.data === undefined ? (
         <Skeleton className="h-24" />
       ) : listings.data.length === 0 ? (
-        <EmptyState icon={LuClipboardList} message={hi.services.noListings} />
+        <EmptyState icon={LuClipboardList} message={hiF.services.noListings} />
       ) : (
         <div className="flex flex-col gap-3">
           {listings.data.map((listing) => (
@@ -60,7 +65,7 @@ function BookingRow({ booking }: { booking: Booking }) {
             {booking.dates[0] && ` · ${shortDate(booking.dates[0])}${booking.dates.length > 1 ? ` +${booking.dates.length - 1}` : ''}`}
           </span>
         </span>
-        <Badge tone={needsMe ? 'warning' : booking.status === 'accepted' || booking.status === 'completed' ? 'success' : 'neutral'} label={hi.services.bookingStatus[booking.status]} />
+        <Badge tone={needsMe ? 'warning' : booking.status === 'accepted' || booking.status === 'completed' ? 'success' : 'neutral'} label={hiF.services.bookingStatus[booking.status]} />
       </a>
     </li>
   );

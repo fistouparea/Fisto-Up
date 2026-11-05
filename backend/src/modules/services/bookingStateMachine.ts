@@ -36,8 +36,6 @@ export const BOOKING_TRANSITIONS: readonly BookingRule[] = [
   { from: 'accepted', to: 'cancelled', by: EVERYONE, effect: 'releaseDates' },
 ];
 
-export const BOOKING_TERMINAL: readonly BookingStatus[] = ['rejected', 'cancelled', 'completed'];
-
 /** Both sides said yes: phone numbers are visible. */
 export const BOOKING_CONTACT_STATUSES: readonly BookingStatus[] = ['accepted', 'completed'];
 

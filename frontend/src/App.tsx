@@ -25,10 +25,9 @@ import { reportAppOpen } from './utils/appOpen';
 import { hasConsented, isConsentPending, markConsentSent, rememberConsent } from './utils/consentState';
 import { cn } from './utils/cn';
 import { RequireRole } from './components/market/RequireRole';
-import { AutoReader } from './components/voice/AutoReader';
-import { VoiceFab } from './components/voice/VoiceFab';
 import { useAuth } from './hooks/useAuth';
 import { useLang } from './hooks/useLang';
+import { useFlags } from './hooks/useFlags';
 import type { Account } from './api/marketTypes';
 import { roleHome } from './utils/loginRedirect';
 import { hi } from './strings/hi';
@@ -71,6 +70,10 @@ const SnapListPage = lazyNamed(() => import('./pages/market/SnapListPage'), 'Sna
 const MarketPage = lazyNamed(() => import('./pages/market/MarketPage'), 'MarketPage');
 const ListingDetailPage = lazyNamed(() => import('./pages/market/ListingDetailPage'), 'ListingDetailPage');
 
+// Voice mode is a pilot feature: its code downloads only when the flag is on.
+const VoiceFab = lazyNamed(() => import('./components/voice/VoiceFab'), 'VoiceFab');
+const AutoReader = lazyNamed(() => import('./components/voice/AutoReader'), 'AutoReader');
+
 const ONBOARDING_FLAG = 'onboardingDone';
 
 export function App() {
@@ -100,6 +103,7 @@ function AppShell() {
   const [onboardingDone, setOnboardingDone] = useState(() => readFlag(ONBOARDING_FLAG));
 
   const { lang } = useLang();
+  const { voiceMode } = useFlags();
   const [consented, setConsented] = useState(hasConsented);
   // Consent comes first; the policy pages stay readable from the consent screen.
   const showConsent = !consented && !LEGAL_ROUTES.has(route.name);
@@ -152,11 +156,11 @@ function AppShell() {
           </ErrorBoundary>
         </PageTransition>
       </main>
-      {!showConsent && !showOnboarding && route.name !== 'admin' && route.name !== 'delivery' && (
-        <>
+      {voiceMode && !showConsent && !showOnboarding && route.name !== 'admin' && route.name !== 'delivery' && (
+        <Suspense fallback={null}>
           <VoiceFab />
           <AutoReader screenKey={screenKey} />
-        </>
+        </Suspense>
       )}
       {!showConsent && route.name !== 'delivery' && (
         <BottomNav

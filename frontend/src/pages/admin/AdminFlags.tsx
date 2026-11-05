@@ -3,7 +3,7 @@ import { fetchAdminFlags, setAdminFlag, type AdminFlag, type FlagState } from '.
 import { LoadState } from '../../components/admin/LoadState';
 import { Chip } from '../../components/ui/Chip';
 import { useLoad } from '../../hooks/useLoad';
-import { hi } from '../../strings/hi';
+import { hiAdmin } from '../../strings/hiAdmin';
 import { runAdminAction } from './adminAction';
 
 const STATES: FlagState[] = ['off', 'pilot', 'all'];
@@ -13,7 +13,7 @@ export function AdminFlags() {
   const flags = useLoad(fetchAdminFlags, []);
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-lg text-ink-700">{hi.admin.flags.intro}</p>
+      <p className="text-lg text-ink-700">{hiAdmin.flags.intro}</p>
       <LoadState data={flags.data} errorCode={flags.errorCode} reload={flags.reload}>
         {(items) => (
           <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2">
@@ -35,7 +35,7 @@ function FlagRow({ flag, onChanged }: { flag: AdminFlag; onChanged: () => void }
         <div className="min-w-0">
           <p className="text-lg font-bold text-ink-900">{flag.description}</p>
           <p className="text-sm text-ink-500">
-            {flag.key} · {hi.admin.flags.default}: {hi.admin.flags.states[flag.default]}
+            {flag.key} · {hiAdmin.flags.default}: {hiAdmin.flags.states[flag.default]}
           </p>
         </div>
       </div>
@@ -43,9 +43,9 @@ function FlagRow({ flag, onChanged }: { flag: AdminFlag; onChanged: () => void }
         {STATES.map((state) => (
           <Chip
             key={state}
-            label={hi.admin.flags.states[state]}
+            label={hiAdmin.flags.states[state]}
             selected={flag.state === state}
-            onClick={() => void runAdminAction(() => setAdminFlag(flag.key, state), hi.admin.flags.saved, onChanged)}
+            onClick={() => void runAdminAction(() => setAdminFlag(flag.key, state), hiAdmin.flags.saved, onChanged)}
           />
         ))}
       </div>

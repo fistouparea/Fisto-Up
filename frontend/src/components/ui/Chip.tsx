@@ -6,7 +6,7 @@ interface ChipProps {
   onClick: () => void;
 }
 
-/** Small toggle pill for quick choices (e.g. "1 हफ्ता"). Still 56px tall for big fingers. */
+/** Small toggle pill for quick choices (e.g. "1 हफ़्ता"). Still 56px tall for big fingers. */
 export function Chip({ label, selected, onClick }: ChipProps) {
   return (
     <button

@@ -9,7 +9,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { TextField } from '../../components/ui/TextField';
 import { notifyError, notifySuccess } from '../../components/ui/notify';
 import { useLoad } from '../../hooks/useLoad';
-import { hi } from '../../strings/hi';
+import { hiF } from '../../strings/hiFeatures';
 
 /** Listings waiting for a coordinator (every animal listing): approve, or refuse with a reason. Audited. */
 export function AdminServices() {
@@ -18,7 +18,7 @@ export function AdminServices() {
     <LoadState data={data} errorCode={errorCode} reload={reload}>
       {(items) =>
         items.length === 0 ? (
-          <EmptyState icon={LuBadgeCheck} message={hi.services.admin.empty} />
+          <EmptyState icon={LuBadgeCheck} message={hiF.services.admin.empty} />
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
             {items.map((listing) => (
@@ -49,12 +49,12 @@ function Review({ listing, onDone }: { listing: ServiceListing; onDone: () => vo
     <article className="flex flex-col gap-2 rounded-3xl border border-line bg-surface p-3">
       <ServiceCard listing={listing} showStatus />
       {listing.description && <p className="text-base">{listing.description}</p>}
-      <Button variant="accent" size="md" icon={LuBadgeCheck} disabled={busy} onClick={() => void act(() => approveService(listing.id), hi.services.admin.approved)}>
-        {hi.services.admin.approve}
+      <Button variant="accent" size="md" icon={LuBadgeCheck} disabled={busy} onClick={() => void act(() => approveService(listing.id), hiF.services.admin.approved)}>
+        {hiF.services.admin.approve}
       </Button>
-      <TextField label={hi.services.admin.reason} value={reason} maxLength={300} onChange={(event) => setReason(event.target.value)} />
-      <Button variant="danger" size="md" icon={LuCircleX} disabled={busy || reason.trim().length < 2} onClick={() => void act(() => rejectService(listing.id, reason.trim()), hi.services.admin.rejected)}>
-        {hi.services.admin.reject}
+      <TextField label={hiF.services.admin.reason} value={reason} maxLength={300} onChange={(event) => setReason(event.target.value)} />
+      <Button variant="danger" size="md" icon={LuCircleX} disabled={busy || reason.trim().length < 2} onClick={() => void act(() => rejectService(listing.id, reason.trim()), hiF.services.admin.rejected)}>
+        {hiF.services.admin.reject}
       </Button>
     </article>
   );

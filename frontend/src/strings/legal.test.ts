@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { legalEn } from './en';
-import { legalHi } from './hi';
+import { legalHi } from './legalHi';
 
 describe('privacy policy and terms', () => {
   it('Hindi and English have the same sections and are marked as a draft', () => {

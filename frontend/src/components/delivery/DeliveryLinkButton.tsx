@@ -3,7 +3,7 @@ import { LuCopy, LuLink, LuShare2 } from 'react-icons/lu';
 import { ApiError } from '../../api/client';
 import { createDeliveryLink, deliveryLinkUrl } from '../../api/delivery';
 import type { Order } from '../../api/marketTypes';
-import { hi } from '../../strings/hi';
+import { hiF } from '../../strings/hiFeatures';
 import { Button } from '../ui/Button';
 import { notifyError, notifySuccess } from '../ui/notify';
 
@@ -23,11 +23,11 @@ export function DeliveryLinkButton({ order }: { order: Order }) {
       setBusy(false);
     }
   };
-  const message = url ? `${hi.delivery.shareText} ${order.ref}: ${url}` : '';
+  const message = url ? `${hiF.delivery.shareText} ${order.ref}: ${url}` : '';
   return (
     <div className="flex flex-col gap-2 px-2 pb-2">
       <Button variant="secondary" size="md" icon={LuLink} disabled={busy} onClick={() => void make()}>
-        {order.deliveryLinkActive || url ? hi.delivery.newLink : hi.delivery.makeLink}
+        {order.deliveryLinkActive || url ? hiF.delivery.newLink : hiF.delivery.makeLink}
       </Button>
       {url && (
         <>
@@ -37,9 +37,9 @@ export function DeliveryLinkButton({ order }: { order: Order }) {
               variant="ghost"
               size="md"
               icon={LuCopy}
-              onClick={() => void navigator.clipboard.writeText(url).then(() => notifySuccess(hi.delivery.copied), () => notifyError('UNKNOWN'))}
+              onClick={() => void navigator.clipboard.writeText(url).then(() => notifySuccess(hiF.delivery.copied), () => notifyError('UNKNOWN'))}
             >
-              {hi.delivery.copy}
+              {hiF.delivery.copy}
             </Button>
             <a
               href={`https://wa.me/91${order.deliveryPerson?.phone ?? ''}?text=${encodeURIComponent(message)}`}
@@ -51,7 +51,7 @@ export function DeliveryLinkButton({ order }: { order: Order }) {
               WhatsApp
             </a>
           </div>
-          <p className="text-sm text-ink-500">{hi.delivery.linkNote}</p>
+          <p className="text-sm text-ink-500">{hiF.delivery.linkNote}</p>
         </>
       )}
     </div>

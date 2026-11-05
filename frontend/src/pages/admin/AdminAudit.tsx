@@ -5,7 +5,7 @@ import { LoadState } from '../../components/admin/LoadState';
 import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { useLoad } from '../../hooks/useLoad';
-import { hi } from '../../strings/hi';
+import { hiAdmin } from '../../strings/hiAdmin';
 import { formatDate } from '../../utils/formatDate';
 
 /** Read-only list of coordinator actions (append-only on the server). */
@@ -14,17 +14,17 @@ export function AdminAudit() {
   const audit = useLoad(() => fetchAudit(page), [page]);
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-lg text-ink-700">{hi.admin.audit.intro}</p>
+      <p className="text-lg text-ink-700">{hiAdmin.audit.intro}</p>
       <LoadState data={audit.data} errorCode={audit.errorCode} reload={audit.reload}>
         {({ items, hasMore }) =>
           items.length === 0 ? (
-            <EmptyState icon={LuHistory} message={hi.admin.audit.none} />
+            <EmptyState icon={LuHistory} message={hiAdmin.audit.none} />
           ) : (
             <>
               <ul className="flex flex-col divide-y divide-line rounded-3xl border-2 border-line bg-surface">
                 {items.map((entry) => (
                   <li key={entry.id} className="flex flex-col gap-1 p-3">
-                    <p className="font-bold text-ink-900">{hi.admin.audit.actions[entry.action] ?? entry.action}</p>
+                    <p className="font-bold text-ink-900">{hiAdmin.audit.actions[entry.action] ?? entry.action}</p>
                     <p className="break-all text-sm text-ink-500">
                       {formatDate(entry.at)} · {entry.target.type} {entry.target.id}
                     </p>
@@ -41,7 +41,7 @@ export function AdminAudit() {
               </ul>
               {hasMore && (
                 <Button variant="secondary" onClick={() => setPage((current) => current + 1)}>
-                  {hi.admin.audit.more}
+                  {hiAdmin.audit.more}
                 </Button>
               )}
             </>

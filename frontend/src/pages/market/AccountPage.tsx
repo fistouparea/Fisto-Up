@@ -13,6 +13,7 @@ import { notifySuccess } from '../../components/ui/notify';
 import { useAuth } from '../../hooks/useAuth';
 import { routes } from '../../hooks/useHashRoute';
 import { hi, roleLabels, sellerStatusLabels } from '../../strings/hi';
+import { hiF } from '../../strings/hiFeatures';
 import { navigateTo } from '../../utils/navigate';
 
 export function AccountPage() {
@@ -83,7 +84,7 @@ export function AccountPage() {
       )}
       {complaints && user.role !== 'coordinator' && (
         <Button variant="secondary" icon={LuFlag} onClick={() => navigateTo(routes.complaints)}>
-          {hi.complaints.title}
+          {hiF.complaints.title}
         </Button>
       )}
       {editRoute && (

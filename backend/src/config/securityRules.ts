@@ -12,9 +12,6 @@ export const RATE_LIMITS = {
   ai: { windowMs: 60_000, limit: 30 },
 } as const;
 
-/** Largest JSON body any route accepts. Routes set smaller limits of their own; photos use multipart. */
-export const MAX_JSON_BODY = '32kb';
-
 /**
  * Content-Security-Policy of the API itself. The API only returns JSON, CSV and images, never HTML,
  * so nothing may run, load or frame it. The frontend's own policy is in frontend/nginx.conf (+ render.yaml).

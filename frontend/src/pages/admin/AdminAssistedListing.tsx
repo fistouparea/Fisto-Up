@@ -11,6 +11,7 @@ import { TextField } from '../../components/ui/TextField';
 import { routes } from '../../hooks/useHashRoute';
 import { useLoad } from '../../hooks/useLoad';
 import { hi } from '../../strings/hi';
+import { hiAdmin } from '../../strings/hiAdmin';
 import { navigateTo } from '../../utils/navigate';
 
 const CONSENT_METHODS: ConsentMethod[] = ['verbal', 'thumbprint', 'signed'];
@@ -33,12 +34,12 @@ export function AdminAssistedListing() {
       <SnapListFlow
         submit={(listing) => createAssistedListing(listing, seller.id, consent)}
         onFinished={() => navigateTo(routes.admin('overview'))}
-        finishLabel={hi.admin.backToPanel}
+        finishLabel={hiAdmin.backToPanel}
         header={
           <div className="flex flex-col gap-2">
-            <Callout tone="neutral" icon={LuHandshake} text={`${hi.admin.forSeller}: ${seller.name}, ${seller.village ?? ''} · ${hi.admin.consentMethods[method]}`} />
+            <Callout tone="neutral" icon={LuHandshake} text={`${hiAdmin.forSeller}: ${seller.name}, ${seller.village ?? ''} · ${hiAdmin.consentMethods[method]}`} />
             <Button variant="ghost" size="md" icon={LuUserPen} onClick={() => setStarted(false)}>
-              {hi.admin.changeSeller}
+              {hiAdmin.changeSeller}
             </Button>
           </div>
         }
@@ -49,10 +50,10 @@ export function AdminAssistedListing() {
   const term = query.trim().toLowerCase();
   return (
     <div className="flex flex-col gap-4">
-      <h3 className="text-xl font-bold">{hi.admin.chooseSeller}</h3>
+      <h3 className="text-xl font-bold">{hiAdmin.chooseSeller}</h3>
       <input
-        aria-label={hi.admin.search}
-        placeholder={hi.admin.search}
+        aria-label={hiAdmin.search}
+        placeholder={hiAdmin.search}
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         className="min-h-14 rounded-2xl border-2 border-line bg-surface px-4 text-lg focus:border-primary-700 focus:outline-none"
@@ -77,15 +78,15 @@ export function AdminAssistedListing() {
         )}
       </LoadState>
 
-      <h3 className="text-xl font-bold">{hi.admin.consent}</h3>
+      <h3 className="text-xl font-bold">{hiAdmin.consent}</h3>
       <div className="flex flex-wrap gap-2">
         {CONSENT_METHODS.map((option) => (
-          <Chip key={option} label={hi.admin.consentMethods[option]} selected={method === option} onClick={() => setMethod(option)} />
+          <Chip key={option} label={hiAdmin.consentMethods[option]} selected={method === option} onClick={() => setMethod(option)} />
         ))}
       </div>
-      <TextField label={hi.admin.consentNote} value={note} maxLength={300} onChange={(event) => setNote(event.target.value)} />
+      <TextField label={hiAdmin.consentNote} value={note} maxLength={300} onChange={(event) => setNote(event.target.value)} />
 
-      {(!seller || !method) && <p className="text-base text-ink-500">{hi.admin.consentNeeded}</p>}
+      {(!seller || !method) && <p className="text-base text-ink-500">{hiAdmin.consentNeeded}</p>}
       <Button variant="accent" size="lg" icon={LuArrowRight} disabled={!seller || !method} onClick={() => setStarted(true)}>
         {hi.sell.next}
       </Button>

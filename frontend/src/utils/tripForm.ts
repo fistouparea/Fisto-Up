@@ -1,5 +1,6 @@
 import type { TripInput } from '../api/mandiTrips';
 import { hi } from '../strings/hi';
+import { hiF } from '../strings/hiFeatures';
 import { addDays, todayInIndia } from './indiaDate';
 import { rupeesToPaise } from './money';
 
@@ -26,8 +27,8 @@ export function validateTripForm(form: TripForm, minCapacity = 0, today = todayI
   const capacity = Number(form.capacity);
   const cost = form.cost.trim() ? rupeesToPaise(form.cost) : undefined;
   if ([form.mandi, form.tehsil, form.pickupPoint, form.vehicle].some((value) => !value.trim())) return { error: hi.sellerProfile.required, trip: null };
-  if (!form.date || form.date < today || form.date > addDays(today, MAX_DAYS_AHEAD)) return { error: hi.mandiTrips.admin.dateInvalid, trip: null };
-  if (!Number.isInteger(capacity) || capacity < Math.max(1, minCapacity) || capacity > MAX_CAPACITY) return { error: hi.mandiTrips.admin.capacityInvalid, trip: null };
+  if (!form.date || form.date < today || form.date > addDays(today, MAX_DAYS_AHEAD)) return { error: hiF.mandiTrips.admin.dateInvalid, trip: null };
+  if (!Number.isInteger(capacity) || capacity < Math.max(1, minCapacity) || capacity > MAX_CAPACITY) return { error: hiF.mandiTrips.admin.capacityInvalid, trip: null };
   if (cost === null) return { error: hi.sell.missing.price, trip: null };
   return {
     error: null,

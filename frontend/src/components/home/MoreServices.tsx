@@ -1,6 +1,5 @@
 import type { IconType } from 'react-icons';
-import { LuLandmark, LuTruck } from 'react-icons/lu';
-import { SERVICE_KIND_INFO } from '../../data/serviceKinds';
+import { LuLandmark, LuPawPrint, LuTractor, LuTruck, LuUsers } from 'react-icons/lu';
 import type { FlagKey } from '../../api/flags';
 import { useFlags } from '../../hooks/useFlags';
 import { routes } from '../../hooks/useHashRoute';
@@ -17,11 +16,11 @@ interface ServiceTile {
 
 /** Phase 5 features on the home screen, each only when its feature flag is on for this person. */
 const TILES: ServiceTile[] = [
-  { flag: 'schemes', href: routes.schemes, icon: LuLandmark, label: () => hi.schemes.homeButton },
-  { flag: 'equipment', href: routes.services('equipment'), icon: SERVICE_KIND_INFO.equipment.icon, label: () => hi.services.kinds.equipment.home },
-  { flag: 'labour', href: routes.services('labour'), icon: SERVICE_KIND_INFO.labour.icon, label: () => hi.services.kinds.labour.home },
-  { flag: 'mandiPool', href: routes.mandiTrips, icon: LuTruck, label: () => hi.mandiTrips.home },
-  { flag: 'livestock', href: routes.services('livestock'), icon: SERVICE_KIND_INFO.livestock.icon, label: () => hi.services.kinds.livestock.home },
+  { flag: 'schemes', href: routes.schemes, icon: LuLandmark, label: () => hi.home.tiles.schemes },
+  { flag: 'equipment', href: routes.services('equipment'), icon: LuTractor, label: () => hi.home.tiles.equipment },
+  { flag: 'labour', href: routes.services('labour'), icon: LuUsers, label: () => hi.home.tiles.labour },
+  { flag: 'mandiPool', href: routes.mandiTrips, icon: LuTruck, label: () => hi.home.tiles.mandiTrips },
+  { flag: 'livestock', href: routes.services('livestock'), icon: LuPawPrint, label: () => hi.home.tiles.livestock },
 ];
 
 export function MoreServices() {

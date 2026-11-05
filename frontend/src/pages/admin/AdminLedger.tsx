@@ -9,6 +9,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { notifyError, notifySuccess } from '../../components/ui/notify';
 import { useLoad } from '../../hooks/useLoad';
 import { hi } from '../../strings/hi';
+import { hiAdmin } from '../../strings/hiAdmin';
 import { saveBlob } from '../../utils/download';
 import { formatRupees } from '../../utils/money';
 
@@ -39,11 +40,11 @@ export function AdminLedger() {
     <div className="flex flex-col gap-6">
       {referrals.data && referrals.data.length > 0 && (
         <section className="rounded-3xl border-2 border-accent-300 bg-surface-cream p-4">
-          <h3 className="text-xl font-bold">{hi.admin.referrals}</h3>
+          <h3 className="text-xl font-bold">{hiAdmin.referrals}</h3>
           <ul className="mt-2 flex flex-col gap-1 text-base">
             {referrals.data.map((row) => (
               <li key={row.month} className="flex justify-between gap-3">
-                <span>{monthLabel(row.month)} · {row.orders} {hi.admin.ordersCount}</span>
+                <span>{monthLabel(row.month)} · {row.orders} {hiAdmin.ordersCount}</span>
                 <strong className="tabular-nums">{formatRupees(row.commissionPaise)}</strong>
               </li>
             ))}
@@ -53,20 +54,20 @@ export function AdminLedger() {
       <LoadState data={months.data} errorCode={months.errorCode} reload={months.reload}>
         {(rows) =>
           rows.length === 0 ? (
-            <EmptyState icon={LuHandCoins} message={hi.admin.noLedger} />
+            <EmptyState icon={LuHandCoins} message={hiAdmin.noLedger} />
           ) : (
             <section className="flex flex-col gap-3">
-              <h3 className="text-xl font-bold">{hi.admin.monthly}</h3>
+              <h3 className="text-xl font-bold">{hiAdmin.monthly}</h3>
               <div className="overflow-x-auto rounded-3xl border border-line bg-surface">
                 <table className="w-full min-w-[34rem] text-base">
                   <thead className="bg-surface-green text-left">
                     <tr>
-                      <th className="p-3">{hi.admin.month}</th>
-                      <th className={`p-3 ${num}`}>{hi.admin.ordersCount}</th>
-                      <th className={`p-3 ${num}`}>{hi.admin.sales}</th>
-                      <th className={`p-3 ${num}`}>{hi.admin.commission}</th>
-                      <th className={`p-3 ${num}`}>{hi.admin.collected}</th>
-                      <th className={`p-3 ${num}`}>{hi.admin.due}</th>
+                      <th className="p-3">{hiAdmin.month}</th>
+                      <th className={`p-3 ${num}`}>{hiAdmin.ordersCount}</th>
+                      <th className={`p-3 ${num}`}>{hiAdmin.sales}</th>
+                      <th className={`p-3 ${num}`}>{hiAdmin.commission}</th>
+                      <th className={`p-3 ${num}`}>{hiAdmin.collected}</th>
+                      <th className={`p-3 ${num}`}>{hiAdmin.due}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -83,8 +84,8 @@ export function AdminLedger() {
                   </tbody>
                 </table>
               </div>
-              <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1" role="group" aria-label={hi.admin.month}>
-                <Chip label={hi.admin.allTime} selected={month === undefined} onClick={() => setMonth(undefined)} />
+              <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1" role="group" aria-label={hiAdmin.month}>
+                <Chip label={hiAdmin.allTime} selected={month === undefined} onClick={() => setMonth(undefined)} />
                 {rows.map((row) => (
                   <Chip key={row.month} label={monthLabel(row.month)} selected={month === row.month} onClick={() => setMonth(row.month)} />
                 ))}
@@ -97,10 +98,10 @@ export function AdminLedger() {
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-xl font-bold">
-            {hi.admin.perSeller} · {month ? monthLabel(month) : hi.admin.allTime}
+            {hiAdmin.perSeller} · {month ? monthLabel(month) : hiAdmin.allTime}
           </h3>
           <Button variant="secondary" size="md" fullWidth={false} icon={LuFileDown} onClick={() => void download()}>
-            {hi.admin.exportCsv}
+            {hiAdmin.exportCsv}
           </Button>
         </div>
         <LoadState data={dues.data} errorCode={dues.errorCode} reload={dues.reload}>
@@ -123,7 +124,7 @@ function DuesCard({ row, month, onCollected }: { row: SellerDues; month: string 
     setBusy(true);
     try {
       const result = await markCollected(row.sellerId, month);
-      notifySuccess(`${hi.admin.collectedDone}: ${formatRupees(result.amountPaise)}`);
+      notifySuccess(`${hiAdmin.collectedDone}: ${formatRupees(result.amountPaise)}`);
       onCollected();
     } catch (error) {
       notifyError(error instanceof ApiError ? error.code : 'UNKNOWN');
@@ -145,18 +146,18 @@ function DuesCard({ row, month, onCollected }: { row: SellerDues; month: string 
       </div>
       <dl className="grid grid-cols-2 gap-x-3 text-base">
         <dt className="text-ink-500">
-          {hi.admin.sales} ({row.orders} {hi.admin.ordersCount})
+          {hiAdmin.sales} ({row.orders} {hiAdmin.ordersCount})
         </dt>
         <dd className={num}>{formatRupees(row.salesPaise)}</dd>
-        <dt className="text-ink-500">{hi.admin.commission}</dt>
+        <dt className="text-ink-500">{hiAdmin.commission}</dt>
         <dd className={num}>{formatRupees(row.commissionPaise)}</dd>
-        <dt className="text-ink-500">{hi.admin.collected}</dt>
+        <dt className="text-ink-500">{hiAdmin.collected}</dt>
         <dd className={num}>{formatRupees(row.collectedPaise)}</dd>
-        <dt className="font-bold">{hi.admin.due}</dt>
+        <dt className="font-bold">{hiAdmin.due}</dt>
         <dd className={`text-xl font-bold ${num}`}>{formatRupees(row.duePaise)}</dd>
       </dl>
       <Button variant={row.duePaise > 0 ? 'accent' : 'secondary'} size="md" icon={LuHandCoins} disabled={busy || row.duePaise === 0} onClick={() => void collect()}>
-        {row.duePaise > 0 ? `${hi.admin.markCollected} (${formatRupees(row.duePaise)})` : hi.admin.nothingDue}
+        {row.duePaise > 0 ? `${hiAdmin.markCollected} (${formatRupees(row.duePaise)})` : hiAdmin.nothingDue}
       </Button>
     </article>
   );

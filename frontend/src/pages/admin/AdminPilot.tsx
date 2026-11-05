@@ -8,12 +8,13 @@ import { Chip } from '../../components/ui/Chip';
 import { notifyError } from '../../components/ui/notify';
 import { ApiError } from '../../api/client';
 import { useLoad } from '../../hooks/useLoad';
-import { cropLabels, hi, productLabels } from '../../strings/hi';
+import { cropLabels, productLabels } from '../../strings/hi';
+import { hiAdmin } from '../../strings/hiAdmin';
 import { saveBlob } from '../../utils/download';
 import { formatRupees } from '../../utils/money';
 
 const WEEK_CHOICES = [4, 8, 12, 26] as const;
-const text = hi.admin.pilot;
+const text = hiAdmin.pilot;
 
 /** Validated pair (dataviz validator): primary-500 #1b7445 + accent-500 #e2a10a; a legend and a table back them up. */
 const ONE: BarSeries[] = [{ key: 'value', label: '', colorClass: 'bg-primary-500' }];

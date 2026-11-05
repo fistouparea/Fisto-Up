@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import type { AppLang } from '../i18n/i18n';
+import type { AppLang } from '../i18n/lang';
 import type { MarketText, OrdersText } from '../strings/en';
 
 /** Language of bilingual content (listing titles, product names): Rajasthani screens show the Hindi text. */

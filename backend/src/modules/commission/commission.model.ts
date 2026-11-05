@@ -3,7 +3,6 @@ import { model, Schema } from 'mongoose';
 export const COMMISSION_STATUSES = ['due', 'collected'] as const;
 /** order: a normal marketplace order. partner_referral: an input dealer's order that came from the "ज़रूरी सामान" kit. */
 export const COMMISSION_TYPES = ['order', 'partner_referral'] as const;
-export type CommissionType = (typeof COMMISSION_TYPES)[number];
 
 /** One ledger line per completed order: our commission, collected offline by a coordinator. */
 const commissionEntrySchema = new Schema(

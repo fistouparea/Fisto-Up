@@ -11,6 +11,7 @@ import { routes } from '../../hooks/useHashRoute';
 import { useLoad } from '../../hooks/useLoad';
 import { runAdminAction } from './adminAction';
 import { hi, roleLabels } from '../../strings/hi';
+import { hiAdmin } from '../../strings/hiAdmin';
 import { formatDate } from '../../utils/formatDate';
 
 
@@ -28,7 +29,7 @@ export function AdminReports() {
       <LoadState data={reports.data} errorCode={reports.errorCode} reload={reports.reload}>
         {(items) =>
           items.length === 0 ? (
-            <EmptyState icon={LuFlag} tone="success" message={hi.admin.noReports} />
+            <EmptyState icon={LuFlag} tone="success" message={hiAdmin.noReports} />
           ) : (
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
               {items.map((report) => (
@@ -40,7 +41,7 @@ export function AdminReports() {
       </LoadState>
 
       <section className="flex flex-col gap-3">
-        <h3 className="text-xl font-bold">{hi.admin.hiddenListings}</h3>
+        <h3 className="text-xl font-bold">{hiAdmin.hiddenListings}</h3>
         <LoadState data={hidden.data} errorCode={hidden.errorCode} reload={hidden.reload}>
           {(listings) =>
             listings.length === 0 ? (
@@ -52,7 +53,7 @@ export function AdminReports() {
                     <ListingPhoto url={listing.photoUrls[0]} product={listing.product} className="size-16 shrink-0 rounded-2xl" />
                     <p className="min-w-0 flex-1 font-bold">{listing.title.hi}</p>
                     <Button variant="secondary" size="md" fullWidth={false} icon={LuEye} onClick={() => void runAdminAction(() => unhideListing(listing.id), hi.sell.saved, reloadAll)}>
-                      {hi.admin.showListing}
+                      {hiAdmin.showListing}
                     </Button>
                   </div>
                 ))}
@@ -77,24 +78,24 @@ function ReportCard({ report, onChanged }: { report: AdminReport; onChanged: () 
       </div>
       {report.text && <p className="text-lg">“{report.text}”</p>}
       <p className="text-base">
-        {hi.admin.reportedBy}: <strong>{report.reporter.name}</strong> ({roleLabels[report.reporter.role as keyof typeof roleLabels] ?? report.reporter.role})
+        {hiAdmin.reportedBy}: <strong>{report.reporter.name}</strong> ({roleLabels[report.reporter.role as keyof typeof roleLabels] ?? report.reporter.role})
       </p>
       {report.listing && (
         <a href={routes.listing(report.listing.id)} className="flex items-center gap-2 font-bold text-primary-700">
           <LuPackage aria-hidden="true" className="size-5" />
           {report.listing.title} · {report.listing.sellerName}
-          {report.listing.hidden && <Badge tone="danger" label={hi.admin.hidden} />}
+          {report.listing.hidden && <Badge tone="danger" label={hiAdmin.hidden} />}
         </a>
       )}
       {report.orderId && (
         <a href={routes.order(report.orderId)} className="font-bold text-primary-700">
-          {hi.admin.openOrder}
+          {hiAdmin.openOrder}
         </a>
       )}
 
       {report.listing && !report.listing.hidden && (
         <div className="flex flex-col gap-2">
-          <TextField label={hi.admin.hideReason} value={hideReason} onChange={(e) => setHideReason(e.target.value)} />
+          <TextField label={hiAdmin.hideReason} value={hideReason} onChange={(e) => setHideReason(e.target.value)} />
           <Button
             variant="danger"
             size="md"
@@ -102,13 +103,13 @@ function ReportCard({ report, onChanged }: { report: AdminReport; onChanged: () 
             disabled={hideReason.trim().length < 2}
             onClick={() => report.listing && void runAdminAction(() => hideListing(report.listing?.id ?? '', hideReason.trim()), hi.sell.saved, onChanged)}
           >
-            {hi.admin.hideListing}
+            {hiAdmin.hideListing}
           </Button>
         </div>
       )}
-      <TextField label={hi.admin.resolution} value={resolution} onChange={(e) => setResolution(e.target.value)} />
-      <Button variant="accent" size="md" icon={LuCheck} onClick={() => void runAdminAction(() => resolveReport(report.id, resolution.trim() || undefined), hi.admin.resolved, onChanged)}>
-        {hi.admin.resolve}
+      <TextField label={hiAdmin.resolution} value={resolution} onChange={(e) => setResolution(e.target.value)} />
+      <Button variant="accent" size="md" icon={LuCheck} onClick={() => void runAdminAction(() => resolveReport(report.id, resolution.trim() || undefined), hiAdmin.resolved, onChanged)}>
+        {hiAdmin.resolve}
       </Button>
     </article>
   );

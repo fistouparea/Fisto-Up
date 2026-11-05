@@ -1,5 +1,5 @@
 import { LuCheck, LuVolume2 } from 'react-icons/lu';
-import { APP_LANGS, type AppLang } from '../i18n/i18n';
+import { APP_LANGS, type AppLang } from '../i18n/lang';
 import { useLang } from '../hooks/useLang';
 import { useSpeechOutput } from '../hooks/useSpeech';
 import { hi } from '../strings/hi';

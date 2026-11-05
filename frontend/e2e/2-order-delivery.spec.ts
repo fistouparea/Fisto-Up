@@ -1,7 +1,10 @@
+import { hiF } from '../src/strings/hiFeatures';
 import { expect, test, type Page } from '@playwright/test';
+import { hiAdmin } from '../src/strings/hiAdmin';
 import { hi, loggedIn, openFresh, orderIdFrom, PHONES, pickPhoto, SNAP_LIST_TITLE } from './fixtures';
 
-const action = (page: Page, name: string) => page.getByRole('button', { name, exact: true });
+/** A button of the screen itself (the seller's "नया ऑर्डर आया!" alert has buttons with the same names). */
+const action = (page: Page, name: string) => page.getByRole('main').getByRole('button', { name, exact: true });
 
 test('Snap & List → order → accept → delivery tracking → paid → completed → rating', async ({ browser }) => {
   // Seller lists with a photo and spoken words; the (fake) AI fills the form.
@@ -37,11 +40,11 @@ test('Snap & List → order → accept → delivery tracking → paid → comple
   const coordinator = await loggedIn(browser, PHONES.coordinator);
   await coordinator.page.goto('/#/admin/orders');
   const card = coordinator.page.locator('article', { hasText: ref }).first();
-  await card.getByRole('button', { name: hi.admin.assignDelivery }).click();
-  await card.getByLabel(hi.admin.deliveryName).fill('सुरेश');
-  await card.getByLabel(hi.admin.deliveryPhone).fill('9876500011');
+  await card.getByRole('button', { name: hiAdmin.assignDelivery }).click();
+  await card.getByLabel(hiAdmin.deliveryName).fill('सुरेश');
+  await card.getByLabel(hiAdmin.deliveryPhone).fill('9876500011');
   await card.getByRole('button', { name: hi.save, exact: true }).click();
-  await coordinator.page.locator('article', { hasText: ref }).first().getByRole('button', { name: hi.delivery.makeLink }).click();
+  await coordinator.page.locator('article', { hasText: ref }).first().getByRole('button', { name: hiF.delivery.makeLink }).click();
   const link = (await coordinator.page.locator('article', { hasText: ref }).first().locator('p.break-all').textContent())?.trim() ?? '';
   expect(link).toMatch(/#\/delivery\/[A-Za-z0-9_-]{32}$/);
 
@@ -49,17 +52,17 @@ test('Snap & List → order → accept → delivery tracking → paid → comple
   const deliveryPhone = await browser.newContext({ serviceWorkers: 'block' });
   const delivery = await deliveryPhone.newPage();
   await delivery.goto(`/${link.slice(link.indexOf('#'))}`);
-  await action(delivery, hi.delivery.buttons.picked).click();
-  await action(delivery, hi.delivery.buttons.on_the_way).click();
+  await action(delivery, hiF.delivery.buttons.picked).click();
+  await action(delivery, hiF.delivery.buttons.on_the_way).click();
   await pickPhoto(delivery);
-  await action(delivery, hi.delivery.buttons.delivered).click();
-  await expect(delivery.getByText(hi.delivery.thanks)).toBeVisible();
+  await action(delivery, hiF.delivery.buttons.delivered).click();
+  await expect(delivery.getByText(hiF.delivery.thanks)).toBeVisible();
   await delivery.reload();
-  await expect(delivery.getByText(hi.delivery.linkInvalid)).toBeVisible();
+  await expect(delivery.getByText(hiF.delivery.linkInvalid)).toBeVisible();
 
   // Buyer sees the timeline, confirms; seller confirms the money; buyer completes and rates.
   await openFresh(buyer.page, `#/orders/${orderId}`);
-  await expect(buyer.page.getByRole('heading', { name: hi.delivery.timeline })).toBeVisible();
+  await expect(buyer.page.getByRole('heading', { name: hiF.delivery.timeline })).toBeVisible();
   await action(buyer.page, hi.orders.actions.deliveredByBuyer).click();
   await openFresh(seller.page, `#/orders/${orderId}`);
   await action(seller.page, hi.orders.actions.paid).click();

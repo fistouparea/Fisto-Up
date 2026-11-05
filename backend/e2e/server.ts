@@ -68,6 +68,8 @@ const app = createApp({
   farmProfiles: new MongoFarmProfileRepository(),
   weather: { getForecast: async () => makeForecast() },
   corsOrigins: ['http://localhost:4173'],
+  // Requests come through vite preview; each test phone sends its own X-Forwarded-For (frontend/e2e/fixtures.ts).
+  trustProxyHops: 1,
   market: { config: { jwtSecret: 'e2e-secret-e2e-secret-e2e-secret-e2e!!', cookieSecure: false, commissionBps: 300 }, credentials: new PinCredentials(4) },
   flags: new FeatureFlags(allOn),
 });

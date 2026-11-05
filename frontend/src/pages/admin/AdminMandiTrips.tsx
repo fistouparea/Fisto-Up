@@ -10,11 +10,12 @@ import { TextField } from '../../components/ui/TextField';
 import { notifyError, notifySuccess } from '../../components/ui/notify';
 import { useLoad } from '../../hooks/useLoad';
 import { cropLabels, hi } from '../../strings/hi';
+import { hiF } from '../../strings/hiFeatures';
 import { shortDate } from '../../utils/dayLabel';
 import { paiseToRupeesInput } from '../../utils/money';
 import { EMPTY_TRIP_FORM, validateTripForm, type TripForm } from '../../utils/tripForm';
 
-const text = () => hi.mandiTrips.admin;
+const text = () => hiF.mandiTrips.admin;
 
 /** Coordinator: plan shared mandi vehicles, see who comes with how much, edit, and move the trip along. */
 export function AdminMandiTrips() {
@@ -32,7 +33,7 @@ export function AdminMandiTrips() {
       <LoadState data={data} errorCode={errorCode} reload={reload}>
         {(trips) =>
           trips.length === 0 ? (
-            <EmptyState icon={LuTruck} message={hi.mandiTrips.empty} />
+            <EmptyState icon={LuTruck} message={hiF.mandiTrips.empty} />
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
               {trips.map((trip) => (
@@ -53,7 +54,7 @@ function TripPanel({ trip, onChanged }: { trip: MandiTrip; onChanged: () => void
     setBusy(true);
     try {
       await setTripStatus(trip.id, status);
-      notifySuccess(hi.mandiTrips.status[status]);
+      notifySuccess(hiF.mandiTrips.status[status]);
       onChanged();
     } catch (error) {
       notifyError(error instanceof ApiError ? error.code : 'UNKNOWN');
@@ -69,20 +70,20 @@ function TripPanel({ trip, onChanged }: { trip: MandiTrip; onChanged: () => void
         <h3 className="text-lg font-bold">
           {trip.mandi} · {shortDate(trip.date)}
         </h3>
-        <Badge tone={tone} label={hi.mandiTrips.status[trip.status]} />
+        <Badge tone={tone} label={hiF.mandiTrips.status[trip.status]} />
       </div>
       <p className="text-base">
         {trip.pickupPoint} ({trip.tehsil}) · {trip.vehicle}
       </p>
       <p className="text-base font-bold">
-        {trip.bookedQuintal} / {trip.capacityQuintal} {hi.mandiTrips.quintal} · {trip.members} {hi.mandiTrips.members}
+        {trip.bookedQuintal} / {trip.capacityQuintal} {hiF.mandiTrips.quintal} · {trip.members} {hiF.mandiTrips.members}
       </p>
       {trip.memberList && trip.memberList.length > 0 && (
         <ul className="flex flex-col gap-1 rounded-2xl bg-surface-page p-2 text-base">
           {trip.memberList.map((member) => (
             <li key={member.phone} className="flex flex-wrap items-center justify-between gap-2">
               <span>
-                {member.name}: {cropLabels[member.crop].hindi} {member.quantityQuintal} {hi.mandiTrips.quintal}
+                {member.name}: {cropLabels[member.crop].hindi} {member.quantityQuintal} {hiF.mandiTrips.quintal}
               </span>
               <a href={`tel:+91${member.phone}`} className="inline-flex min-h-11 items-center gap-1 font-bold text-primary-700">
                 <LuPhone aria-hidden="true" className="size-4" />

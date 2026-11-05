@@ -1,4 +1,4 @@
-import { model, Schema, type InferSchemaType } from 'mongoose';
+import { model, Schema } from 'mongoose';
 import { CROPS, SEVERITIES } from '../types/diagnosis.js';
 import { FOLLOW_UP_ANSWERS } from '../types/history.js';
 
@@ -43,6 +43,5 @@ diagnosisRecordSchema.index({ deviceId: 1, createdAt: -1 });
 // Pilot dashboard: follow-up answers given in the chosen weeks.
 diagnosisRecordSchema.index({ 'followUp.answeredAt': 1 }, { partialFilterExpression: { followUp: { $exists: true } } });
 
-export type DiagnosisRecordDocument = InferSchemaType<typeof diagnosisRecordSchema>;
 
 export const DiagnosisRecord = model('DiagnosisRecord', diagnosisRecordSchema, 'diagnoses');

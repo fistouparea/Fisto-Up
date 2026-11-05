@@ -11,7 +11,7 @@ import { PageHeader } from '../components/ui/PageHeader';
 import { Skeleton } from '../components/ui/Skeleton';
 import { notifyError, notifySuccess } from '../components/ui/notify';
 import { useLoad } from '../hooks/useLoad';
-import { hi } from '../strings/hi';
+import { hiF } from '../strings/hiFeatures';
 import { compressImage } from '../utils/compressImage';
 
 const STEP_ICONS: Record<DeliveryStep, typeof LuTruck> = { picked: LuPackageCheck, on_the_way: LuTruck, delivered: LuCircleCheckBig };
@@ -23,15 +23,15 @@ export function DeliveryPage({ token }: { token: string }) {
   const [busy, setBusy] = useState(false);
   const [finished, setFinished] = useState(false);
 
-  if (finished) return <EmptyState icon={LuCircleCheckBig} tone="success" message={hi.delivery.thanks} />;
-  if (errorCode) return <EmptyState icon={LuTruck} tone="warning" message={errorCode === 'NOT_FOUND' ? hi.delivery.linkInvalid : hi.delivery.loadFailed} />;
+  if (finished) return <EmptyState icon={LuCircleCheckBig} tone="success" message={hiF.delivery.thanks} />;
+  if (errorCode) return <EmptyState icon={LuTruck} tone="warning" message={errorCode === 'NOT_FOUND' ? hiF.delivery.linkInvalid : hiF.delivery.loadFailed} />;
   if (!data) return <Skeleton className="h-64" />;
 
   const send = async (step: DeliveryStep) => {
     setBusy(true);
     try {
       const next = await reportDeliveryStep(token, step, photo);
-      notifySuccess(hi.delivery.steps[step]);
+      notifySuccess(hiF.delivery.steps[step]);
       setPhoto(null);
       if (next.next === null) setFinished(true);
       else reload();
@@ -43,14 +43,14 @@ export function DeliveryPage({ token }: { token: string }) {
   };
   const next = data.next;
   const NextIcon = next ? STEP_ICONS[next] : LuCircleCheckBig;
-  const speak = `${hi.delivery.title}. ${data.item}, ${data.quantity}. ${data.buyerName}, ${data.address}.`;
+  const speak = `${hiF.delivery.title}. ${data.item}, ${data.quantity}. ${data.buyerName}, ${data.address}.`;
 
   return (
     <section className="flex flex-col gap-4">
-      <PageHeader title={hi.delivery.title} icon={LuTruck} speakText={speak} />
+      <PageHeader title={hiF.delivery.title} icon={LuTruck} speakText={speak} />
       <Card>
         <p className="text-sm text-ink-500">
-          {hi.delivery.order}: <strong className="tracking-wider">{data.ref}</strong>
+          {hiF.delivery.order}: <strong className="tracking-wider">{data.ref}</strong>
         </p>
         <p className="text-2xl font-bold" data-read-aloud>
           {data.item} · {data.quantity}
@@ -64,10 +64,10 @@ export function DeliveryPage({ token }: { token: string }) {
           </span>
         </p>
       </Card>
-      <ol className="flex flex-col gap-1 text-lg" aria-label={hi.delivery.timeline}>
+      <ol className="flex flex-col gap-1 text-lg" aria-label={hiF.delivery.timeline}>
         {data.done.map((step) => (
           <li key={step} className="flex items-center gap-2 text-success-800">
-            <LuCircleCheckBig aria-hidden="true" className="size-6" /> {hi.delivery.steps[step]}
+            <LuCircleCheckBig aria-hidden="true" className="size-6" /> {hiF.delivery.steps[step]}
           </li>
         ))}
       </ol>
@@ -76,12 +76,12 @@ export function DeliveryPage({ token }: { token: string }) {
           <div className="flex flex-col gap-2">
             <p className="flex items-center gap-2 text-lg font-bold">
               <LuCamera aria-hidden="true" className="size-6 text-primary-700" />
-              {hi.delivery.photoOptional}
+              {hiF.delivery.photoOptional}
             </p>
             {photo ? <PhotoPreview photo={photo} size="small" /> : <div className="flex gap-3"><PhotoActions onPick={(file) => void compressImage(file).then(setPhoto, () => notifyError('PHOTO_READ_FAILED'))} /></div>}
           </div>
           <Button variant="accent" size="hero" icon={NextIcon} disabled={busy} onClick={() => void send(next)}>
-            {hi.delivery.buttons[next]}
+            {hiF.delivery.buttons[next]}
           </Button>
         </>
       )}

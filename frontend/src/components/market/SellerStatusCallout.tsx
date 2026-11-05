@@ -1,4 +1,4 @@
-import { LuBadgeCheck, LuClock, LuFilePen, LuOctagonAlert } from 'react-icons/lu';
+import { LuClock, LuFilePen, LuOctagonAlert } from 'react-icons/lu';
 import type { SellerProfile } from '../../api/marketTypes';
 import { hi } from '../../strings/hi';
 import { Callout } from '../ui/Callout';
@@ -13,4 +13,3 @@ export function SellerStatusCallout({ seller }: { seller: SellerProfile }) {
   return null;
 }
 
-export const VerifiedIcon = LuBadgeCheck;

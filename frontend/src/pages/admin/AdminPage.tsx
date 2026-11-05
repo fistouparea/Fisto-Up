@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { LuShieldCheck } from 'react-icons/lu';
 import { ADMIN_TABS, routes, type AdminTab } from '../../hooks/useHashRoute';
-import { hi } from '../../strings/hi';
+import { hiAdmin } from '../../strings/hiAdmin';
 import { useFlags } from '../../hooks/useFlags';
 import { cn } from '../../utils/cn';
 import { AdminAssistedListing } from './AdminAssistedListing';
@@ -33,9 +33,9 @@ export function AdminPage({ tab }: { tab: AdminTab }) {
     <section className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
         <LuShieldCheck aria-hidden="true" className="size-8 text-primary-700" />
-        <h2 className="text-2xl font-bold">{hi.admin.title}</h2>
+        <h2 className="text-2xl font-bold">{hiAdmin.title}</h2>
       </div>
-      <nav aria-label={hi.admin.title} className="-mx-4 overflow-x-auto px-4">
+      <nav aria-label={hiAdmin.title} className="-mx-4 overflow-x-auto px-4">
         <ul className="flex gap-2 pb-1">
           {ADMIN_TABS.filter((item) => item !== 'pilot' || pilotDashboard).map((item) => (
             <li key={item}>
@@ -48,7 +48,7 @@ export function AdminPage({ tab }: { tab: AdminTab }) {
                   item === tab ? 'border-primary-700 bg-primary-700 text-white' : 'border-line bg-surface text-ink-700 hover:border-primary-300',
                 )}
               >
-                {hi.admin.tabs[item]}
+                {hiAdmin.tabs[item]}
               </a>
             </li>
           ))}

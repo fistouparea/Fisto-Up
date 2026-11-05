@@ -3,9 +3,9 @@ import { LuPawPrint, LuTractor, LuUsers } from 'react-icons/lu';
 import type { FlagKey } from '../api/flags';
 
 /** Mirrors backend/src/config/serviceKinds.ts (ids, units, rules); keep in sync. Hindi type names live here too. */
-export const SERVICE_KINDS = ['equipment', 'labour', 'livestock'] as const;
-export type ServiceKind = (typeof SERVICE_KINDS)[number];
-export type ServiceSide = 'offer' | 'need';
+import { SERVICE_KINDS, type ServiceKind, type ServiceSide } from './serviceKindIds';
+
+export { SERVICE_KINDS, type ServiceKind, type ServiceSide };
 export type PriceUnit = 'hour' | 'day' | 'bigha' | 'animal';
 
 export const PRICE_UNIT_LABELS: Record<PriceUnit, string> = { hour: 'घंटा', day: 'दिन', bigha: 'बीघा', animal: 'पशु' };

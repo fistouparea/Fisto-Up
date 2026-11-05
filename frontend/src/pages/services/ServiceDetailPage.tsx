@@ -20,6 +20,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { routes } from '../../hooks/useHashRoute';
 import { useLoad } from '../../hooks/useLoad';
 import { hi, marketErrorMessage } from '../../strings/hi';
+import { hiF } from '../../strings/hiFeatures';
 import { addDays, todayInIndia } from '../../utils/indiaDate';
 import { goToLogin } from '../../utils/loginRedirect';
 import { formatRupees } from '../../utils/money';
@@ -53,18 +54,18 @@ export function ServiceDetailPage({ id }: { id: string }) {
 function ListingFacts({ listing }: { listing: ServiceListing }) {
   const details = listing.details;
   const facts: [string, string][] = [];
-  if (listing.kind === 'equipment') facts.push([hi.services.type, details.withOperator === false ? hi.services.equipment.noOperator : hi.services.equipment.withOperator]);
+  if (listing.kind === 'equipment') facts.push([hiF.services.type, details.withOperator === false ? hiF.services.equipment.noOperator : hiF.services.equipment.withOperator]);
   if (listing.kind === 'labour') {
-    facts.push([hi.services.skills, listing.skills.map((skill) => typeLabel('labour', skill)).join(', ')]);
-    if (typeof details.workersNeeded === 'number') facts.push([hi.services.labour.workersNeeded, String(details.workersNeeded)]);
+    facts.push([hiF.services.skills, listing.skills.map((skill) => typeLabel('labour', skill)).join(', ')]);
+    if (typeof details.workersNeeded === 'number') facts.push([hiF.services.labour.workersNeeded, String(details.workersNeeded)]);
   }
   if (listing.kind === 'livestock') {
-    facts.push([hi.services.livestock.breed, String(details.breed ?? '—')], [hi.services.livestock.age, String(details.ageYears ?? '—')]);
-    if (typeof details.milkLitresPerDay === 'number') facts.push([hi.services.livestock.milk, String(details.milkLitresPerDay)]);
-    if (typeof details.vaccinations === 'string' && details.vaccinations) facts.push([hi.services.livestock.vaccination, details.vaccinations]);
+    facts.push([hiF.services.livestock.breed, String(details.breed ?? '—')], [hiF.services.livestock.age, String(details.ageYears ?? '—')]);
+    if (typeof details.milkLitresPerDay === 'number') facts.push([hiF.services.livestock.milk, String(details.milkLitresPerDay)]);
+    if (typeof details.vaccinations === 'string' && details.vaccinations) facts.push([hiF.services.livestock.vaccination, details.vaccinations]);
     const purpose = LIVESTOCK_PURPOSES[details.purpose as keyof typeof LIVESTOCK_PURPOSES] as string | undefined;
-    if (purpose) facts.push([hi.services.livestock.purpose, purpose]);
-    facts.push([hi.services.livestock.count, String(details.count ?? 1)]);
+    if (purpose) facts.push([hiF.services.livestock.purpose, purpose]);
+    facts.push([hiF.services.livestock.count, String(details.count ?? 1)]);
   }
   const price = `${formatRupees(listing.pricePaise)} / ${PRICE_UNIT_LABELS[listing.priceUnit]}`;
   const speak = [listing.title, typeLabel(listing.kind, listing.typeId), price, listing.description, ...facts.map(([label, value]) => `${label}: ${value}`)].join('। ');
@@ -79,14 +80,14 @@ function ListingFacts({ listing }: { listing: ServiceListing }) {
           ))}
         </div>
       )}
-      {listing.kind === 'livestock' && <Callout tone="warning" icon={LuScale} text={hi.services.livestock.legal} />}
+      {listing.kind === 'livestock' && <Callout tone="warning" icon={LuScale} text={hiF.services.livestock.legal} />}
       <Card>
         <p className="text-sm font-bold text-primary-700">{typeLabel(listing.kind, listing.typeId)}</p>
         <p className="text-2xl font-bold">{price}</p>
         <p className="mt-1 flex items-center gap-1 text-base text-ink-700" data-read-aloud>
           <LuMapPin aria-hidden="true" className="size-5" />
           {listing.owner.name}, {listing.village}
-          {listing.distanceKm !== undefined && ` · ${listing.distanceKm} ${hi.services.kmAway}`}
+          {listing.distanceKm !== undefined && ` · ${listing.distanceKm} ${hiF.services.kmAway}`}
         </p>
         {listing.description && <p className="mt-2">{listing.description}</p>}
         {facts.length > 0 && (
@@ -99,7 +100,7 @@ function ListingFacts({ listing }: { listing: ServiceListing }) {
             ))}
           </dl>
         )}
-        <p className="mt-3 text-base text-ink-500">{hi.services.noPayment}</p>
+        <p className="mt-3 text-base text-ink-500">{hiF.services.noPayment}</p>
       </Card>
     </>
   );
@@ -113,7 +114,7 @@ function BookingForm({ listing, loggedIn }: { listing: ServiceListing; loggedIn:
   if (!loggedIn) {
     return (
       <Button variant="accent" size="lg" icon={LuLogIn} onClick={() => goToLogin()}>
-        {hi.services.loginToBook}
+        {hiF.services.loginToBook}
       </Button>
     );
   }
@@ -121,7 +122,7 @@ function BookingForm({ listing, loggedIn }: { listing: ServiceListing; loggedIn:
     setBusy(true);
     try {
       const booking = await requestBooking(listing.id, { dates, ...(note.trim() && { note: note.trim() }) });
-      notifySuccess(hi.services.requested);
+      notifySuccess(hiF.services.requested);
       navigateTo(routes.serviceBooking(booking.id));
     } catch (error) {
       notifyError(error instanceof ApiError ? error.code : 'UNKNOWN');
@@ -129,19 +130,19 @@ function BookingForm({ listing, loggedIn }: { listing: ServiceListing; loggedIn:
     }
   };
   return (
-    <Card icon={LuCalendarDays} title={calendar ? hi.services.pickDays : hi.services.enquire}>
+    <Card icon={LuCalendarDays} title={calendar ? hiF.services.pickDays : hiF.services.enquire}>
       {calendar &&
         (listing.freeDates.length === 0 ? (
-          <p>{hi.services.noFreeDays}</p>
+          <p>{hiF.services.noFreeDays}</p>
         ) : (
-          <DayPicker days={listing.freeDates} selected={dates} onChange={setDates} label={hi.services.pickDays} />
+          <DayPicker days={listing.freeDates} selected={dates} onChange={setDates} label={hiF.services.pickDays} />
         ))}
       <div className="mt-3">
-        <VoiceTextBox id="booking-note" label={hi.services.note} value={note} onChange={setNote} maxLength={300} />
+        <VoiceTextBox id="booking-note" label={hiF.services.note} value={note} onChange={setNote} maxLength={300} />
       </div>
-      <p className="mt-2 text-base text-ink-500">{hi.services.contactAfter}</p>
+      <p className="mt-2 text-base text-ink-500">{hiF.services.contactAfter}</p>
       <Button variant="accent" size="lg" icon={LuSend} className="mt-3" disabled={busy || (calendar && dates.length === 0)} onClick={() => void send()}>
-        {calendar ? hi.services.request : hi.services.enquire}
+        {calendar ? hiF.services.request : hiF.services.enquire}
       </Button>
     </Card>
   );
@@ -157,7 +158,7 @@ function OwnerTools({ listing, onChanged }: { listing: ServiceListing; onChanged
     setBusy(true);
     try {
       await updateService(listing.id, change);
-      notifySuccess(hi.services.saved);
+      notifySuccess(hiF.services.saved);
       onChanged();
     } catch (error) {
       notifyError(error instanceof ApiError ? error.code : 'UNKNOWN');
@@ -168,19 +169,19 @@ function OwnerTools({ listing, onChanged }: { listing: ServiceListing; onChanged
   const status = listing.status ?? 'active';
   return (
     <>
-      <Callout tone={status === 'active' ? 'success' : status === 'rejected' ? 'danger' : 'warning'} icon={SERVICE_KIND_INFO[listing.kind].icon} text={`${hi.services.ownListing} ${hi.services.status[status]}${listing.rejectReason ? `: ${listing.rejectReason}` : ''}`} />
-      {status === 'pending_approval' && <p className="text-base text-ink-700">{hi.services.pendingApproval}</p>}
+      <Callout tone={status === 'active' ? 'success' : status === 'rejected' ? 'danger' : 'warning'} icon={SERVICE_KIND_INFO[listing.kind].icon} text={`${hiF.services.ownListing} ${hiF.services.status[status]}${listing.rejectReason ? `: ${listing.rejectReason}` : ''}`} />
+      {status === 'pending_approval' && <p className="text-base text-ink-700">{hiF.services.pendingApproval}</p>}
       {(status === 'active' || status === 'paused') && (
         <Button variant="secondary" size="md" icon={status === 'active' ? LuPause : LuPlay} disabled={busy} onClick={() => void act({ status: status === 'active' ? 'paused' : 'active' })}>
-          {status === 'active' ? hi.services.pause : hi.services.resume}
+          {status === 'active' ? hiF.services.pause : hiF.services.resume}
         </Button>
       )}
       {calendar && (
-        <Card icon={LuCalendarDays} title={hi.services.calendar}>
-          <p className="mb-2 text-base text-ink-500">{hi.services.calendarHint}</p>
-          <DayPicker days={Array.from({ length: 30 }, (_, index) => addDays(today, index))} selected={dates} disabled={booked} onChange={setDates} label={hi.services.calendar} />
+        <Card icon={LuCalendarDays} title={hiF.services.calendar}>
+          <p className="mb-2 text-base text-ink-500">{hiF.services.calendarHint}</p>
+          <DayPicker days={Array.from({ length: 30 }, (_, index) => addDays(today, index))} selected={dates} disabled={booked} onChange={setDates} label={hiF.services.calendar} />
           <Button variant="accent" size="md" className="mt-3" disabled={busy} onClick={() => void act({ availableDates: [...new Set([...dates, ...booked])].sort() })}>
-            {hi.services.saveCalendar}
+            {hiF.services.saveCalendar}
           </Button>
         </Card>
       )}
@@ -192,18 +193,18 @@ function OwnerTools({ listing, onChanged }: { listing: ServiceListing; onChanged
 function LabourMatches({ listingId }: { listingId: string }) {
   const { data } = useLoad(() => fetchMatches(listingId), [listingId]);
   return (
-    <Card icon={LuUsers} title={hi.services.labour.matches}>
-      <p className="mb-3 text-base text-ink-500">{hi.services.labour.matchesHint}</p>
+    <Card icon={LuUsers} title={hiF.services.labour.matches}>
+      <p className="mb-3 text-base text-ink-500">{hiF.services.labour.matchesHint}</p>
       {data === undefined ? (
         <Skeleton className="h-24" />
       ) : data.length === 0 ? (
-        <p>{hi.services.labour.noMatches}</p>
+        <p>{hiF.services.labour.noMatches}</p>
       ) : (
         <div className="flex flex-col gap-3">
           {data.map((match) => (
             <div key={match.listing.id} className="flex flex-col gap-1">
               <ServiceCard listing={match.listing} />
-              {match.sharedDates.length > 0 && <Badge tone="success" label={`${hi.services.labour.sharedDays}: ${match.sharedDates.length}`} />}
+              {match.sharedDates.length > 0 && <Badge tone="success" label={`${hiF.services.labour.sharedDays}: ${match.sharedDates.length}`} />}
             </div>
           ))}
         </div>

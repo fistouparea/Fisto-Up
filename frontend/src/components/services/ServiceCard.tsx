@@ -3,7 +3,7 @@ import { LuMapPin, LuStar } from 'react-icons/lu';
 import type { ServiceListing } from '../../api/services';
 import { PRICE_UNIT_LABELS, SERVICE_KIND_INFO, typeLabel } from '../../data/serviceKinds';
 import { routes } from '../../hooks/useHashRoute';
-import { hi } from '../../strings/hi';
+import { hiF } from '../../strings/hiFeatures';
 import { formatRupees } from '../../utils/money';
 import { Badge } from '../ui/Badge';
 
@@ -38,7 +38,7 @@ export function ServiceCard({ listing, showStatus = false }: { listing: ServiceL
           <LuMapPin aria-hidden="true" className="size-4 shrink-0" />
           <span className="truncate">
             {listing.village}
-            {listing.distanceKm !== undefined && ` · ${listing.distanceKm} ${hi.services.kmAway}`}
+            {listing.distanceKm !== undefined && ` · ${listing.distanceKm} ${hiF.services.kmAway}`}
           </span>
         </p>
         <div className="flex flex-wrap items-center gap-2">
@@ -48,7 +48,7 @@ export function ServiceCard({ listing, showStatus = false }: { listing: ServiceL
             </span>
           )}
           {showStatus && listing.status && (
-            <Badge tone={listing.status === 'active' ? 'success' : listing.status === 'rejected' ? 'danger' : 'warning'} label={hi.services.status[listing.status]} />
+            <Badge tone={listing.status === 'active' ? 'success' : listing.status === 'rejected' ? 'danger' : 'warning'} label={hiF.services.status[listing.status]} />
           )}
         </div>
       </div>

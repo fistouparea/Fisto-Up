@@ -4,7 +4,8 @@ import { Callout } from '../components/ui/Callout';
 import { PageHeader } from '../components/ui/PageHeader';
 import { useLang } from '../hooks/useLang';
 import { legalEn } from '../strings/en';
-import { hi, legalHi } from '../strings/hi';
+import { hi } from '../strings/hi';
+import { legalHi } from '../strings/legalHi';
 
 /** Privacy policy or terms, in Hindi or English (toggle). Clearly marked as a draft until a lawyer reviewed it. */
 export function LegalPage({ doc }: { doc: 'privacy' | 'terms' }) {

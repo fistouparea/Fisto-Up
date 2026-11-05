@@ -15,6 +15,7 @@ import { notifyError, notifySuccess } from '../../components/ui/notify';
 import { PRICE_UNIT_LABELS, SERVICE_KIND_INFO } from '../../data/serviceKinds';
 import { useLoad } from '../../hooks/useLoad';
 import { hi, marketErrorMessage } from '../../strings/hi';
+import { hiF } from '../../strings/hiFeatures';
 import { dayLabel, shortDate } from '../../utils/dayLabel';
 import { formatRupees } from '../../utils/money';
 
@@ -59,11 +60,11 @@ function BookingView({ booking, onChanged }: { booking: Booking; onChanged: () =
     }
   };
   const tone = booking.status === 'accepted' || booking.status === 'completed' ? 'success' : booking.status === 'requested' ? 'warning' : 'danger';
-  const status = hi.services.bookingStatus[booking.status];
+  const status = hiF.services.bookingStatus[booking.status];
   const speak = `${booking.title}। ${status}। ${booking.dates.map((day) => shortDate(day)).join(', ')}`;
   return (
     <section className="flex flex-col gap-4">
-      <PageHeader title={hi.services.bookingTitle} icon={SERVICE_KIND_INFO[booking.kind].icon} speakText={speak} onBack={() => window.history.back()} backLabel={hi.back} />
+      <PageHeader title={hiF.services.bookingTitle} icon={SERVICE_KIND_INFO[booking.kind].icon} speakText={speak} onBack={() => window.history.back()} backLabel={hi.back} />
       <Card>
         <div className="flex flex-wrap items-center gap-2">
           <h3 className="min-w-0 flex-1 text-xl font-bold">{booking.title}</h3>
@@ -78,7 +79,7 @@ function BookingView({ booking, onChanged }: { booking: Booking; onChanged: () =
           </p>
         )}
         <p className="mt-1 text-base text-ink-700">
-          {hi.services.from}: {booking.requester.name} · {hi.services.to}: {booking.owner.name}
+          {hiF.services.from}: {booking.requester.name} · {hiF.services.to}: {booking.owner.name}
         </p>
         {booking.note && <p className="mt-2 rounded-2xl bg-surface-page p-3">{booking.note}</p>}
       </Card>
@@ -86,29 +87,29 @@ function BookingView({ booking, onChanged }: { booking: Booking; onChanged: () =
       {phone ? (
         <a href={`tel:+91${phone}`} className="inline-flex min-h-16 items-center justify-center gap-3 rounded-2xl bg-primary-700 px-4 text-xl font-bold text-white">
           <LuPhone aria-hidden="true" className="size-7" />
-          {hi.services.call}: {phone}
+          {hiF.services.call}: {phone}
         </a>
       ) : (
-        booking.status === 'requested' && <p className="text-base text-ink-500">{hi.services.contactAfter}</p>
+        booking.status === 'requested' && <p className="text-base text-ink-500">{hiF.services.contactAfter}</p>
       )}
 
       {booking.allowedNext.length > 0 && (
         <div className="grid grid-cols-1 gap-3">
           {booking.allowedNext.map((to) => (
-            <Button key={to} variant={STEP_STYLE[to].variant} size={to === 'accepted' || to === 'rejected' ? 'hero' : 'lg'} icon={STEP_STYLE[to].icon} disabled={busy} onClick={() => void act(() => stepBooking(booking.id, to), hi.services.bookingStatus[to])}>
-              {hi.services.steps[to as keyof typeof hi.services.steps]}
+            <Button key={to} variant={STEP_STYLE[to].variant} size={to === 'accepted' || to === 'rejected' ? 'hero' : 'lg'} icon={STEP_STYLE[to].icon} disabled={busy} onClick={() => void act(() => stepBooking(booking.id, to), hiF.services.bookingStatus[to])}>
+              {hiF.services.steps[to as keyof typeof hiF.services.steps]}
             </Button>
           ))}
         </div>
       )}
 
       {booking.canRate && (
-        <Card title={hi.services.rate}>
-          <StarPicker label={hi.services.rate} disabled={busy} onPick={(stars) => void act(() => rateBooking(booking.id, stars), hi.services.rated)} />
+        <Card title={hiF.services.rate}>
+          <StarPicker label={hiF.services.rate} disabled={busy} onPick={(stars) => void act(() => rateBooking(booking.id, stars), hiF.services.rated)} />
         </Card>
       )}
       {complaints && booking.viewerRole !== 'coordinator' && <ComplaintForm target={{ kind: 'booking', id: booking.id }} />}
-      <p className="text-base text-ink-500">{hi.services.noPayment}</p>
+      <p className="text-base text-ink-500">{hiF.services.noPayment}</p>
     </section>
   );
 }

@@ -15,6 +15,7 @@ import { PhoneField, TextField } from '../../components/ui/TextField';
 import { notifyError, notifySuccess } from '../../components/ui/notify';
 import { useLoad } from '../../hooks/useLoad';
 import { hi } from '../../strings/hi';
+import { hiAdmin } from '../../strings/hiAdmin';
 
 const BOARD_ORDER: OrderStatus[] = ['requested', 'accepted', 'ready', 'out_for_delivery', 'ready_for_pickup', 'delivered', 'paid', 'completed', 'rejected', 'cancelled'];
 type Filter = 'active' | OrderStatus;
@@ -31,7 +32,7 @@ export function AdminOrders() {
   return (
     <div className="flex flex-col gap-4">
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
-        <Chip label={hi.admin.activeOrders} selected={filter === 'active'} onClick={() => setFilter('active')} />
+        <Chip label={hiAdmin.activeOrders} selected={filter === 'active'} onClick={() => setFilter('active')} />
         {BOARD_ORDER.map((status) => (
           <Chip key={status} label={`${hi.orders.status[status]} (${counts.get(status) ?? 0})`} selected={filter === status} onClick={() => setFilter(status)} />
         ))}
@@ -39,7 +40,7 @@ export function AdminOrders() {
       <LoadState data={data} errorCode={errorCode} reload={reload}>
         {(orders) => {
           const groups = shownStatuses.map((status) => ({ status, orders: orders.filter((order) => order.status === status) })).filter((group) => group.orders.length > 0);
-          if (groups.length === 0) return <EmptyState icon={LuClipboardList} message={hi.admin.noOrders} />;
+          if (groups.length === 0) return <EmptyState icon={LuClipboardList} message={hiAdmin.noOrders} />;
           return (
             <div className="flex flex-col gap-6">
               {groups.map((group) => (
@@ -70,7 +71,7 @@ function BoardOrder({ order, onChanged }: { order: Order; onChanged: () => void 
       <OrderCard order={order} />
       {order.allowedNext.length > 0 && (
         <div className="px-2">
-          <p className="mb-2 text-sm font-bold text-ink-500">{hi.admin.onBehalf}</p>
+          <p className="mb-2 text-sm font-bold text-ink-500">{hiAdmin.onBehalf}</p>
           <OrderActions order={order} text={hi.orders} onChanged={onChanged} />
         </div>
       )}
@@ -90,7 +91,7 @@ function DeliveryPersonForm({ order, onSaved }: { order: Order; onSaved: () => v
     setBusy(true);
     try {
       await assignDeliveryPerson(order.id, { name: name.trim(), phone });
-      notifySuccess(hi.admin.deliverySaved);
+      notifySuccess(hiAdmin.deliverySaved);
       setOpen(false);
       onSaved();
     } catch (error) {
@@ -103,14 +104,14 @@ function DeliveryPersonForm({ order, onSaved }: { order: Order; onSaved: () => v
   if (!open) {
     return (
       <Button variant="ghost" size="md" icon={LuTruck} onClick={() => setOpen(true)}>
-        {order.deliveryPerson ? `${hi.admin.deliveryPerson}: ${order.deliveryPerson.name}` : hi.admin.assignDelivery}
+        {order.deliveryPerson ? `${hiAdmin.deliveryPerson}: ${order.deliveryPerson.name}` : hiAdmin.assignDelivery}
       </Button>
     );
   }
   return (
     <div className="flex flex-col gap-2 px-2 pb-2">
-      <TextField label={hi.admin.deliveryName} value={name} onChange={(e) => setName(e.target.value)} />
-      <PhoneField label={hi.admin.deliveryPhone} value={phone} onChange={(e) => setPhone(e.target.value)} />
+      <TextField label={hiAdmin.deliveryName} value={name} onChange={(e) => setName(e.target.value)} />
+      <PhoneField label={hiAdmin.deliveryPhone} value={phone} onChange={(e) => setPhone(e.target.value)} />
       <div className="grid grid-cols-2 gap-2">
         <Button variant="accent" size="md" disabled={busy || name.trim().length < 2 || !/^[6-9]\d{9}$/.test(phone)} onClick={() => void save()}>
           {hi.save}

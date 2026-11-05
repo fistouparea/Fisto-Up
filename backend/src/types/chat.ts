@@ -33,8 +33,6 @@ export const chatRequestSchema = z.object({
     ),
 });
 
-export type ChatRequest = z.infer<typeof chatRequestSchema>;
-
 /** Shape the AI model must return for a chat answer. */
 export const aiChatAnswerSchema = z.object({
   answer: z.string().trim().min(1).max(MAX_ANSWER_LENGTH),
