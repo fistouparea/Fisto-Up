@@ -8,7 +8,7 @@ import { EmptyState } from '../components/ui/EmptyState';
 import { PageHeader } from '../components/ui/PageHeader';
 import { Skeleton } from '../components/ui/Skeleton';
 import { useFlags } from '../hooks/useFlags';
-import { useLoad } from '../hooks/useLoad';
+import { useCachedResource } from '../hooks/useCachedResource';
 import { hi } from '../strings/hi';
 
 const dayFormat = new Intl.DateTimeFormat('hi-IN', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
@@ -17,7 +17,8 @@ const formatDay = (isoDate: string) => dayFormat.format(new Date(`${isoDate}T00:
 /** "मेरे लिए योजनाएँ": central + Rajasthan farmer schemes, simple hints from the farm, always "check officially". */
 export function SchemesPage() {
   const { schemes } = useFlags();
-  const { data, errorCode, reload } = useLoad(() => (schemes ? fetchSchemesForMe() : Promise.resolve([])), [schemes]);
+  // Kept on the phone: the list opens offline too (with the banner showing the data is old).
+  const { data, errorCode, reload } = useCachedResource(schemes ? 'schemes' : null, fetchSchemesForMe);
 
   return (
     <section className="flex flex-col gap-4">

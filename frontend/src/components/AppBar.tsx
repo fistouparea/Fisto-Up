@@ -9,8 +9,11 @@ import { hi } from '../strings/hi';
 /** 48 px round buttons: three fit next to the name on a 360 px phone. */
 const ROUND_LINK = 'flex size-12 shrink-0 items-center justify-center rounded-full bg-primary-800 hover:bg-primary-900';
 
-/** Slim top bar with the brand and the सूचनाएँ bell. Navigation lives in the bottom bar. */
-export function AppBar() {
+/**
+ * Slim top bar with the brand and the सूचनाएँ bell. Navigation lives in the bottom bar.
+ * `minimal`: brand only, for people who are not app users (the delivery person's link).
+ */
+export function AppBar({ minimal = false }: { minimal?: boolean }) {
   const { unreadCount: farmUnread } = useNotifications();
   const { unreadCount: marketUnread } = useMarketNotifications();
   const unreadCount = farmUnread + marketUnread;
@@ -28,30 +31,26 @@ export function AppBar() {
           <h1 className="text-2xl font-bold">{hi.appName}</h1>
           <p className="truncate text-base text-primary-100">{hi.appTagline}</p>
         </div>
-        {helpRequests && (
+        {!minimal && helpRequests && (
           <a href={routes.help} aria-label={hi.help.button} className={ROUND_LINK}>
             <LuLifeBuoy aria-hidden="true" className="size-7" />
           </a>
         )}
-        <a
-          href={routes.account}
-          aria-label={user ? `${hi.account.open}: ${user.name}` : hi.account.login}
-          className={ROUND_LINK}
-        >
-          <LuUserRound aria-hidden="true" className="size-7" />
-        </a>
-        <a
-          href={routes.notifications}
-          aria-label={bellLabel}
-          className={`relative ${ROUND_LINK}`}
-        >
-          <LuBell aria-hidden="true" className="size-7" />
-          {unreadCount > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 flex min-w-6 items-center justify-center rounded-full bg-accent-400 px-1.5 text-sm font-bold text-ink-900">
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </span>
-          )}
-        </a>
+        {!minimal && (
+          <>
+            <a href={routes.account} aria-label={user ? `${hi.account.open}: ${user.name}` : hi.account.login} className={ROUND_LINK}>
+              <LuUserRound aria-hidden="true" className="size-7" />
+            </a>
+            <a href={routes.notifications} aria-label={bellLabel} className={`relative ${ROUND_LINK}`}>
+              <LuBell aria-hidden="true" className="size-7" />
+              {unreadCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex min-w-6 items-center justify-center rounded-full bg-accent-400 px-1.5 text-sm font-bold text-ink-900">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </a>
+          </>
+        )}
       </div>
     </header>
   );

@@ -20,6 +20,8 @@ const write = { 'X-Requested-With': 'agriai' };
 test('Phase 5/6 screens', async ({ browser }) => {
   // --- Farmer without account ---
   const guest = await newPhone(browser);
+  // The home screen itself, not the one-time farm setup (that screen has its own Phase 2 screenshots).
+  await guest.page.addInitScript(() => localStorage.setItem('agriai.flag.onboardingDone', '1'));
   await guest.page.goto('/#/');
   await shot(guest.page, 'home-more-services');
   await guest.page.goto('/#/settings');

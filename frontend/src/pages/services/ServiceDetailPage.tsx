@@ -1,7 +1,7 @@
 import { ComplaintForm } from '../../components/complaints/ComplaintForm';
 import { useFlags } from '../../hooks/useFlags';
 import { useState } from 'react';
-import { LuCalendarDays, LuLogIn, LuMapPin, LuPause, LuPlay, LuScale, LuSend, LuUsers } from 'react-icons/lu';
+import { LuArrowLeft, LuCalendarDays, LuLogIn, LuMapPin, LuPause, LuPlay, LuScale, LuSend, LuUsers } from 'react-icons/lu';
 import { ApiError } from '../../api/client';
 import { fetchMatches, fetchService, requestBooking, updateService, type ServiceListing } from '../../api/services';
 import { VoiceTextBox } from '../../components/VoiceTextBox';
@@ -30,7 +30,15 @@ export function ServiceDetailPage({ id }: { id: string }) {
   const { data, errorCode, reload } = useLoad(() => fetchService(id), [id]);
   const { user } = useAuth();
   const { complaints } = useFlags();
-  if (errorCode) return <EmptyState icon={LuMapPin} tone="warning" message={marketErrorMessage(errorCode)} />;
+  if (errorCode) {
+    return (
+      <EmptyState icon={LuMapPin} tone="warning" message={marketErrorMessage(errorCode)}>
+        <Button variant="secondary" icon={LuArrowLeft} onClick={() => window.history.back()}>
+          {hi.back}
+        </Button>
+      </EmptyState>
+    );
+  }
   if (!data) return <Skeleton className="h-64" />;
   const isOwner = Boolean(user && (user.id === data.owner.id || user.role === 'coordinator') && data.status);
   return (
@@ -43,7 +51,6 @@ export function ServiceDetailPage({ id }: { id: string }) {
 }
 
 function ListingFacts({ listing }: { listing: ServiceListing }) {
-  const info = SERVICE_KIND_INFO[listing.kind];
   const details = listing.details;
   const facts: [string, string][] = [];
   if (listing.kind === 'equipment') facts.push([hi.services.type, details.withOperator === false ? hi.services.equipment.noOperator : hi.services.equipment.withOperator]);
@@ -63,7 +70,8 @@ function ListingFacts({ listing }: { listing: ServiceListing }) {
   const speak = [listing.title, typeLabel(listing.kind, listing.typeId), price, listing.description, ...facts.map(([label, value]) => `${label}: ${value}`)].join('। ');
   return (
     <>
-      <PageHeader title={listing.title} icon={info.icon} speakText={speak} onBack={() => window.history.back()} backLabel={hi.back} />
+      {/* Back + title + 🔊 only: with the kind icon too, long titles wrapped to four lines at 360 px. */}
+      <PageHeader title={listing.title} speakText={speak} onBack={() => window.history.back()} backLabel={hi.back} />
       {listing.photoUrls.length > 0 && (
         <div className="-mx-4 flex gap-2 overflow-x-auto px-4">
           {listing.photoUrls.map((url) => (

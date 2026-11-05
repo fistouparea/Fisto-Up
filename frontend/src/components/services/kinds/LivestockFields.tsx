@@ -1,4 +1,4 @@
-import { LuBeef } from 'react-icons/lu';
+import { LuPawPrint } from 'react-icons/lu';
 import { LIVESTOCK_ANIMALS, LIVESTOCK_PURPOSES } from '../../../data/serviceKinds';
 import { hi } from '../../../strings/hi';
 import { Chip } from '../../ui/Chip';
@@ -20,7 +20,7 @@ export function LivestockFields({ value, onChange, showErrors }: KindFieldsProps
       <h3 className="text-lg font-bold">{hi.services.type}</h3>
       <div className="grid grid-cols-3 gap-2">
         {Object.entries(LIVESTOCK_ANIMALS).map(([id, label]) => (
-          <SelectCard key={id} icon={LuBeef} label={label} selected={value.typeId === id} onClick={() => onChange({ ...value, typeId: id })} className="min-h-24 text-base" />
+          <SelectCard key={id} icon={LuPawPrint} label={label} selected={value.typeId === id} onClick={() => onChange({ ...value, typeId: id })} className="min-h-24 text-base" />
         ))}
       </div>
       {showErrors && !value.typeId && <p className="font-bold text-danger-700">{hi.services.type}</p>}

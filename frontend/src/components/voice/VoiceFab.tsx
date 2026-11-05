@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import { hasStickyActions, subscribeStickyActions } from '../../utils/stickyActions';
 import { LuLoaderCircle, LuMic, LuSquare, LuX } from 'react-icons/lu';
 import { askIntent } from '../../api/voice';
 import { VOICE_FALLBACK_CHOICES, VOICE_INTENT_SCREENS, type VoiceIntentId } from '../../data/voiceIntents';
@@ -21,6 +22,7 @@ export function VoiceFab() {
   const { voiceMode } = useFlags();
   const [state, setState] = useState<State>({ step: 'idle' });
   const { speak } = useSpeechOutput();
+  const aboveActions = useSyncExternalStore(subscribeStickyActions, hasStickyActions);
 
   const open = useCallback(
     (intent: VoiceIntentId) => {
@@ -66,7 +68,9 @@ export function VoiceFab() {
         aria-pressed={listening}
         aria-label={listening ? hi.voice.listening : hi.voiceMode.button}
         className={cn(
-          'fixed bottom-24 right-4 z-30 flex size-20 items-center justify-center rounded-full shadow-raised transition-colors',
+          'fixed right-4 z-30 flex size-20 items-center justify-center rounded-full shadow-raised transition-colors',
+          // Above a screen's sticky main button, else just above the bottom navigation.
+          aboveActions ? 'bottom-60' : 'bottom-24',
           'mb-[env(safe-area-inset-bottom)]',
           listening ? 'bg-danger-700 text-white' : 'bg-accent-400 text-ink-900 hover:bg-accent-300',
         )}
@@ -81,7 +85,7 @@ export function VoiceFab() {
         )}
       </button>
       {listening && (
-        <p role="status" className="fixed bottom-48 right-4 z-30 rounded-2xl bg-ink-900 px-4 py-2 text-lg font-bold text-white">
+        <p role="status" className={cn('fixed right-4 z-30 rounded-2xl bg-ink-900 px-4 py-2 text-lg font-bold text-white', aboveActions ? 'bottom-84' : 'bottom-48')}>
           {hi.voiceMode.sayHint}
         </p>
       )}

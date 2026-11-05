@@ -65,8 +65,8 @@ function TripPanel({ trip, onChanged }: { trip: MandiTrip; onChanged: () => void
   const tone = trip.status === 'cancelled' ? 'danger' : trip.status === 'open' ? 'success' : 'warning';
   return (
     <article className="flex flex-col gap-2 rounded-3xl border border-line bg-surface p-4 shadow-card">
-      <div className="flex flex-wrap items-center gap-2">
-        <h3 className="min-w-0 flex-1 text-lg font-bold">
+      <div className="flex flex-col items-start gap-2">
+        <h3 className="text-lg font-bold">
           {trip.mandi} · {shortDate(trip.date)}
         </h3>
         <Badge tone={tone} label={hi.mandiTrips.status[trip.status]} />

@@ -1,5 +1,5 @@
 import type { IconType } from 'react-icons';
-import { LuBeef, LuTractor, LuUsers } from 'react-icons/lu';
+import { LuPawPrint, LuTractor, LuUsers } from 'react-icons/lu';
 import type { FlagKey } from '../api/flags';
 
 /** Mirrors backend/src/config/serviceKinds.ts (ids, units, rules); keep in sync. Hindi type names live here too. */
@@ -52,7 +52,7 @@ export interface KindInfo {
 export const SERVICE_KIND_INFO: Record<ServiceKind, KindInfo> = {
   equipment: { flag: 'equipment', icon: LuTractor, types: EQUIPMENT_TYPES, sides: ['offer'], priceUnits: ['hour', 'day', 'bigha'], bookedByDate: true, needsApproval: false, maxPhotos: 3 },
   labour: { flag: 'labour', icon: LuUsers, types: LABOUR_SKILLS, sides: ['offer', 'need'], priceUnits: ['day'], bookedByDate: true, needsApproval: false, maxPhotos: 1 },
-  livestock: { flag: 'livestock', icon: LuBeef, types: LIVESTOCK_ANIMALS, sides: ['offer'], priceUnits: ['animal'], bookedByDate: false, needsApproval: true, maxPhotos: 4 },
+  livestock: { flag: 'livestock', icon: LuPawPrint, types: LIVESTOCK_ANIMALS, sides: ['offer'], priceUnits: ['animal'], bookedByDate: false, needsApproval: true, maxPhotos: 4 },
 };
 
 export function typeLabel(kind: ServiceKind, typeId: string): string {

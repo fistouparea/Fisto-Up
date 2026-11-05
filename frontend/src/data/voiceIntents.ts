@@ -1,6 +1,6 @@
 import type { IconType } from 'react-icons';
 import {
-  LuBeef,
+  LuPawPrint,
   LuBell,
   LuCalendarDays,
   LuCloudSun,
@@ -39,7 +39,7 @@ export const VOICE_INTENT_SCREENS: Record<VoiceIntentId, { href: string; icon: I
   schemes: { href: routes.schemes, icon: LuLandmark },
   equipment: { href: routes.services('equipment'), icon: LuTractor },
   labour: { href: routes.services('labour'), icon: LuUsers },
-  livestock: { href: routes.services('livestock'), icon: LuBeef },
+  livestock: { href: routes.services('livestock'), icon: LuPawPrint },
   home: { href: routes.home, icon: LuHouse },
 };
 

@@ -1,7 +1,7 @@
 import { ComplaintForm } from '../../components/complaints/ComplaintForm';
 import { useFlags } from '../../hooks/useFlags';
 import { useState } from 'react';
-import { LuCalendarDays, LuCircleCheckBig, LuCircleX, LuPhone, LuX } from 'react-icons/lu';
+import { LuArrowLeft, LuCalendarDays, LuCircleCheckBig, LuCircleX, LuPhone, LuX } from 'react-icons/lu';
 import { ApiError } from '../../api/client';
 import { fetchBooking, rateBooking, stepBooking, type Booking, type BookingStatus } from '../../api/services';
 import { StarPicker } from '../../components/services/StarPicker';
@@ -29,7 +29,15 @@ const STEP_STYLE: Record<BookingStatus, { variant: ButtonVariant; icon: typeof L
 /** One booking: big "हाँ" / "ना" buttons for the owner, phone numbers after both said yes, then stars. */
 export function BookingPage({ id }: { id: string }) {
   const { data, errorCode, reload } = useLoad(() => fetchBooking(id), [id]);
-  if (errorCode) return <EmptyState icon={LuCalendarDays} tone="warning" message={marketErrorMessage(errorCode)} />;
+  if (errorCode) {
+    return (
+      <EmptyState icon={LuCalendarDays} tone="warning" message={marketErrorMessage(errorCode)}>
+        <Button variant="secondary" icon={LuArrowLeft} onClick={() => window.history.back()}>
+          {hi.back}
+        </Button>
+      </EmptyState>
+    );
+  }
   if (!data) return <Skeleton className="h-64" />;
   return <BookingView booking={data} onChanged={reload} />;
 }

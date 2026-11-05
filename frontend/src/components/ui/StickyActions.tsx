@@ -1,8 +1,10 @@
 import { m } from 'framer-motion';
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
+import { stickyActionsShown } from '../../utils/stickyActions';
 
 /** Keeps the main action(s) in thumb reach, floating just above the bottom navigation. */
 export function StickyActions({ children }: { children: ReactNode }) {
+  useEffect(() => stickyActionsShown(), []);
   return (
     <m.div
       initial={{ opacity: 0, y: 24 }}

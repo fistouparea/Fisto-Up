@@ -25,13 +25,14 @@ export function ComplaintsPage() {
           <li key={complaint.id}>
             <a href={routes.complaint(complaint.id)} className="flex min-h-16 items-center gap-3 rounded-2xl border border-line bg-surface p-3 shadow-card">
               <LuFlag aria-hidden="true" className="size-7 shrink-0 text-danger-700" />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate font-bold">{complaint.target.title}</span>
+              {/* The status sits under the title: next to it the title was cut to "महिंद्रा 57…" at 360 px. */}
+              <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
+                <span className="block font-bold">{complaint.target.title}</span>
                 <span className="block text-sm text-ink-500">
                   {hi.orders.reasons[complaint.category]} · {complaint.viewerRole === 'against' ? hi.complaints.aboutMe : hi.complaints.byMe}
                 </span>
+                <Badge tone={complaint.status === 'resolved' ? 'success' : complaint.status === 'rejected' ? 'neutral' : 'warning'} label={hi.complaints.status[complaint.status]} />
               </span>
-              <Badge tone={complaint.status === 'resolved' ? 'success' : complaint.status === 'rejected' ? 'neutral' : 'warning'} label={hi.complaints.status[complaint.status]} />
             </a>
           </li>
         ))}

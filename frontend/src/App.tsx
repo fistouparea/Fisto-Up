@@ -130,13 +130,13 @@ function AppShell() {
 
   return (
     <div className="min-h-dvh bg-surface-page">
-      <AppBar />
+      <AppBar minimal={route.name === 'delivery'} />
       <OfflineBanner />
       <AppToaster />
       <NewOrderAlert />
-      {/* Bottom padding keeps content clear of the fixed bottom navigation. */}
+      {/* Bottom padding keeps content clear of the fixed bottom navigation (and of the floating 🎤 on farmer screens). */}
       {/* Shopping screens use the width of a tablet/desktop; farmer screens stay phone-narrow. */}
-      <main className={cn('mx-auto px-4 pt-4 pb-32', WIDE_ROUTES.has(route.name) ? 'max-w-5xl' : 'max-w-lg')}>
+      <main className={cn('mx-auto px-4 pt-4', route.name === 'admin' ? 'pb-32' : 'pb-56', WIDE_ROUTES.has(route.name) ? 'max-w-5xl' : 'max-w-lg')}>
         <PageTransition pageKey={screenKey}>
           {/* A crash inside one screen keeps the app bar and bottom navigation usable; changing screen resets it. */}
           <ErrorBoundary key={screenKey}>

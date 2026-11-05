@@ -72,8 +72,9 @@ function SchemeEditor({ scheme, onSaved }: { scheme: Scheme; onSaved: () => void
 
   return (
     <article className="flex flex-col gap-2 rounded-3xl border border-line bg-surface p-4 shadow-card">
-      <div className="flex flex-wrap items-center gap-2">
-        <h3 className="min-w-0 flex-1 text-lg font-bold">{scheme.name}</h3>
+      {/* Title on its own line: next to a badge long scheme names broke into one word per line at 360 px. */}
+      <div className="flex flex-col items-start gap-2">
+        <h3 className="text-lg font-bold">{scheme.name}</h3>
         <Badge tone={scheme.status === 'verified' ? 'success' : 'warning'} label={scheme.status === 'verified' ? hi.schemes.verified : hi.schemes.verifyBadge} />
       </div>
       <p className="text-sm text-ink-500">
