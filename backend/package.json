@@ -19,7 +19,9 @@
     "prompts:snapshot": "tsx src/scripts/snapshotPrompts.ts",
     "eval": "tsx --env-file-if-exists=.env src/scripts/evalAi.ts",
     "loadtest": "tsx loadtest/run.ts",
-    "e2e:server": "tsx e2e/server.ts"
+    "e2e:server": "tsx e2e/server.ts",
+    "kvk:sheet": "tsx --env-file-if-exists=.env src/scripts/kvkReviewSheet.ts",
+    "kvk:rules": "tsx src/scripts/expertReviewDoc.ts"
   },
   "dependencies": {
     "@google/genai": "^2.30.0",
