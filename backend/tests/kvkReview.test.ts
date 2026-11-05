@@ -25,8 +25,8 @@ describe('KVK review sheet', () => {
       { photo: 'blur.jpg', crop: 'other', response: { status: 'unclear' } },
       { photo: 'bad.jpg', crop: 'other', response: { status: 'error', message: 'not an image' } },
     ]);
-    const lines = csv.replace(/^﻿/, '').trim().split('\r\n');
-    expect(csv.startsWith('﻿')).toBe(true);
+    const lines = csv.replace(/^\uFEFF/, '').trim().split('\r\n');
+    expect(csv.startsWith('\uFEFF')).toBe(true);
     expect(lines[0]?.split(',')).toEqual(REVIEW_HEADER);
     expect(lines).toHaveLength(4);
     expect(lines[1]).toContain('जोगिया रोग');
