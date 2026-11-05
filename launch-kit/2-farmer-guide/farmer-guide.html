@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<title>AgriAI – किसान गाइड</title>
+<link rel="stylesheet" href="../assets/print.css">
+<style>
+  .step { grid-template-columns: 52mm 1fr; gap: 7mm; margin: 3mm 0 6mm; }
+  .shot { width: 52mm; }
+  .head { display: flex; align-items: center; gap: 4mm; background: var(--green); color: #fff; border-radius: 4mm; padding: 3mm 5mm; margin-bottom: 4mm; }
+  .head .big { color: #fff; }
+  .head .pg { margin-left: auto; font-size: 13pt; opacity: .85; }
+  .say { display: inline-block; background: var(--cream); border: 2px dashed var(--yellow); border-radius: 3mm; padding: 1mm 4mm; font-weight: 700; font-size: 16pt; margin-top: 2mm; }
+  .phone { width: 52mm; height: 92mm; border: 2px solid #333; border-radius: 6mm; padding: 3mm; position: relative; background: #f6f8f6; }
+  .bar { background: #fff; border: 1px solid #bbb; border-radius: 3mm; padding: 1.5mm 2mm; font-size: 9pt; display: flex; justify-content: space-between; }
+  .menu { position: absolute; right: 3mm; top: 13mm; width: 36mm; background: #fff; border: 1px solid #999; border-radius: 2mm; box-shadow: 0 1mm 3mm rgba(0,0,0,.25); font-size: 9pt; }
+  .menu div { padding: 2mm 3mm; border-bottom: 1px solid #eee; }
+  .menu .hit { background: #fff2c2; font-weight: 700; }
+  .icon { width: 13mm; height: 13mm; border-radius: 3mm; background: var(--green); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 9pt; margin: 0 auto 1mm; }
+  .qr { width: 40mm; height: 40mm; border: 3px dashed #333; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 11pt; }
+  .tip { font-size: 14pt; }
+</style>
+</head>
+<body>
+
+<!-- 1. खोलें + होम स्क्रीन पर जोड़ें -->
+<section class="page">
+  <h1>AgriAI – खेती का साथी 🌾</h1>
+  <p class="tip">फसल की बीमारी, मौसम, पानी, बेचना – सब एक फ़ोन पर। <b>मुफ़्त।</b></p>
+
+  <div class="head"><span class="num" style="background:var(--yellow);color:#000">1</span><span class="big">ऐप खोलें</span><span class="pg">पेज 1</span></div>
+  <div class="step">
+    <div class="qr">QR कोड<br>(दीदी से स्कैन करवाएँ)</div>
+    <div>
+      <p class="big">कैमरा से QR स्कैन करें</p>
+      <p class="tip">या <b>Chrome</b> में लिंक लिखें:<br><span class="line"></span></p>
+      <p class="small">इंटरनेट चाहिए। पहली बार: <b>“मैं सहमत हूँ”</b> दबाएँ।</p>
+    </div>
+  </div>
+
+  <div class="head"><span class="num" style="background:var(--yellow);color:#000">2</span><span class="big">होम स्क्रीन पर जोड़ें</span></div>
+  <div class="step">
+    <div class="phone">
+      <div class="bar"><span>🔒 agriai…</span><span style="font-size:13pt;line-height:1">⋮</span></div>
+      <span class="marker" style="right:-2mm;top:1mm">1</span>
+      <div class="menu">
+        <div>नया टैब</div><div>बुकमार्क</div>
+        <div class="hit">ऐप इंस्टॉल करें / होम स्क्रीन पर जोड़ें</div>
+        <div>सेटिंग</div>
+      </div>
+      <span class="marker" style="left:-3mm;top:30mm">2</span>
+      <div style="position:absolute;bottom:6mm;left:0;right:0;text-align:center">
+        <div class="icon">AgriAI</div><span style="font-size:9pt">होम स्क्रीन पर</span>
+      </div>
+      <span class="marker" style="left:9mm;bottom:9mm">3</span>
+    </div>
+    <div>
+      <p class="big"><span class="num">1</span>ऊपर <b>⋮</b> दबाएँ</p>
+      <p class="big"><span class="num">2</span>“ऐप इंस्टॉल करें”</p>
+      <p class="big"><span class="num">3</span>अब हरे <b>AgriAI</b> आइकन से खोलें</p>
+    </div>
+  </div>
+</section>
+
+<!-- 2. फोटो जाँच -->
+<section class="page">
+  <div class="head"><span class="num" style="background:var(--yellow);color:#000">3</span><span class="big">फसल की फोटो जाँच</span><span class="pg">पेज 2</span></div>
+  <div class="step">
+    <div class="shot"><img src="../assets/shots/f-check-camera.png" alt="फसल चुनें और फोटो लें">
+      <span class="marker" style="left:12%;top:45%">1</span><span class="marker" style="left:20%;top:77%">2</span></div>
+    <div>
+      <p class="big"><span class="num">1</span>अपनी फसल चुनें</p>
+      <p class="big"><span class="num">2</span>“फोटो लें”</p>
+      <p class="small">बीमार पत्ता <b>पास से</b>, दिन की रोशनी में।</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="shot"><img src="../assets/shots/f-check-preview.png" alt="जाँच करें">
+      <span class="marker" style="left:26%;top:77%">3</span></div>
+    <div>
+      <p class="big"><span class="num">3</span>“जाँच करें” दबाएँ</p>
+      <p class="small">फोटो धुंधली हो तो “फिर से”।</p>
+    </div>
+  </div>
+</section>
+
+<!-- 3. जवाब + बोलकर चलाएँ -->
+<section class="page">
+  <div class="head"><span class="num" style="background:var(--yellow);color:#000">4</span><span class="big">जवाब देखें और सुनें</span><span class="pg">पेज 3</span></div>
+  <div class="step">
+    <div class="shot"><img src="../assets/shots/f-check-result.png" alt="जाँच का जवाब">
+      <span class="marker" style="left:32%;top:46%">1</span><span class="marker" style="left:30%;top:64%">2</span></div>
+    <div>
+      <p class="big"><span class="num">1</span>बीमारी और उपाय</p>
+      <p class="big"><span class="num">2</span>🔊 “पूरा सुनें”</p>
+      <p class="small">दवाई से पहले <b>KVK / कृषि अधिकारी</b> से पूछें। साफ़ न दिखे तो ऐप अंदाज़ा नहीं लगाता – नई फोटो लें।</p>
+    </div>
+  </div>
+  <div class="head"><span class="num" style="background:var(--yellow);color:#000">5</span><span class="big">बोलकर चलाएँ 🎤</span></div>
+  <div class="step">
+    <div class="shot"><img src="../assets/shots/f-home.png" alt="पीला माइक बटन">
+      <span class="marker" style="left:70%;top:76%">1</span><span class="marker" style="left:82%;top:10%">2</span></div>
+    <div>
+      <p class="big"><span class="num">1</span>पीला 🎤 दबाएँ और बोलें</p>
+      <span class="say">“मौसम बताओ”</span> <span class="say">“फोटो जाँच”</span>
+      <p class="big" style="margin-top:4mm"><span class="num">2</span>🔊 = पढ़कर सुनाए</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4. मौसम + पानी -->
+<section class="page">
+  <div class="head"><span class="num" style="background:var(--yellow);color:#000">6</span><span class="big">मौसम की चेतावनी</span><span class="pg">पेज 4</span></div>
+  <div class="step">
+    <div class="shot"><img src="../assets/shots/f-weather.png" alt="मौसम">
+      <span class="marker" style="left:36%;top:25%">1</span><span class="marker" style="left:42%;top:62%">2</span></div>
+    <div>
+      <p class="big"><span class="num">1</span>आज का मौसम</p>
+      <p class="big"><span class="num">2</span>चेतावनी – सूखा, पाला, बारिश</p>
+      <p class="small">होम पर “मौसम” दबाएँ।</p>
+    </div>
+  </div>
+  <div class="head"><span class="num" style="background:var(--yellow);color:#000">7</span><span class="big">पानी कब दें 💧</span></div>
+  <div class="step">
+    <div class="shot"><img src="../assets/shots/f-water.png" alt="पानी की सलाह">
+      <span class="marker" style="left:42%;top:55%">1</span><span class="marker" style="left:42%;top:76%">2</span></div>
+    <div>
+      <p class="big"><span class="num">1</span>पहले मिट्टी देखें</p>
+      <p class="big"><span class="num">2</span>पानी दिया? “आज पानी दिया” दबाएँ</p>
+      <p class="small">यह सामान्य सलाह है, अपने खेत की नमी भी देखें।</p>
+    </div>
+  </div>
+</section>
+
+<!-- 5. बेचें -->
+<section class="page">
+  <div class="head"><span class="num" style="background:var(--yellow);color:#000">8</span><span class="big">अपनी उपज बेचें</span><span class="pg">पेज 5</span></div>
+  <p class="tip">बाज़ार → <b>“बेचें”</b> → माल की फोटो लें। (पहली बार दीदी खाता बनवाएँगी।)</p>
+  <div class="step">
+    <div class="shot"><img src="../assets/shots/s-sell-speak.png" alt="बोलकर बताएँ">
+      <span class="marker" style="left:72%;top:56%">1</span><span class="marker" style="left:14%;top:79%">2</span></div>
+    <div>
+      <p class="big"><span class="num">1</span>🎤 बोलें: क्या, कितना, भाव</p>
+      <span class="say">“दस क्विंटल बाजरा, पच्चीस सौ रुपये क्विंटल”</span>
+      <p class="big" style="margin-top:4mm"><span class="num">2</span>“आगे”</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="shot"><img src="../assets/shots/s-sell-confirm.png" alt="पक्का करें">
+      <span class="marker" style="left:42%;top:76%">3</span></div>
+    <div>
+      <p class="big"><span class="num">3</span>जाँचें → “पक्का करें, बेचें”</p>
+      <p class="small">ऑर्डर आए तो “स्वीकार करें”। पैसे UPI या नकद – सीधे खरीदार से।</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6. साथ में मंडी -->
+<section class="page">
+  <div class="head"><span class="num" style="background:var(--yellow);color:#000">9</span><span class="big">साथ में मंडी चलें 🚚</span><span class="pg">पेज 6</span></div>
+  <div class="step">
+    <div class="shot"><img src="../assets/shots/f-mandi.png" alt="साथ में मंडी">
+      <span class="marker" style="left:40%;top:40%">1</span><span class="marker" style="left:12%;top:67%">2</span></div>
+    <div>
+      <p class="big"><span class="num">1</span>गाड़ी चुनें (मंडी, तारीख)</p>
+      <p class="big"><span class="num">2</span>फसल + क्विंटल → “जुड़ें”</p>
+      <p class="small">एक गाड़ी, भाड़ा बँटेगा। दीदी फ़ोन करेंगी।</p>
+    </div>
+  </div>
+  <div class="box" style="margin-top:8mm">
+    <p class="big">मदद चाहिए?</p>
+    <p class="tip">SHG दीदी का नाम: <span class="line"></span></p>
+    <p class="tip">फ़ोन: <span class="line"></span></p>
+    <p class="tip">कुछ गलत लगे → ऐप में <b>“शिकायत करें”</b>।</p>
+    <p class="small">ऐप आपकी फोटो नहीं रखता। “मेरा खेत → मेरा डेटा” से अपना डेटा देख या मिटा सकते हैं।</p>
+  </div>
+</section>
+</body>
+</html>
