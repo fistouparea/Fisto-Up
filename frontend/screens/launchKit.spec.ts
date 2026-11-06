@@ -14,6 +14,8 @@ test.use({ deviceScaleFactor: 2 });
 
 async function shot(page: Page, name: string, fullPage = false): Promise<void> {
   await page.waitForLoadState('networkidle');
+  // No toast (such as "जाँच पूरी हुई") covering the screen: they close on their own after 4 s.
+  await page.waitForFunction(() => document.querySelectorAll('[data-rht-toaster] [role="status"]').length === 0, undefined, { timeout: 10_000 });
   await page.waitForTimeout(700);
   await page.screenshot({ path: `${OUT}${name}.png`, fullPage });
 }
@@ -70,6 +72,7 @@ test('launch kit pictures', async ({ browser }) => {
 });
 
 test('launch kit delivery pictures', async ({ browser }) => {
+  test.setTimeout(600_000);
   const coordinator = await loggedIn(browser, PHONES.coordinator);
   await closeOrderAlerts(coordinator.page);
   // Orders: the delivery person + link controls of one delivery order.
