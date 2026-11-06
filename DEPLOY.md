@@ -1,9 +1,17 @@
 # AgriAI ko internet par chalana (Deploy guide)
 
-Ye guide pilot (20–50 kisan, 2–3 SHG) ke liye hai. Sab kuch **free tier** par chalta hai. Har step ek-ek karke karein.
+Ye guide pilot (20–50 kisan, 2–3 SHG) ke liye hai. Har step ek-ek karke karein.
 Jahaan `<...>` likha hai, wahaan apni value daalein.
 
-**Kya-kya lagega (sab free):**
+**Production ke liye teen paid cheezein (baaki free chal sakta hai):**
+- **Gemini: paid key** (billing chalu + monthly spend cap, step 4). Free tier commercial kaam ke liye nahi hai,
+  aur us par Google prompts ko apne product sudharne mein use kar sakta hai.
+- **Render backend: Starter plan (~$7/mahina)**. Free web service production ke liye nahi hai aur so jaata hai.
+  `render.yaml` mein `agriai-api` ka `plan: free` → `plan: starter` karein (farmer app static site free hi rehti hai).
+- **Atlas:** M0 (free, 512 MB, Atlas backup nahi) pilot ke liye chalta hai; hamara roz ka backup (step 10) zaroor lagayein.
+  Zyada data ho to Flex (~$8/mahina).
+
+**Kya-kya lagega:**
 
 | Service | Kis kaam ke liye | Free tier ki seema (sach-sach) |
 | --- | --- | --- |
@@ -12,7 +20,7 @@ Jahaan `<...>` likha hai, wahaan apni value daalein.
 | [Cloudinary](https://cloudinary.com) | Listing ki photos | 25 credit/mahina (1 credit ≈ 1 GB storage ya 1 GB download). Pilot ke liye kaafi. |
 | [Sentry](https://sentry.io) | Error pakadna (optional) | Developer plan: 5,000 errors/mahina, 1 user. |
 | [GitHub](https://github.com) | Code, CI, daily backup | Private repo: 2,000 CI minute/mahina. |
-| Google AI Studio | Gemini (AI) | Per-minute aur per-day limit. Free tier par Google data ko apne product sudharne mein use kar sakta hai (hum sirf photo aur fasal ka naam bhejte hain). |
+| Google AI Studio | Gemini (AI) | Production mein **paid** project (prepay, kam se kam $5) + monthly spend cap. Tier 1 ki account seema $250/mahina. Hum sirf photo aur fasal ka naam bhejte hain. |
 
 > **Sabse badi seema:** Render free backend so jaata hai. Kisan ki pehli jaanch ~1 minute le sakti hai.
 > Upay: step 8 mein ek free "uptime ping" lagayein jo har 10 minute `/health` kholta rahe (750 ghante mein ek
@@ -61,9 +69,20 @@ Repo **private** rakhein. `.env` kabhi push nahi hota (`.gitignore` mein hai). P
    - Platform **React** → naam `agriai-web` → DSN copy karein (`VITE_SENTRY_DSN`).
 2. Settings → Security & Privacy → **Data Scrubber** chalu rakhein. Hum khud bhi phone, cookie, body nahi bhejte.
 
-## Step 4: Gemini key
+## Step 4: Gemini key (paid, kharche ki seema ke saath)
 
-README ka "Get a free Gemini API key" dekhein. **Nayi key banayein** (laptop wali `.env` ki key dobara na lagayein).
+Laptop wali `.env` ki key production mein **na** lagayein. Production ke liye alag project aur nayi key:
+
+1. https://aistudio.google.com/projects → **Create project** → naam `agriai-production`.
+2. Us project ki line mein **Set up billing** → billing account chunein ya banayein → **Prepay** (kam se kam $5).
+   Prepay mein jitna paisa daala, usse zyada kharcha ho hi nahi sakta.
+3. https://aistudio.google.com/spend → project `agriai-production` → **Monthly spend cap → Edit spend cap**
+   → jaise **$30** (pilot ka andaaza ₹1,300–2,800/mahina, showcase/SOURCES.md). Cap par pahunchne par AI ruk jaata hai
+   (app "थोड़ी देर बाद कोशिश करें" dikhata hai, koi guess nahi). Billing data ~10 minute late aata hai,
+   isliye thoda upar ja sakta hai.
+4. https://aistudio.google.com/api-keys → **Create API key** → project `agriai-production` → key copy karein
+   (sirf Render mein daalein, kahin aur nahi). Billing Tier column mein "Tier 1" / paid dikhna chahiye.
+5. (Achha hai) Google Cloud console → Billing → **Budgets & alerts** → $20 par email alert (ye sirf batata hai, rokta nahi).
 
 ## Step 5: Render par deploy (Blueprint)
 
@@ -83,6 +102,12 @@ README ka "Get a free Gemini API key" dekhein. **Nayi key banayein** (laptop wal
    | `VAPID_*` | web push ke liye (optional, README "Web push") |
 
    `JWT_SECRET` Render khud random banata hai. `INVITE_ONLY=true` pilot ke liye hai (sirf invite code se khaata bane).
+
+   **`DEMO_MODE` kabhi na jodein.** Production mein `DEMO_MODE=true` ho to server start hi nahi hota (jaanboojhkar).
+
+   VAPID keys (web push) laptop par banayein: `cd backend && npx web-push generate-vapid-keys`.
+   Public key `VAPID_PUBLIC_KEY`, private key `VAPID_PRIVATE_KEY`, aur `VAPID_SUBJECT=mailto:<aapka email>`.
+   Teeno hon tabhi push chalta hai. Private key kisi ko na dikhayein.
 3. **Apply** dabayein. Pehla build 5–10 minute leta hai.
 4. Check karein:
    - `https://agriai-api.onrender.com/health` → `{"status":"ok"}`
@@ -114,8 +139,9 @@ MONGO_URI="<step 1 wala MONGO_URI>" npm run create-coordinator -- --phone <aapka
 # 4 ank ka PIN poochega (dikhega nahi)
 ```
 
-Phir app mein `#/login` par login karein → "संयोजक पैनल" khulega. Yahin se invite code banayein (Task 5) aur
-sellers verify karein. Demo data (`npm run seed`) production mein **na chalayein**.
+Phir app mein `#/login` par login karein → "संयोजक पैनल" khulega. Invite code `#/admin/invites` par banayein
+(6 akshar, har kisan/SHG ke liye ek), sellers `#/admin/sellers` par verify karein. Naye features `#/admin/flags` mein
+pehle sirf pilot accounts ke liye chalu hote hain (invite code se bane khaate pilot hote hain). Demo data (`npm run seed`) production mein **na chalayein**.
 
 Indexes check (optional): `MONGO_URI="..." npm run check-indexes` → saari lines par ✓ aana chahiye.
 
@@ -205,3 +231,13 @@ docker compose -f docker-compose.prod.yml up -d --build
 | Photo upload fail | `CLOUDINARY_URL` sahi format mein? Logs mein `Cloudinary HTTP 401` = galat key. |
 | Pehli jaanch bahut dheemi | Server so raha tha (step 8). |
 | Error kahaan dekhein | Sentry → Issues. Har error mein `request_id` hai; Render Logs mein usi id ko search karein. |
+
+## Production status
+
+Abhi deploy nahi hua. Deploy ke baad yahan live address likhein (koi secret nahi):
+
+| Kya | Address |
+| --- | --- |
+| Farmer app | – |
+| Backend health | – |
+| Deploy ki tareekh | – |
