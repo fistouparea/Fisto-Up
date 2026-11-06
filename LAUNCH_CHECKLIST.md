@@ -131,3 +131,39 @@ Launch Kit ke dauraan app ka koi feature nahi badla aur koi bug nahi mila. Naya 
 - [ ] Poster/guide par asli app link + QR + didi ka number daalein, phir print.
 - [ ] KVK review (1) pass hone ke baad hi pilot camp (4).
 - [ ] Demo se pehle `npm run demo:reset` aur ek practice run (5).
+
+---
+
+## 5. Showcase Kit (`showcase/`) – Rajasthan sarkar ke senior officers ke liye
+
+Sab files: HTML source + PDF. PDF dobara: `cd frontend && npm run showcase:pdf`. Har sankhya ka source:
+`showcase/SOURCES.md` (jo wahan nahi, woh kahin nahi bola gaya). AI accuracy ka koi number nahi (eval report abhi nahi hai).
+
+| File | Kya hai | Print / laptop / phone |
+| --- | --- | --- |
+| `SOURCES.md` | Har sankhya ka source (naam, saal, link), assumptions, jo daave hum nahi karte | Laptop (sawaal aaye to kholein) |
+| `4-brief/brief-hi.pdf`, `brief-en.pdf` | 2 page executive brief: samasya (sourced), samadhan, 4 screenshot, suraksha, privacy, sarkari prayaso mein madad, sahi sthiti, kharcha (anumaan), anurodh | **Print:** har officer ke liye 1 Hindi + 1 English (5+5), laptop par bhi |
+| `5-deck/deck.pdf` (+ `deck.pptx`, `deck.html`) | 12 slide (Hindi headline, English sub-line): samasya → kisan ka din → AI → bazaar → tantra → suraksha → SHG → sthiti → pilot → anurodh | Laptop + pen drive. PPTX = har slide ek tasveer + speaker notes (badlav `build_deck.py` mein) |
+| `scripts/demo.sh` | Offline demo: laptop par sab kuch, bina internet; asli AI ke pehle record kiye jawab (`DEMO_MODE`) | Laptop (ek din pehle offline test) |
+| `2-demo-mode/demo-day-checklist.pdf` | 1 page: charge, offline test, backup phone, hotspot, agar fail ho to | **Print:** 1 (presenter) |
+| `3-video/agriai-demo.mp4` (+ `.srt`) | 2 min 20 s backup video, Hindi captions, 4 flows | Laptop + phone + pen drive |
+| `6-qa/qa-prep.pdf` | 25 mushkil sawaal + chhote imaandar jawab (Hinglish) | **Print:** 1 (presenter), meeting se pehle padhein |
+| `7-one-pagers/architecture.pdf` | Ek page: diagram + saral bhasha mein kaise chalta hai | **Print:** 2–3 (IT/technical officer ke liye) |
+| `7-one-pagers/security-privacy.pdf` | Ek page: kya data, kahan, kaun dekhta hai, kab tak, mitana, audit log, backup | **Print:** 2–3 |
+| `launch-kit/4-pilot/pilot-plan.pdf` | 4 hafte ka pilot plan (anurodh ka aadhaar) | **Print:** 1–2 (agar detail maange) |
+
+**Meeting se pehle:**
+- [ ] Brief aur deck ke "[नाम] · [फ़ोन] · [ईमेल]" mein asli sampark bharein (`4-brief/build_brief.py`, `5-deck/build_deck.py`), PDF dobara banayein.
+- [ ] Ek din pehle Wi-Fi band karke `scripts/demo.sh` se poora demo; checklist ke hisaab se taiyari.
+- [ ] Q&A doc ek baar zor se padhein; "abhi nahi pata, pilot mein naapenge" kehne ki aadat.
+
+**Meeting mein kram (30–40 min):**
+1. Haath mein **brief (Hindi)** dein – officer 2 minute padhte hain jab aap laptop lagate hain.
+2. **Deck slide 1–3** (3 min): samasya aur kisan ka din.
+3. **Live demo** (`scripts/demo.sh`, 5 min): photo jaanch → "photo saaf nahi" → 🎤 mausam → bechna → sanyojak dashboard. Shuru mein bolein: "offline demo, asli AI ke record kiye jawab, demo data". Kuch atke → turant **video**.
+4. **Deck slide 7–11** (5 min): suraksha, sahi sthiti, pilot, anurodh – anurodh ke baad ruk kar sawaal lein.
+5. **Sawaal:** `qa-prep.pdf` + technical sawaal par **architecture** / **security-privacy** one-pager dein.
+6. Ant mein: pilot plan (launch-kit) aur follow-up email (brief PDF) ka vaada.
+
+Is kaam mein mila bug (theek kiya): photo cleanup job MongoDB connect hone se pehle index sync karta tha, isliye startup
+par hamesha fail hota tha – ab connection ke baad chalta hai (`backend/src/jobs/photoCleanup.ts`).
