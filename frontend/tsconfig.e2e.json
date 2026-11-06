@@ -10,5 +10,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["e2e", "screens", "playwright.config.ts", "playwright.screens.config.ts"]
+  "include": ["e2e", "screens", "showcase", "playwright.config.ts", "playwright.screens.config.ts", "playwright.showcase.config.ts"]
 }

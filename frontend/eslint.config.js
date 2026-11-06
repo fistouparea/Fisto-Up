@@ -16,7 +16,7 @@ export default tseslint.config(
   },
   {
     // Playwright end-to-end journeys (run in Node).
-    files: ['e2e/**/*.ts', 'screens/**/*.ts', 'playwright*.config.ts'],
+    files: ['e2e/**/*.ts', 'screens/**/*.ts', 'showcase/**/*.ts', 'playwright*.config.ts'],
     languageOptions: { globals: globals.node },
   },
   {
