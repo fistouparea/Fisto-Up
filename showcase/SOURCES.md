@@ -14,7 +14,13 @@ or "planned / needs pilot".
 | S6 | Google, Gemini API pricing (page read 6 Nov 2026) | Gemini 3.8 Flash: **$0.75** per 1M input tokens and **$3.75** per 1M output tokens until 31 Dec 2026 (**$1.50 / $7.50** from 1 Jan 2027); a free tier exists | https://aistudio.google.com/docs/pricing |
 | S7 | Render, "Deploy for free" docs (read 6 Nov 2026) | Free web services sleep after 15 min idle, 750 free hours/month, "Do not use them for production applications" | https://render.com/docs/free |
 | S8 | MongoDB, Atlas pricing (read 6 Nov 2026) | M0 free cluster: 512 MB, $0; Flex tier from **$8/month** (up to $30) | https://www.mongodb.com/pricing |
+| S10 | Render, "Render vs Railway" (Render's own article, 6 May 2026) | Render Starter instance **$7/month** (0.5 vCPU, 512 MB); Standard $25/month | https://render.com/articles/render-vs-railway |
 | S9 | Wikimedia Commons (demo photos only) | Openly licensed crop-disease photos used in the demo and video (CC0 / CC BY-SA 4.0) | backend/demo/photos/ATTRIBUTION.md |
+
+## Assumptions (marked as estimates wherever used)
+- Exchange rate ₹88 per US$ (assumption for rough rupee figures; check the day's rate).
+- One photo check ≈ 3,500 input tokens (prompt + one shrunk photo) and ≈ 1,500 output tokens (answer + "thinking").
+  Not measured on the live API yet; the real bill will confirm it.
 
 ## Claims we deliberately do NOT make
 - No AI accuracy number: there are no `/eval` reports yet (no labelled field photos). Say: "KVK review planned before pilot".
