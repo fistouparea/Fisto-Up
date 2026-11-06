@@ -1,0 +1,105 @@
+<!doctype html><html lang="hi"><head><meta charset="utf-8"><title>AgriAI – Government presentation</title>
+<style>@font-face { font-family: Mukta; font-weight: 400; src: url(../assets/fonts/mukta-devanagari-400-normal.woff2) format('woff2'); unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+25CC, U+A830-A839, U+A8E0-A8FF; }
+@font-face { font-family: Mukta; font-weight: 600; src: url(../assets/fonts/mukta-devanagari-600-normal.woff2) format('woff2'); unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+25CC, U+A830-A839, U+A8E0-A8FF; }
+@font-face { font-family: Mukta; font-weight: 800; src: url(../assets/fonts/mukta-devanagari-800-normal.woff2) format('woff2'); unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+25CC, U+A830-A839, U+A8E0-A8FF; }
+@font-face { font-family: Mukta; font-weight: 400; src: url(../assets/fonts/mukta-latin-400-normal.woff2) format('woff2'); }
+@font-face { font-family: Mukta; font-weight: 600; src: url(../assets/fonts/mukta-latin-600-normal.woff2) format('woff2'); }
+@font-face { font-family: Mukta; font-weight: 800; src: url(../assets/fonts/mukta-latin-800-normal.woff2) format('woff2'); }
+@page { size: 1920px 1080px; margin: 0; }
+:root { --g: #03542c; --g2: #e8f2ec; --y: #fbba16; --cream: #fdf3da; --ink: #1a2b22; --mut: #55665b; }
+* { box-sizing: border-box; margin: 0; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { font-family: Mukta, 'Noto Sans Devanagari', sans-serif; color: var(--ink); background: #fff; }
+.slide { width: 1920px; height: 1080px; padding: 90px 110px; position: relative; overflow: hidden; page-break-after: always; background: #fff; }
+.slide::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 14px; background: var(--g); }
+.num { position: absolute; right: 60px; bottom: 40px; color: var(--mut); font-size: 22px; }
+h1 { font-size: 92px; line-height: 1.12; font-weight: 800; color: var(--g); }
+h2 { font-size: 60px; line-height: 1.15; font-weight: 800; color: var(--g); }
+.en { font-size: 28px; color: var(--mut); margin-top: 6px; margin-bottom: 40px; }
+ul { padding-left: 34px; } li { font-size: 34px; line-height: 1.4; margin-bottom: 16px; }
+.note, .foot-note { font-size: 24px; color: var(--mut); margin-top: 24px; }
+.two { display: grid; grid-template-columns: 0.95fr 1.05fr; gap: 60px; align-items: start; height: 100%; }
+.phones { display: flex; gap: 26px; justify-content: flex-end; }
+.ph .frame { width: auto; aspect-ratio: 360 / 780; border-radius: 34px; border: 10px solid #1a2b22; overflow: hidden; background: #fff; box-shadow: 0 24px 50px rgba(3,84,44,.16); }
+.ph .frame img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+.cap { text-align: center; font-size: 24px; color: var(--mut); margin-top: 12px; }
+.title { display: grid; grid-template-columns: 1.25fr 0.75fr; gap: 60px; align-items: center; background: linear-gradient(120deg, #fff 55%, var(--g2) 55%); }
+.title-r { display: flex; justify-content: center; }
+.brand { display: flex; align-items: center; gap: 22px; margin-bottom: 60px; }
+.brand .logo { width: 84px; height: 84px; border-radius: 24px; background: var(--g); color: var(--y); font-weight: 800; font-size: 52px; display: flex; align-items: center; justify-content: center; }
+.brand .name { font-size: 46px; font-weight: 800; color: var(--g); } .brand .sub { font-size: 26px; color: var(--mut); }
+.pill-y { display: inline-block; background: var(--y); font-weight: 600; font-size: 30px; border-radius: 60px; padding: 14px 34px; margin-top: 20px; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 34px; margin-top: 30px; }
+.stat { background: var(--g2); border-radius: 28px; padding: 44px 34px; min-height: 560px; display: flex; flex-direction: column; }
+.stat b { font-size: 84px; color: var(--g); font-weight: 800; line-height: 1; }
+.stat span { font-size: 32px; line-height: 1.35; margin-top: 30px; flex: 1; }
+.stat i { font-style: normal; font-size: 21px; color: var(--mut); border-top: 2px solid #c6dccd; padding-top: 14px; }
+.story { display: grid; grid-template-columns: repeat(5, 1fr); gap: 30px; }
+.st .time { font-weight: 800; font-size: 28px; color: var(--g); margin-bottom: 12px; text-align: center; }
+.st .frame { margin: 0 auto; }
+.status { display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px; }
+.status .col { border-radius: 28px; padding: 36px 36px 20px; min-height: 640px; }
+.status h3 { font-size: 38px; font-weight: 800; } .status .en { margin-bottom: 20px; font-size: 24px; }
+.status li { font-size: 29px; margin-bottom: 10px; }
+.built { background: #dff3e6; } .built h3 { color: #05612f; }
+.tested { background: #fff4cf; } .tested h3 { color: #6b4b00; }
+.planned { background: #eef0f2; } .planned h3 { color: #3d4650; }
+.pilot { grid-template-columns: 0.9fr 1.1fr; height: auto; }
+.weeks div { font-size: 28px; padding: 18px 26px; border-left: 8px solid var(--y); background: var(--g2); border-radius: 0 18px 18px 0; margin-bottom: 16px; }
+.weeks b { display: inline-block; width: 170px; color: var(--g); }
+.metrics { width: 100%; border-collapse: collapse; font-size: 28px; }
+.metrics th { text-align: left; font-size: 22px; color: var(--mut); padding: 10px 14px; border-bottom: 3px solid var(--g); }
+.metrics td { padding: 14px; border-bottom: 1px solid #d5e2d9; } .metrics td:nth-child(2) { font-weight: 800; color: var(--g); }
+.asks { display: grid; grid-template-columns: repeat(2, 1fr); gap: 34px; }
+.asks div { background: var(--g2); border-radius: 28px; padding: 36px 40px 36px 130px; position: relative; min-height: 210px; }
+.asks span { position: absolute; left: 36px; top: 34px; width: 66px; height: 66px; border-radius: 50%; background: var(--g); color: var(--y); font-size: 36px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+.asks b { font-size: 38px; color: var(--g); } .asks p { font-size: 29px; margin-top: 10px; line-height: 1.35; }
+.big-note { margin-top: 44px; font-size: 32px; background: var(--y); border-radius: 22px; padding: 24px 36px; font-weight: 600; }
+.contact { font-size: 38px; margin-top: 40px; font-weight: 600; }
+.srcs { font-size: 20px; color: var(--mut); margin-top: 80px; line-height: 1.5; max-width: 1050px; }
+</style></head><body><section class="slide title" data-notes="Namaste. AgriAI ek Hindi app hai jo kisan ke apne phone par chalta hai. Aaj hum ek cheez maangne aaye hain: Churu mein ek chhota, nigrani wala pilot."><div class="title-l">
+<div class="brand big"><div class="logo">A</div><div><div class="name">AgriAI</div><div class="sub">by Fisto Up</div></div></div>
+<h1>खेती का साथी –<br>किसान के अपने फ़ोन पर</h1>
+<p class="en">A Hindi farm assistant for Rajasthan’s smallholders, supported by village SHGs</p>
+<p class="pill-y">प्रस्ताव: चूरू ज़िले में KVK और SHG के साथ 4 सप्ताह का निगरानी वाला पायलट</p>
+</div>
+<div class="title-r"><div class="ph"><div class="frame" style="height:760px"><img src="../assets/shots/result-problem.png" alt=""></div></div></div><div class="num">1</div></section><section class="slide " data-notes="Sirf sourced numbers. 40% global hai, Rajasthan ka alag number hum claim nahi karte."><h2>राजस्थान की खेती: बड़ा योगदान, बड़ी चुनौतियाँ</h2><p class="en">The problem – every number is sourced</p>
+<div class="stats">
+<div class="stat"><b>45.40%</b><span>देश की सरसों-राई राजस्थान में (2023-24)</span><i>Economic Survey 2023-24, Table 1.18 [S1]</i></div>
+<div class="stat"><b>219 / 302</b><span>भूजल इकाइयाँ “अति-दोहित” (2022 आकलन)</span><i>PIB, Ministry of Jal Shakti, 8 Dec 2022 [S2]</i></div>
+<div class="stat"><b>40% तक</b><span>दुनिया का फसल उत्पादन हर साल कीट-रोग से नष्ट</span><i>FAO, 2 Jun 2021 [S3]</i></div>
+<div class="stat"><b>47</b><span>कृषि विज्ञान केंद्र राजस्थान में – सलाह है, पर खेत तक, उसी दिन पहुँचना कठिन</span><i>ICAR KVK list [S4]</i></div>
+</div><div class="num">2</div></section><section class="slide " data-notes="Kahani kaalpanik hai, screens asli app ki hain, data demo hai."><h2>AgriAI के साथ एक किसान का दिन</h2><p class="en">A farmer’s day – illustrative story, demo data</p><div class="story"><div class="st"><div class="time">सुबह 7 बजे</div><div class="ph"><div class="frame" style="height:520px"><img src="../assets/shots/home.png" alt=""></div><p class="cap">मौसम चेतावनी: लंबा सूखा</p></div></div><div class="st"><div class="time">सुबह 10 बजे</div><div class="ph"><div class="frame" style="height:520px"><img src="../assets/shots/result-problem.png" alt=""></div><p class="cap">सरसों पर चेपा – फोटो से जाँच</p></div></div><div class="st"><div class="time">दोपहर</div><div class="ph"><div class="frame" style="height:520px"><img src="../assets/shots/water.png" alt=""></div><p class="cap">पानी: पहले मिट्टी देखें</p></div></div><div class="st"><div class="time">शाम</div><div class="ph"><div class="frame" style="height:520px"><img src="../assets/shots/sell-ai-draft.png" alt=""></div><p class="cap">बाजरा बेचा – बोलकर</p></div></div><div class="st"><div class="time">अगले दिन</div><div class="ph"><div class="frame" style="height:520px"><img src="../assets/shots/mandi-trips.png" alt=""></div><p class="cap">साथ में मंडी – भाड़ा बँटा</p></div></div></div><p class="foot-note">उदाहरण की कहानी, डेमो डेटा पर। असली किसानों के अनुभव पायलट में दर्ज होंगे।</p><div class="num">3</div></section><section class="slide " data-notes="Accuracy ka number nahi bata rahe – KVK review pilot se pehle."><div class="two"><div><h2>AI फसल सलाहकार</h2><p class="en">AI crop advisor</p><ul><li>फोटो + फसल → समस्या, कारण, देसी उपाय, सावधानी</li><li>दवाई केवल generic नाम से – सटीक मात्रा कभी नहीं</li><li>आगे सवाल पूछें, 🔊 पूरा सुनें</li><li>हर जवाब: “KVK से पक्का करें”</li><li>AI बदला जा सकता है – एक ही interface के पीछे</li></ul><p class="note">स्क्रीन पर: असली AI (Gemini) का पहले रिकॉर्ड किया जवाब, खुले लाइसेंस की फोटो पर।</p></div><div class="phones"><div class="ph"><div class="frame" style="height:640px"><img src="../assets/shots/check-photo.png" alt=""></div><p class="cap">फोटो</p></div><div class="ph"><div class="frame" style="height:640px"><img src="../assets/shots/result-problem.png" alt=""></div><p class="cap">समस्या</p></div><div class="ph"><div class="frame" style="height:640px"><img src="../assets/shots/result-dawai.png" alt=""></div><p class="cap">उपाय</p></div></div></div><div class="num">4</div></section><section class="slide " data-notes="Commission sirf poore order par (abhi 3%). Online payment jaan-boojhkar nahi."><div class="two"><div><h2>बाज़ार: फोटो और आवाज़ से बिक्री</h2><p class="en">Marketplace</p><ul><li>विक्रेता फोटो ले, बोले – AI फ़ॉर्म भरता है, विक्रेता पक्का करता है</li><li>भाव सुझाव, ऑर्डर, घर पर डिलीवरी</li><li>डिलीवरी वाला: बिना लॉगिन लिंक, खरीदार को हर कदम दिखता है</li><li>पैसे सीधे किसान को – UPI या नकद (ऐप में पैसा नहीं रुकता)</li><li>हर ऑर्डर पर शिकायत, 48 घंटे में जवाब</li></ul></div><div class="phones"><div class="ph"><div class="frame" style="height:640px"><img src="../assets/shots/sell-ai-draft.png" alt=""></div><p class="cap">AI ने भरा</p></div><div class="ph"><div class="frame" style="height:640px"><img src="../assets/shots/market.png" alt=""></div><p class="cap">बाज़ार</p></div><div class="ph"><div class="frame" style="height:640px"><img src="../assets/shots/delivery.png" alt=""></div><p class="cap">डिलीवरी</p></div></div></div><div class="num">5</div></section><section class="slide " data-notes="Yojana data abhi verify hona baaki hai (PM-KISAN ke alawa). Pashu ka legal review baaki."><div class="two"><div><h2>किसान का पूरा तंत्र</h2><p class="en">Farmer ecosystem</p><ul><li>सरकारी योजनाएँ: सरल हिंदी + आधिकारिक लिंक (आवेदन नहीं करता)</li><li>मशीन किराया: दिन चुनें, मालिक “हाँ” कहे, दोनों को नंबर</li><li>साथ में मंडी: एक गाड़ी, कई किसान, भाड़ा बँटे</li><li>मज़दूर और पशु (संयोजक की मंज़ूरी के बाद)</li></ul></div><div class="phones"><div class="ph"><div class="frame" style="height:640px"><img src="../assets/shots/schemes.png" alt=""></div><p class="cap">योजनाएँ</p></div><div class="ph"><div class="frame" style="height:640px"><img src="../assets/shots/rental.png" alt=""></div><p class="cap">किराया</p></div><div class="ph"><div class="frame" style="height:640px"><img src="../assets/shots/mandi-trips.png" alt=""></div><p class="cap">साथ में मंडी</p></div></div></div><div class="num">6</div></section><section class="slide " data-notes="Data region: database Mumbai (planned), server Singapore (planned). Photo Google ko jaati hai, store nahi hoti."><div class="two"><div><h2>सुरक्षा और गोपनीयता</h2><p class="en">Safety &amp; privacy</p><ul><li><b>अंदाज़ा नहीं:</b> फोटो साफ़ न हो या भरोसा कम – नई फोटो माँगता है</li><li><b>प्रतिबंधित दवाई</b> सर्वर पर ब्लॉक</li><li><b>AI को केवल फोटो + फसल का नाम</b> – नाम, नंबर, स्थान नहीं</li><li>जाँच की फोटो सहेजी नहीं जाती; “मेरा डेटा” से डाउनलोड/तुरंत मिटाएँ</li><li>सहमति पहले; न बदलने वाला ऑडिट लॉग; एन्क्रिप्टेड बैकअप 14 दिन</li><li>DPDP नियम 2025 (14 नवं 2025 अधिसूचित) [S5] – नीति का कानूनी रिव्यू बाकी</li></ul></div><div class="phones"><div class="ph"><div class="frame" style="height:640px"><img src="../assets/shots/unclear.png" alt=""></div><p class="cap">अस्पष्ट फोटो</p></div><div class="ph"><div class="frame" style="height:640px"><img src="../assets/shots/result-kvk.png" alt=""></div><p class="cap">KVK सलाह</p></div><div class="ph"><div class="frame" style="height:640px"><img src="../assets/shots/consent.png" alt=""></div><p class="cap">सहमति</p></div></div></div><div class="num">7</div></section><section class="slide " data-notes="Didi ka maandey SHG ke saath tay hoga – abhi koi vaada nahi."><div class="two"><div><h2>गाँव की SHG दीदी: संयोजक</h2><p class="en">SHG coordinator &amp; pilot dashboard</p><ul><li>विक्रेता सत्यापन: फ़ोन पर बात, ₹1 UPI जाँच, दवाई डीलर का लाइसेंस</li><li>न पढ़ पाने वालों के लिए “मदद से लिस्टिंग” (सहमति दर्ज)</li><li>शिकायत कतार – 48 घंटे; बार-बार शिकायत पर विक्रेता चिह्नित</li><li>पायलट डैशबोर्ड: केवल गिनती, किसी किसान का नाम नहीं</li><li>हिंदी/हिंग्लिश ट्रेनिंग मैनुअल और रोज़ की चेकलिस्ट तैयार</li></ul></div><div class="phones"><div class="ph"><div class="frame" style="height:640px"><img src="../assets/shots/admin-overview.png" alt=""></div><p class="cap">सारांश</p></div><div class="ph"><div class="frame" style="height:640px"><img src="../assets/shots/admin-pilot.png" alt=""></div><p class="cap">पायलट डैशबोर्ड</p></div><div class="ph"><div class="frame" style="height:640px"><img src="../assets/shots/admin-complaints.png" alt=""></div><p class="cap">शिकायत</p></div></div></div><div class="num">8</div></section><section class="slide " data-notes="Kabhi &quot;proven&quot; nahi bolna. Jo tested hai woh demo data par."><h2>क्या बना है – सही स्थिति</h2><p class="en">What is built – honest status</p>
+<div class="status">
+<div class="col built"><h3>बना हुआ और काम करता है</h3><p class="en">Built and working</p><ul><li>फोटो जाँच, चैट, आवाज़</li><li>मौसम, पानी, फसल कैलेंडर, सूचनाएँ</li><li>बाज़ार, ऑर्डर, डिलीवरी लिंक, शिकायत</li><li>साथ में मंडी, किराया, योजनाएँ</li><li>संयोजक पैनल, ऑडिट लॉग</li><li>सहमति, “मेरा डेटा”, ऑफ़लाइन डेमो</li></ul></div>
+<div class="col tested"><h3>डेमो डेटा पर जाँचा</h3><p class="en">Tested with demo data</p><ul><li>566 सर्वर टेस्ट, 146 ऐप टेस्ट</li><li>8 एंड-टू-एंड फ़ोन यात्राएँ</li><li>सुगम्यता (WCAG 2.1 A/AA) जाँच</li><li>असली AI जवाब, खुले लाइसेंस की रोग-फोटो पर</li><li>360 px सस्ते फ़ोन की स्क्रीन</li></ul></div>
+<div class="col planned"><h3>योजना / पायलट में</h3><p class="en">Planned / needs pilot</p><ul><li>KVK द्वारा AI सटीकता समीक्षा</li><li>क्लाउड पर तैनाती (तैयार, चालू नहीं)</li><li>नीति/शर्तों की कानूनी समीक्षा</li><li>असली किसान, SHG</li><li>उपज/आय पर असर – <b>दावा नहीं</b></li></ul></div>
+</div><div class="num">9</div></section><section class="slide " data-notes="Ye lakshya hain, nateeje nahi. Pilot plan: launch-kit/4-pilot."><h2>पायलट योजना: चूरू, 4 सप्ताह</h2><p class="en">Pilot plan with metrics (targets, not results)</p>
+<div class="two pilot"><div>
+<div class="weeks"><div><b>सप्ताह 0</b>KVK फोटो समीक्षा, तैनाती, दीदी प्रशिक्षण</div><div><b>सप्ताह 1</b>2 गाँवों में कैंप, सहमति, विक्रेता सत्यापन</div><div><b>सप्ताह 2</b>तीसरा गाँव, फीडबैक #1, KVK नमूना जाँच</div><div><b>सप्ताह 3</b>बिक्री, मंडी गाड़ी, शिकायत SLA</div><div><b>सप्ताह 4</b>फीडबैक #2, नतीजे, जारी/रोकें का फ़ैसला</div></div>
+<p class="note">20–50 किसान · 2–3 SHG समूह · 1 KVK विशेषज्ञ · हर सोमवार समीक्षा</p>
+</div><div>
+<table class="metrics"><tr><th>मापदंड (डैशबोर्ड से)</th><th>लक्ष्य</th><th>न्यूनतम</th></tr>
+<tr><td>जुड़े किसान (सहमति सहित)</td><td>40</td><td>20</td></tr>
+<tr><td>सक्रिय किसान, सप्ताह 4</td><td>50%</td><td>25%</td></tr>
+<tr><td>AI जवाब पर 👍</td><td>≥ 70%</td><td>≥ 55%</td></tr>
+<tr><td>KVK नमूना: सही + आंशिक</td><td>≥ 80%</td><td>≥ 70%</td></tr>
+<tr><td>प्रतिबंधित दवाई की सलाह</td><td>0</td><td>0</td></tr>
+<tr><td>पूरे ऑर्डर</td><td>15</td><td>5</td></tr>
+<tr><td>शिकायत का 48 घंटे में जवाब</td><td>100%</td><td>90%</td></tr>
+</table>
+<p class="note">तुरंत रोकें: प्रतिबंधित दवाई की सलाह, डेटा लीक या धोखा।</p>
+</div></div><div class="num">10</div></section><section class="slide ask" data-notes="Clear ask, phir chup ho jaayein aur sawaal lein."><h2>हमारा अनुरोध</h2><p class="en">Our request</p>
+<div class="asks">
+<div><span>1</span><b>पायलट की अनुमति</b><p>चूरू ज़िले में 4 सप्ताह, 20–50 किसान, ज़िला प्रशासन की निगरानी में</p></div>
+<div><span>2</span><b>KVK विशेषज्ञ का समय</b><p>पायलट से पहले 100 फोटो की समीक्षा, पायलट में नमूना जाँच</p></div>
+<div><span>3</span><b>2–3 SHG समूहों से परिचय</b><p>जो गाँव संयोजक बनना चाहें (जैसे राजीविका समूह)</p></div>
+<div><span>4</span><b>नतीजे साथ में देखें</b><p>साप्ताहिक रिपोर्ट, पहले से तय रोकने/जारी रखने के नियम</p></div>
+</div>
+<p class="big-note">पायलट के लिए कोई राशि नहीं माँग रहे। ऐप, प्रशिक्षण सामग्री और तकनीकी संचालन – Fisto Up।</p><div class="num">11</div></section><section class="slide title" data-notes=""><div class="title-l">
+<div class="brand big"><div class="logo">A</div><div><div class="name">AgriAI</div><div class="sub">by Fisto Up</div></div></div>
+<h1>धन्यवाद</h1>
+<p class="en">Thank you</p>
+<p class="contact">[नाम] · [फ़ोन] · [ईमेल]</p>
+<p class="srcs">स्रोत / Sources: [S1] Economic Survey 2023-24, Stat. Appendix Table 1.18 · [S2] PIB, Ministry of Jal Shakti, 8 Dec 2022 · [S3] FAO, 2 Jun 2021 · [S4] ICAR KVK list · [S5] PIB, MeitY, 14 Nov 2025 · links: showcase/SOURCES.md · Demo photos: Wikimedia Commons (CC0 / CC BY-SA 4.0)</p>
+</div><div class="title-r"><div class="ph"><div class="frame" style="height:760px"><img src="../assets/shots/home.png" alt=""></div></div></div><div class="num">12</div></section></body></html>
