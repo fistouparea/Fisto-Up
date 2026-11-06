@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="hi"><head><meta charset="utf-8"><title>AgriAI – Demo day checklist</title>
+<link rel="stylesheet" href="../assets/showcase.css">
+<style> body { font-size: 10pt; } h2 { margin-top: 3.5mm; } .row { margin: 0.9mm 0; } code { font-size: 8.5pt; background: var(--grey); padding: 0 1mm; border-radius: 1mm; } </style>
+</head><body>
+<div class="brandbar"><div class="logo">A</div><div class="name">AgriAI · Demo day checklist</div><div class="tag">Offline demo mode<br>Hinglish – presenter ke liye</div></div>
+<div class="grid2">
+<div>
+<h2>Ek din pehle</h2>
+<div class="row"><span class="check"></span><span>Laptop + backup phone + power bank <b>100% charge</b>; laptop charger aur extension board bag mein.</span></div><div class="row"><span class="check"></span><span><code>git pull</code>, phir <code>REBUILD=1 scripts/demo.sh</code> ek baar (build + install sab local).</span></div><div class="row"><span class="check"></span><span><b>Offline test:</b> Wi-Fi band karke <code>scripts/demo.sh</code> → poora demo ek baar chalayein.</span></div><div class="row"><span class="check"></span><span>Laptop par Chrome: <code>localhost:4173</code>, F12 → device toolbar → 360 × 780 (phone jaisa).</span></div><div class="row"><span class="check"></span><span>Demo photos phone/laptop mein: <code>backend/demo/photos/</code> (sarson rust, sarson chepa, bajra jogiya) + <code>seed-assets/handicraft.jpg</code> ("paudha nahi").</span></div><div class="row"><span class="check"></span><span>Backup video <code>showcase/3-video/agriai-demo.mp4</code> laptop + phone + pen drive par.</span></div><div class="row"><span class="check"></span><span>Deck PDF + brief PDF laptop par khule; 5 printed brief (Hindi) + 5 (English).</span></div>
+<h2>Venue par (30 min pehle)</h2>
+<div class="row"><span class="check"></span><span>Projector/HDMI test, screen <b>mirror</b>, font bada (Chrome zoom 125%).</span></div><div class="row"><span class="check"></span><span><code>scripts/demo.sh</code> → "DEMO READY" dikhe. Internet ki zaroorat nahi.</span></div><div class="row"><span class="check"></span><span>Login check: sanyojak <code>9000000001</code>, रमेश <code>9000000101</code>, अनीता <code>9000000202</code> (PIN 2580).</span></div><div class="row"><span class="check"></span><span>Notifications/WhatsApp/auto-update band; phone silent; laptop sleep off.</span></div><div class="row"><span class="check"></span><span>Mobile hotspot <b>sirf backup</b> (asli phone par dikhane ke liye USB + chrome://inspect port forwarding).</span></div><div class="row"><span class="check"></span><span>Volume theek – 🔊 "पूरा सुनें" ek baar test.</span></div>
+</div>
+<div>
+<h2>Demo ke dauraan</h2>
+<div class="row"><span class="check"></span><span>Shuru mein saaf bolein: <b>"Ye offline demo hai – AI ke asli jawab pehle record kiye gaye hain, data demo hai."</b></span></div><div class="row"><span class="check"></span><span>Sirf recorded photos aur sujhaye sawaal use karein (doosri photo par app "फोटो साफ नहीं" kehta hai – ye bhi dikhayein).</span></div><div class="row"><span class="check"></span><span>Bechne ka vaakya bilkul yahi: <b>"दस क्विंटल बाजरा, पच्चीस सौ रुपये क्विंटल"</b> + bajra.jpg.</span></div><div class="row"><span class="check"></span><span>Kuch atke → turant backup video (<code>agriai-demo.mp4</code>), maafi nahi, bas "recorded version dekhte hain".</span></div><div class="row"><span class="check"></span><span>Koi sankhya bina source na bolein – brief/deck ke source wali hi.</span></div>
+<h2>Agar kuch fail ho</h2>
+<table>
+<tr><th>Dikkat</th><th>Kya karein</th></tr>
+<tr><td>demo.sh nahi chala</td><td>Port busy? Purana demo band karein (Ctrl+C) aur dobara. Phir bhi nahi → video.</td></tr>
+<tr><td>Photo par jawab nahi</td><td>Fasal sahi chuni? (sarson photo → सरसों). Recorded photo hi lein.</td></tr>
+<tr><td>Data gadbad</td><td>Ctrl+C → <code>scripts/demo.sh</code> (har start par saaf demo data, ~30 sec).</td></tr>
+<tr><td>Laptop band</td><td>Backup phone par video + printed brief.</td></tr>
+</table>
+<h2>Baad mein</h2>
+<div class="row"><span class="check"></span><span>Ctrl+C se demo band (sab band ho jaata hai, koi data nahi bachta).</span></div><div class="row"><span class="check"></span><span>Sawaal jo aaye, unke jawab Q&A doc mein jodein.</span></div><div class="row"><span class="check"></span><span>Follow-up email: brief PDF + sampark.</span></div>
+<p class="small" style="margin-top:3mm">Demo mode: <code>DEMO_MODE=true</code> recorded AI answers (<code>backend/demo/recordings.json</code>, <code>npm run demo:record</code> se asli Gemini se), ek recorded mausam. Production (NODE_ENV=production) mein ye mode chal hi nahi sakta – app start hone se mana karta hai (test se pakka).</p>
+</div></div>
+</body></html>

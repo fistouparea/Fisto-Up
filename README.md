@@ -276,6 +276,21 @@ calendars and bookings, a worker and a matching work need, an approved cow and a
 trip with 2 farmers and a cancelled one, and a farm profile + 2 saved checks on the household buyer's phone
 (device id `00000000-0000-4000-8000-000000000202`, linked on login). Schemes come from `backend/src/data/schemes.ts`.
 
+### Offline demo mode (no internet)
+
+```bash
+scripts/demo.sh                     # → http://localhost:4173, Ctrl+C stops everything
+```
+
+Runs everything on the laptop: an in-memory demo database filled by the seed (fresh on every start, every pilot feature
+on), and `DEMO_MODE=true`, which replays **saved real AI answers** and one saved Open-Meteo forecast from
+`backend/demo/recordings.json` instead of calling Gemini/Open-Meteo (`backend/src/demo/`). The answers cover the demo
+photos in `backend/demo/photos/` (openly licensed, see `ATTRIBUTION.md`), the "not a plant" photo
+`seed-assets/handicraft.jpg`, the three suggested follow-up questions and the selling sentence "दस क्विंटल बाजरा, पच्चीस
+सौ रुपये क्विंटल" with `seed-assets/bajra.jpg`. Any other photo gets "फोटो साफ नहीं" (never a guess). Re-record with the real
+model: `cd backend && npm run demo:record` (Gemini key in `.env`). `DEMO_MODE` is refused with `NODE_ENV=production`.
+Checklist: `showcase/2-demo-mode/demo-day-checklist.pdf`.
+
 ### MongoDB replica set (for npm dev)
 
 Orders reserve stock inside a MongoDB transaction, which needs a replica set. Docker does this for you. With npm,

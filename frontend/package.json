@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "typecheck": "tsc -b",
     "e2e": "playwright test",
-    "launch-kit:pdf": "node ../launch-kit/build-pdfs.mjs"
+    "launch-kit:pdf": "node ../launch-kit/build-pdfs.mjs",
+    "showcase:pdf": "node ../launch-kit/build-pdfs.mjs ../showcase"
   },
   "dependencies": {
     "@fontsource/mukta": "^5.3.0",

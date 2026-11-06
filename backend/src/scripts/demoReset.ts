@@ -13,9 +13,7 @@
  */
 import { spawn } from 'node:child_process';
 import mongoose from 'mongoose';
-import { FEATURE_FLAGS, FLAG_KEYS } from '../config/featureFlags.js';
-import { UserModel } from '../modules/auth/user.model.js';
-import { FeatureFlagModel } from '../modules/flags/flag.model.js';
+import { enablePilotFeaturesForDemo } from '../demo/demoFlags.js';
 import { databaseName, demoResetProblem } from './demoGuard.js';
 
 const uri = process.env.DEMO_MONGO_URI?.trim() || process.env.MONGO_URI?.trim() || undefined;
@@ -42,15 +40,7 @@ if (exit !== 0) {
 }
 // Pilot-only features on for everyone in the demo database, set by the demo coordinator (9000000001).
 await mongoose.connect(uri, { serverSelectionTimeoutMS: 5_000 });
-const coordinator = await UserModel.findOne({ phone: '9000000001', role: 'coordinator' }, { _id: 1 }).lean().exec();
-if (!coordinator) {
-  console.error('Demo coordinator nahi mila – seed adhoora?');
-  process.exit(1);
-}
-const pilotFlags = FLAG_KEYS.filter((key) => FEATURE_FLAGS[key].default === 'pilot');
-for (const key of pilotFlags) {
-  await FeatureFlagModel.updateOne({ key }, { $set: { state: 'all', updatedBy: coordinator._id } }, { upsert: true }).exec();
-}
+const flagCount = await enablePilotFeaturesForDemo();
 await mongoose.disconnect();
-console.log(`${pilotFlags.length} pilot suvidhaayein demo mein sabke liye chalu.`);
+console.log(`${flagCount} pilot suvidhaayein demo mein sabke liye chalu.`);
 console.log('Demo taiyaar. Sab demo PIN 2580 (launch-kit/5-demo/demo-script.pdf).');

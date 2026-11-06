@@ -1,14 +1,17 @@
 /**
  * Prints every Launch Kit HTML page to an A4 PDF next to it (Chromium from the frontend's Playwright).
- *   cd frontend && npm run launch-kit:pdf
+ *   cd frontend && npm run launch-kit:pdf          (launch-kit/)
+ *   cd frontend && npm run showcase:pdf            (showcase/, same printer)
+ * Optional argument: the folder to print (default: this launch-kit folder).
  */
 import { createRequire } from 'node:module';
 import { readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-const kit = path.dirname(fileURLToPath(import.meta.url));
-const require = createRequire(path.join(kit, '../frontend/package.json'));
+const here = path.dirname(fileURLToPath(import.meta.url));
+const kit = path.resolve(process.argv[2] ?? here);
+const require = createRequire(path.join(here, '../frontend/package.json'));
 const { chromium } = require('@playwright/test');
 
 const pages = [];

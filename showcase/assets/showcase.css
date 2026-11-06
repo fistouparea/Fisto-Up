@@ -1,0 +1,55 @@
+/* Government Showcase Kit: shared print styles. Fisto Up brand (same tokens as the app, frontend/src/index.css). */
+@font-face { font-family: Mukta; font-weight: 400; src: url(fonts/mukta-devanagari-400-normal.woff2) format('woff2'); unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+25CC, U+A830-A839, U+A8E0-A8FF; }
+@font-face { font-family: Mukta; font-weight: 500; src: url(fonts/mukta-devanagari-500-normal.woff2) format('woff2'); unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+25CC, U+A830-A839, U+A8E0-A8FF; }
+@font-face { font-family: Mukta; font-weight: 600; src: url(fonts/mukta-devanagari-600-normal.woff2) format('woff2'); unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+25CC, U+A830-A839, U+A8E0-A8FF; }
+@font-face { font-family: Mukta; font-weight: 700; src: url(fonts/mukta-devanagari-700-normal.woff2) format('woff2'); unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+25CC, U+A830-A839, U+A8E0-A8FF; }
+@font-face { font-family: Mukta; font-weight: 800; src: url(fonts/mukta-devanagari-800-normal.woff2) format('woff2'); unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+25CC, U+A830-A839, U+A8E0-A8FF; }
+@font-face { font-family: Mukta; font-weight: 400; src: url(fonts/mukta-latin-400-normal.woff2) format('woff2'); }
+@font-face { font-family: Mukta; font-weight: 500; src: url(fonts/mukta-latin-500-normal.woff2) format('woff2'); }
+@font-face { font-family: Mukta; font-weight: 600; src: url(fonts/mukta-latin-600-normal.woff2) format('woff2'); }
+@font-face { font-family: Mukta; font-weight: 700; src: url(fonts/mukta-latin-700-normal.woff2) format('woff2'); }
+@font-face { font-family: Mukta; font-weight: 800; src: url(fonts/mukta-latin-800-normal.woff2) format('woff2'); }
+
+:root {
+  --green: #03542c; --green-2: #0b6b3c; --green-soft: #e8f2ec; --yellow: #fbba16; --cream: #fdf3da;
+  --ink: #1a2b22; --muted: #55665b; --line: #d5e2d9; --red: #b42318; --grey: #f4f6f5;
+}
+@page { size: A4; margin: 14mm 14mm 14mm; }
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { font-family: Mukta, 'Noto Sans Devanagari', sans-serif; color: var(--ink); margin: 0; font-size: 10.5pt; line-height: 1.5; }
+h1 { font-size: 22pt; line-height: 1.15; margin: 0 0 3mm; color: var(--green); font-weight: 800; letter-spacing: -0.2pt; }
+h2 { font-size: 12.5pt; margin: 5mm 0 2mm; color: var(--green); font-weight: 700; }
+h3 { font-size: 10.5pt; margin: 3mm 0 1mm; font-weight: 700; }
+p { margin: 0 0 2mm; }
+ul, ol { margin: 0 0 2mm; padding-left: 5mm; } li { margin-bottom: 1mm; }
+a { color: var(--green-2); text-decoration: none; word-break: break-word; }
+table { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin: 1mm 0 3mm; }
+th, td { text-align: left; vertical-align: top; padding: 1.6mm 2mm; border-bottom: 1px solid var(--line); }
+th { color: var(--muted); font-weight: 600; font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.4pt; }
+.page { page-break-after: always; position: relative; }
+.page:last-child { page-break-after: auto; }
+.brandbar { display: flex; align-items: center; gap: 3mm; padding-bottom: 3mm; margin-bottom: 4mm; border-bottom: 2px solid var(--green); }
+.brandbar .logo { width: 9mm; height: 9mm; border-radius: 2.5mm; background: var(--green); color: var(--yellow); font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 12pt; }
+.brandbar .name { font-weight: 800; color: var(--green); font-size: 12pt; }
+.brandbar .tag { color: var(--muted); font-size: 9pt; margin-left: auto; text-align: right; }
+.lede { font-size: 12pt; color: var(--ink); margin-bottom: 3mm; }
+.muted { color: var(--muted); } .small { font-size: 8.5pt; color: var(--muted); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+.card { background: var(--grey); border-radius: 3mm; padding: 3mm 4mm; }
+.card.green { background: var(--green-soft); } .card.cream { background: var(--cream); }
+.card h3 { margin-top: 0; }
+.ask { background: var(--green); color: #fff; border-radius: 3mm; padding: 4mm 5mm; }
+.ask h2 { color: var(--yellow); margin-top: 0; } .ask a { color: #fff; text-decoration: underline; }
+.pill { display: inline-block; border-radius: 10mm; padding: 0.3mm 2.5mm; font-size: 8.5pt; font-weight: 600; white-space: nowrap; }
+.built { background: #dff3e6; color: #05612f; } .tested { background: #fff1c2; color: #6b4b00; } .planned { background: #e9ecef; color: #3d4650; }
+.phones { display: flex; gap: 4mm; justify-content: space-between; }
+.phone { flex: 1; border: 1.5px solid #c8d3cc; border-radius: 4mm; overflow: hidden; background: #fff; }
+.phone img { display: block; width: 100%; }
+.cap { font-size: 8.5pt; color: var(--muted); text-align: center; margin-top: 1mm; }
+.src { font-size: 7.5pt; color: var(--muted); line-height: 1.35; }
+.src li { margin-bottom: 0.6mm; }
+.check { display: inline-block; width: 3.6mm; height: 3.6mm; border: 1.3px solid var(--ink); border-radius: 0.8mm; vertical-align: -0.5mm; margin-right: 2mm; }
+.row { display: flex; gap: 2mm; margin: 1.3mm 0; } .row .check { flex: none; margin-top: 0.8mm; }
+.foot { position: absolute; bottom: 0; left: 0; right: 0; font-size: 7.5pt; color: var(--muted); border-top: 1px solid var(--line); padding-top: 1.5mm; display: flex; justify-content: space-between; }

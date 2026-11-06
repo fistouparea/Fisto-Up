@@ -32,7 +32,10 @@ export async function removeUnusedPhotos(storage: PhotoStorage, now: Date = new 
 
 /** Runs the cleanup every hour. Also drops the TTL index of Phase 3 (it deleted records but not Cloudinary files). */
 export function startPhotoCleanup(storage: PhotoStorage): ScheduledTask {
-  void ListingPhotoModel.syncIndexes().catch((error: unknown) => logger.warn({ err: error }, 'listing photo indexes not synced'));
+  // After the connection is up: the server starts connecting to MongoDB without waiting (bufferCommands is off).
+  const syncIndexes = () => void ListingPhotoModel.syncIndexes().catch((error: unknown) => logger.warn({ err: error }, 'listing photo indexes not synced'));
+  if (ListingPhotoModel.db.readyState === 1) syncIndexes();
+  else ListingPhotoModel.db.once('connected', syncIndexes);
   return cron.schedule(
     '17 * * * *',
     async () => {

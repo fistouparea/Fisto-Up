@@ -48,6 +48,11 @@ const envSchema = z.object({
   /** Send the login cookie only over HTTPS. Defaults to on when NODE_ENV=production. */
   COOKIE_SECURE: optional(z.enum(['true', 'false']).transform((value) => value === 'true')),
   NODE_ENV: optional(z.enum(['development', 'production', 'test'])).default('development'),
+  /**
+   * Offline demo (npm run demo): replays saved real AI answers and one saved forecast (demo/recordings.json)
+   * instead of calling Gemini and Open-Meteo. Never allowed with NODE_ENV=production.
+   */
+  DEMO_MODE: optional(z.enum(['true', 'false']).transform((value) => value === 'true')),
   /** Our commission on completed orders, in percent (2–5). */
   COMMISSION_PERCENT: optional(
     z.coerce.number().min(COMMISSION_RULES.minPercent).max(COMMISSION_RULES.maxPercent),
@@ -95,6 +100,7 @@ function isPlainOrigin(value: string): boolean {
 /** Settings that are optional in development but must be explicit in production. */
 const productionChecks = envSchema.superRefine((env, ctx) => {
   if (env.NODE_ENV !== 'production') return;
+  if (env.DEMO_MODE) ctx.addIssue({ code: 'custom', path: ['DEMO_MODE'], message: 'DEMO_MODE (recorded AI answers) can never be used in production' });
   const require = (key: keyof typeof env, why: string) => {
     if (env[key] === undefined) ctx.addIssue({ code: 'custom', path: [key], message: `required in production (${why})` });
   };

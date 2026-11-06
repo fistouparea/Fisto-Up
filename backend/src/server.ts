@@ -20,6 +20,9 @@ import { AgmarknetProvider } from './services/mandi/agmarknetProvider.js';
 import { MongoPushSubscriptionRepository } from './services/push/mongoPushSubscriptionRepository.js';
 import { WebPushSender } from './services/push/pushSender.js';
 import { OpenMeteoProvider } from './services/weather/openMeteoProvider.js';
+import { RecordedWeatherProvider } from './demo/recordedWeather.js';
+import { loadRecordings } from './demo/recordings.js';
+import { todayInIndia } from './utils/dates.js';
 
 /** Render and Docker send SIGTERM and wait ~30 s; finish open requests well before that. */
 const SHUTDOWN_TIMEOUT_MS = 10_000;
@@ -41,7 +44,9 @@ if (env.MONGO_URI) {
 const historyRepository = env.MONGO_URI ? new MongoHistoryRepository() : null;
 const farmProfiles = env.MONGO_URI ? new MongoFarmProfileRepository() : null;
 const subscriptions = env.MONGO_URI && vapid ? new MongoPushSubscriptionRepository() : null;
-const weather = new OpenMeteoProvider();
+// DEMO_MODE (offline demo, never production): one saved real forecast instead of Open-Meteo.
+const weather = env.DEMO_MODE ? new RecordedWeatherProvider(loadRecordings().forecast, () => todayInIndia()) : new OpenMeteoProvider();
+if (env.DEMO_MODE) logger.warn('DEMO_MODE: AI answers and weather are replayed from demo/recordings.json (offline demo).');
 let shuttingDown = false;
 
 const app = createApp({
