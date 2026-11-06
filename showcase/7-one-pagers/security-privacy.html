@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>AgriAI – Security and privacy (one page)</title>
+<link rel="stylesheet" href="../assets/showcase.css">
+<style> body { font-size: 9pt; line-height: 1.38; } .brandbar { margin-bottom: 2.5mm; padding-bottom: 2mm; } td, th { font-size: 8.3pt; padding: 1mm 1.5mm; } h2 { margin-top: 2.6mm; font-size: 11.5pt; } li { margin-bottom: 0.5mm; } .lede { font-size: 10.5pt; } </style>
+</head><body>
+<div class="brandbar"><div class="logo">A</div><div class="name">AgriAI · Security &amp; privacy</div><div class="tag">One-pager · Nov 2026<br>Fisto Up</div></div>
+<p class="lede">We collect only what the advice or the sale needs, never sell data, and never send a farmer's identity to the AI. Farmers can download or delete their data from the app at any time.</p>
+
+<h2>What data, why, where, who can see it</h2>
+<table>
+<tr><th>Data</th><th>Why</th><th>Stored where</th><th>Who can see it</th><th>How long</th></tr>
+<tr><td>Crop photo for a check</td><td>To find the problem</td><td><b>Not stored.</b> Sent once to the AI (Google Gemini) with the crop name only</td><td>Nobody at AgriAI</td><td>Not kept by us</td></tr>
+<tr><td>Check results ("मेरी जाँच")</td><td>History, follow-up</td><td>Database (planned: MongoDB Atlas, Mumbai)</td><td>The farmer's own phone</td><td>Until the farmer deletes</td></tr>
+<tr><td>Farm profile (village, crops, sowing date)</td><td>Local weather &amp; water advice</td><td>Database, linked to an anonymous phone ID</td><td>The farmer</td><td>Until deleted</td></tr>
+<tr><td>Account (name, phone, village, UPI ID)</td><td>Buying and selling</td><td>Database; PIN only as a bcrypt hash</td><td>The person; the other party of an order sees name/phone; SHG coordinator</td><td>Until deleted</td></tr>
+<tr><td>Sale listing photos</td><td>Show the produce</td><td>Photo storage (Cloudinary planned)</td><td>Everyone in the market</td><td>Until the listing/account is deleted</td></tr>
+<tr><td>Orders and commission</td><td>Accounting</td><td>Database</td><td>Buyer, seller, coordinator</td><td>Kept for accounts, <b>without</b> name, village or address after deletion</td></tr>
+<tr><td>Usage counts (pilot dashboard)</td><td>Measure the pilot</td><td>Database, weekly pseudonym, fixed values only</td><td>Coordinators (counts, no names)</td><td>400 days, then auto-deleted</td></tr>
+<tr><td>Consent record</td><td>Proof of consent</td><td>Database (version, time, language)</td><td>—</td><td>Until deleted</td></tr>
+</table>
+
+<div class="grid2">
+<div>
+<h2>Farmer's rights in the app (DPDP basics)</h2>
+<ul>
+<li><b>Consent first:</b> simple Hindi consent screen with 🔊, before any data is used; asked again when the text changes.</li>
+<li><b>"मेरा डेटा":</b> download everything as a file, or delete it at once (two confirmations). Completed orders are anonymised, not deleted.</li>
+<li><b>Complaints:</b> in-app complaint queue, coordinator answers within 48 hours.</li>
+<li>India's DPDP Rules, 2025 were notified on 14 Nov 2025 with an 18-month phased compliance timeline and rights to access, correct and erase data <span class="small">[S5]</span>. Our privacy policy and terms are <b>drafts awaiting legal review</b>.</li>
+</ul>
+<h2>What the AI receives</h2>
+<ul>
+<li>Photo check: <b>only the photo and the crop name</b> (tested automatically).</li>
+<li>Follow-up chat: crop, the earlier answer and the questions – never the photo or phone ID.</li>
+<li>Selling: the product photo and the seller's words with phone numbers removed.</li>
+</ul>
+</div>
+<div>
+<h2>Security controls (built)</h2>
+<ul>
+<li>HTTPS only; login cookie HttpOnly, SameSite=Strict, Secure.</li>
+<li>PIN lockout after 5 wrong tries (15 min); rate limits on every API.</li>
+<li>Strict Content-Security-Policy, helmet headers, every input validated.</li>
+<li>Server checks every role and ownership (a seller can only change own listings; delivery links expire after 14 days or on delivery).</li>
+<li><b>Audit log:</b> every coordinator action (who, what, when) – append-only, cannot be edited or deleted.</li>
+<li>Logs hide PIN, tokens, phone numbers and photos; error reports (optional) carry no user data.</li>
+<li><b>Backups:</b> daily, encrypted, kept 14 days (GitHub Actions or server cron; restore script included).</li>
+<li>No known vulnerable packages (<code>npm audit</code>: high = 0); dependencies kept minimal.</li>
+</ul>
+<h2>Open items (honest)</h2>
+<ul>
+<li>Legal review of policy, terms, consent text and retention.</li>
+<li>Hosting not yet live; server region planned Singapore (Render), database Mumbai (Atlas).</li>
+<li>Google processes photos under its API terms; a government-hosted model can be connected if required.</li>
+<li>No external security audit yet – welcome before scale-up.</li>
+</ul>
+</div></div>
+<div class="foot"><span>AgriAI by Fisto Up · Security &amp; privacy</span><span>[S5] PIB/MeitY 14 Nov 2025 – see showcase/SOURCES.md</span></div>
+</body></html>

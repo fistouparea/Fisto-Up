@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>AgriAI – Architecture (one page)</title>
+<link rel="stylesheet" href="../assets/showcase.css">
+<style>
+ svg text { font-family: Mukta, sans-serif; }
+ .legend { display: flex; gap: 5mm; font-size: 8.5pt; color: var(--muted); margin: 1mm 0 3mm; }
+ .legend span::before { content: ''; display: inline-block; width: 3mm; height: 3mm; border-radius: 0.8mm; margin-right: 1.5mm; vertical-align: -0.3mm; }
+ .l1::before { background: #03542c; } .l2::before { background: #e8f2ec; border: 1px solid #03542c; } .l3::before { background: #fdf3da; border: 1px solid #b98a00; }
+</style></head><body>
+<div class="brandbar"><div class="logo">A</div><div class="name">AgriAI · How it works</div><div class="tag">Architecture one-pager · Nov 2026<br>Fisto Up</div></div>
+<p class="lede">One Hindi web app on the farmer's own phone, one small server, one database. AI is used only through one narrow, replaceable connection – and it never receives a farmer's name, phone number or location.</p>
+
+<svg viewBox="0 0 760 330" width="100%" role="img" aria-label="Architecture diagram">
+ <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#55665b"/></marker></defs>
+ <!-- users -->
+ <g font-size="12">
+  <rect x="10" y="20" width="170" height="130" rx="12" fill="#03542c"/>
+  <text x="95" y="45" text-anchor="middle" fill="#fbba16" font-weight="700" font-size="14">Phones (PWA)</text>
+  <text x="95" y="68" text-anchor="middle" fill="#fff">Farmer · Seller · Buyer</text>
+  <text x="95" y="86" text-anchor="middle" fill="#fff">Hindi UI, voice (browser),</text>
+  <text x="95" y="104" text-anchor="middle" fill="#fff">works offline for saved info</text>
+  <text x="95" y="130" text-anchor="middle" fill="#d9eadf" font-size="11">no app-store install needed</text>
+  <rect x="10" y="175" width="170" height="70" rx="12" fill="#03542c"/>
+  <text x="95" y="200" text-anchor="middle" fill="#fbba16" font-weight="700" font-size="14">SHG didi (coordinator)</text>
+  <text x="95" y="222" text-anchor="middle" fill="#fff">same app, coordinator panel</text>
+  <rect x="10" y="265" width="170" height="50" rx="12" fill="#e8f2ec" stroke="#03542c"/>
+  <text x="95" y="287" text-anchor="middle" fill="#03542c" font-weight="700">Delivery person</text>
+  <text x="95" y="304" text-anchor="middle" fill="#03542c" font-size="11">one-time link, no login</text>
+ </g>
+ <!-- server -->
+ <rect x="260" y="60" width="210" height="210" rx="14" fill="#e8f2ec" stroke="#03542c" stroke-width="1.5"/>
+ <text x="365" y="88" text-anchor="middle" fill="#03542c" font-weight="700" font-size="15">AgriAI server</text>
+ <g font-size="11.5" fill="#1a2b22">
+  <text x="278" y="112">• login (phone + PIN), roles</text>
+  <text x="278" y="131">• checks every input (Zod)</text>
+  <text x="278" y="150">• safety rules: unclear photo →</text>
+  <text x="290" y="166">no answer; banned medicines</text>
+  <text x="290" y="182">blocked; KVK advice line</text>
+  <text x="278" y="201">• weather / water / alert rules</text>
+  <text x="278" y="220">• orders, delivery, complaints</text>
+  <text x="278" y="239">• audit log, rate limits</text>
+  <text x="278" y="258" fill="#55665b">Node.js · planned host: Render</text>
+ </g>
+ <!-- data -->
+ <rect x="560" y="20" width="190" height="78" rx="12" fill="#e8f2ec" stroke="#03542c"/>
+ <text x="655" y="45" text-anchor="middle" fill="#03542c" font-weight="700" font-size="13.5">Database (MongoDB)</text>
+ <text x="655" y="64" text-anchor="middle" font-size="11">accounts, farm, checks, orders</text>
+ <text x="655" y="82" text-anchor="middle" font-size="11" fill="#55665b">planned: Atlas, Mumbai region</text>
+ <rect x="560" y="112" width="190" height="62" rx="12" fill="#fdf3da" stroke="#b98a00"/>
+ <text x="655" y="136" text-anchor="middle" fill="#6b4b00" font-weight="700" font-size="13.5">AI (Google Gemini)</text>
+ <text x="655" y="156" text-anchor="middle" font-size="11">photo + crop name only</text>
+ <rect x="560" y="188" width="190" height="62" rx="12" fill="#fdf3da" stroke="#b98a00"/>
+ <text x="655" y="210" text-anchor="middle" fill="#6b4b00" font-weight="700" font-size="13.5">Public data</text>
+ <text x="655" y="229" text-anchor="middle" font-size="11">weather: Open-Meteo</text>
+ <text x="655" y="243" text-anchor="middle" font-size="11">mandi prices: data.gov.in</text>
+ <rect x="560" y="264" width="190" height="52" rx="12" fill="#fdf3da" stroke="#b98a00"/>
+ <text x="655" y="286" text-anchor="middle" fill="#6b4b00" font-weight="700" font-size="13.5">Photo storage</text>
+ <text x="655" y="304" text-anchor="middle" font-size="11">sale listing photos only</text>
+ <!-- arrows -->
+ <g stroke="#55665b" stroke-width="1.6" fill="none" marker-end="url(#a)" marker-start="url(#a)">
+  <path d="M182 85 L258 120"/><path d="M182 210 L258 190"/><path d="M182 290 L258 245"/>
+  <path d="M472 110 L558 60"/><path d="M472 150 L558 143"/><path d="M472 190 L558 219"/><path d="M472 230 L558 288"/>
+ </g>
+ <text x="215" y="80" font-size="10" fill="#55665b">HTTPS</text>
+</svg>
+<div class="legend"><span class="l1">people</span><span class="l2">our code &amp; our data</span><span class="l3">outside services (behind small, replaceable connectors with time limits)</span></div>
+
+<div class="grid2">
+<div>
+<h2>In plain words</h2>
+<ol>
+<li><b>The farmer opens a link</b> in Chrome and can add it to the home screen. Everything is in simple Hindi, with 🔊 read-aloud and a mic button (browser speech).</li>
+<li><b>Photo check:</b> the phone shrinks the photo (and removes GPS data), the server sends only the photo and the crop name to the AI, then applies our safety rules before showing anything.</li>
+<li><b>Weather, water, calendar, alerts</b> are rules written down in one place (marked "verify with KVK"), not AI guesses.</li>
+<li><b>Marketplace:</b> listings, orders, delivery tracking, complaints and the commission ledger run on our server. Money moves directly between buyer and seller (UPI or cash).</li>
+<li><b>SHG didi</b> uses the same app with a coordinator panel; every coordinator action is written to an append-only audit log.</li>
+</ol>
+</div>
+<div>
+<h2>Design choices that matter for government</h2>
+<ul>
+<li><b>Replaceable AI:</b> all AI calls go through one interface. Another model (including an Indian or government-hosted one) can be connected without changing the app.</li>
+<li><b>Low cost, low bandwidth:</b> a web app (no app store), small first load, offline screen for saved advice.</li>
+<li><b>Works without the AI:</b> if the AI is slow or down, weather, water, market and coordinator work continue.</li>
+<li><b>Offline demo mode:</b> recorded real AI answers for demonstrations; it cannot be turned on in production.</li>
+<li><b>Open, testable code:</b> 566 automatic server tests, 146 app tests and 8 end-to-end phone journeys run before each change.</li>
+</ul>
+<div class="card cream small" style="margin-top:2mm"><b>Status:</b> built and tested with demo data on a laptop. Cloud deployment (Render, Atlas) is prepared but not yet live; no real users yet.</div>
+</div></div>
+<div class="foot"><span>AgriAI by Fisto Up · Architecture</span><span>Sources and status: showcase/SOURCES.md</span></div>
+</body></html>
