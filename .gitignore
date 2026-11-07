@@ -4,3 +4,5 @@ dev-dist
 .env
 *.tsbuildinfo
 backups/
+# Production secrets kept only on this laptop (never committed)
+deploy/prod.env
