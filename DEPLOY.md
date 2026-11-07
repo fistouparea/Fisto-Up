@@ -118,8 +118,10 @@ Laptop wali `.env` ki key production mein **na** lagayein. Production ke liye al
    Farmer app `/api/*` ko Render ke "rewrite" se backend tak bhejta hai, taaki app aur API ek hi address par hon
    (cookie aur CSP ke liye zaroori). Agar login reload ke baad chala jaaye, to step 7 ka "Plan B" karein.
 
-> Agar `agriai-api` naam pehle se kisi ne le liya ho, Render alag address dega (jaise `agriai-api-x1y2.onrender.com`).
-> Tab `render.yaml` mein `destination: https://<naya-address>/api/*` badalkar push karein.
+> **Dhyaan:** `agriai-api` aur `agriai-web` naam Render par pehle se kisi aur ke hain, isliye Render alag address deta hai
+> (hamara: `agriai-api-y8zs.onrender.com`, `agriai-web-qacl.onrender.com`). Service page par upar likha asli address dekhein,
+> `render.yaml` mein `destination: https://<asli-api-address>/api/*` likhkar push karein, aur `CORS_ORIGIN` asli
+> web address rakhein. Tab tak app mein login na karein (warna request kisi aur ke server par jaayegi).
 
 **Server ki settings (kyon):** `NODE_ENV=production` par server tab tak start nahi hota jab tak `CORS_ORIGIN`,
 `MONGO_URI` aur `JWT_SECRET` sahi na hon. Galti hone par Render ke **Logs** mein saaf likha aata hai kya galat hai

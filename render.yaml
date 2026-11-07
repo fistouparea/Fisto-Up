@@ -65,7 +65,7 @@ services:
       # The app and the API share one address: the login cookie stays first-party and CSP 'self' covers the API.
       - type: rewrite
         source: /api/*
-        destination: https://agriai-api.onrender.com/api/*
+        destination: https://agriai-api-y8zs.onrender.com/api/* # our real Render address (agriai-api.onrender.com belongs to someone else)
       - type: rewrite
         source: /*
         destination: /index.html
