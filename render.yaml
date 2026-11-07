@@ -4,7 +4,7 @@ services:
   - type: web
     name: agriai-api
     runtime: docker
-    plan: starter # always on; free web services sleep and are not for production
+    plan: free # test-pilot (no budget yet). Before wider use: plan: starter (always on), see DEPLOY.md
     region: singapore # closest Render region to Rajasthan
     rootDir: backend
     dockerfilePath: ./Dockerfile

@@ -236,6 +236,11 @@ docker compose -f docker-compose.prod.yml up -d --build
 
 Abhi deploy nahi hua. Deploy ke baad yahan live address likhein (koi secret nahi):
 
+**Abhi ka plan: free test-pilot** (budget nahi). Gemini free key, Render free (UptimeRobot ping ke saath), Atlas M0,
+Cloudinary free. Free Gemini par Google photo/sawaal ko apni AI sudharne mein use kar sakta hai, isliye "मेरा डेटा"
+aur sahmati patra mein ye likha hai. **Zyada kisano tak le jaane se pehle:** paid Gemini key (step 4) aur
+`render.yaml` mein `agriai-api` ka `plan: starter`.
+
 | Kya | Address |
 | --- | --- |
 | Farmer app | – |
