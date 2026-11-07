@@ -27,6 +27,8 @@ export type ErrorCode =
   | 'LICENCE_CHECK_REQUIRED'
   | 'BLOCKED_INPUT'
   | 'LICENCE_NOT_VERIFIED'
+  | 'UPI_REQUIRED'
+  | 'PAYMENT_METHOD_UNAVAILABLE'
   | 'INTERNAL';
 
 const HTTP_STATUS: Record<ErrorCode, number> = {
@@ -48,7 +50,7 @@ const HTTP_STATUS: Record<ErrorCode, number> = {
   LOGIN_LOCKED: 429,
   PHONE_TAKEN: 409,
   WEAK_PIN: 400,
-  /** A seller must fill name, village, UPI ID and pickup place before listing. */
+  /** A seller must fill name, village and pickup place (and a UPI ID while cash payment is off) before listing. */
   SELLER_PROFILE_MISSING: 403,
   OUT_OF_STOCK: 409,
   /** The order is not in a state where this step is allowed (or someone else changed it first). */
@@ -68,6 +70,10 @@ const HTTP_STATUS: Record<ErrorCode, number> = {
   BLOCKED_INPUT: 400,
   /** Input dealers list only after a coordinator checked their licence. */
   LICENCE_NOT_VERIFIED: 403,
+  /** Cash payment is switched off (flag cashPayment): a seller needs a UPI ID. */
+  UPI_REQUIRED: 400,
+  /** The buyer chose UPI for a seller without a UPI ID, or cash while cash payment is switched off. */
+  PAYMENT_METHOD_UNAVAILABLE: 400,
   INTERNAL: 500,
 };
 

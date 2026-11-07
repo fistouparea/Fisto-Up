@@ -3,7 +3,7 @@ import { PRICING_RULES } from '../../config/marketRules.js';
 import type { AiProvider } from '../../services/ai/aiProvider.js';
 import type { MandiProvider } from '../../services/mandi/agmarknetProvider.js';
 import type { MandiPrice } from '../../types/mandi.js';
-import { ListingModel } from '../listings/listing.model.js';
+import { ListingModel, VISIBLE_LISTING_FILTER } from '../listings/listing.model.js';
 import type { PriceSuggestion } from './pricing.types.js';
 import { logger } from '../../observability/logger.js';
 
@@ -73,7 +73,7 @@ function validMin(price: MandiPrice): number {
 /** Median price of similar listings that buyers can see right now. */
 async function fromPlatform(product: ProductId, unit: Unit): Promise<PriceSuggestion> {
   const rows = await ListingModel.find(
-    { product, unit, status: 'active', hidden: false, sellerVerified: true, quantityAvailable: { $gt: 0 } },
+    { product, unit, ...VISIBLE_LISTING_FILTER },
     { pricePerUnitPaise: 1 },
   )
     .sort({ createdAt: -1 })

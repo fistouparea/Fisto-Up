@@ -50,9 +50,10 @@ export interface OrderContact {
   pickup?: Place;
 }
 
+/** What the buyer pays whom. The UPI fields only when the seller has a UPI ID (else: cash at delivery only). */
 export interface OrderPayment {
-  upiLink: string;
-  upiId: string;
+  upiLink?: string;
+  upiId?: string;
   payeeName: string;
   amountPaise: number;
 }

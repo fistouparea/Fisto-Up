@@ -11,7 +11,7 @@ import { toCsv } from '../../utils/csv.js';
 import { lastWeeks, weekStartInstant } from '../../utils/weeks.js';
 import { CommissionEntryModel } from '../commission/commission.model.js';
 import { DiagnosisFeedbackModel } from '../feedback/feedback.model.js';
-import { ListingModel } from '../listings/listing.model.js';
+import { ListingModel, VISIBLE_LISTING_FILTER } from '../listings/listing.model.js';
 import { OrderModel } from '../orders/order.model.js';
 import { EventModel } from './event.model.js';
 
@@ -132,7 +132,7 @@ async function marketPerWeek(weeks: string[], from: Date) {
 async function marketTotals() {
   const [listings, activeListings, orders, ledger] = await Promise.all([
     ListingModel.countDocuments().exec(),
-    ListingModel.countDocuments({ status: 'active', hidden: false, sellerVerified: true, quantityAvailable: { $gt: 0 } }).exec(),
+    ListingModel.countDocuments(VISIBLE_LISTING_FILTER).exec(),
     OrderModel.countDocuments().exec(),
     CommissionEntryModel.aggregate<{ count: number; sales: number; commission: number }>([
       { $group: { _id: null, count: { $sum: 1 }, sales: { $sum: '$orderTotalPaise' }, commission: { $sum: '$amountPaise' } } },

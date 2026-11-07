@@ -13,15 +13,15 @@ export function toAuthUser(user: UserDocument): AuthUser {
   };
 }
 
-/** The account as its owner sees it. */
-export function toAccountView(user: UserDocument): AccountView {
+/** The account as its owner sees it. `cashOn`: the cashPayment flag (decides whether a UPI ID is required). */
+export function toAccountView(user: UserDocument, cashOn: boolean): AccountView {
   return {
     id: user._id.toString(),
     phone: user.phone,
     role: user.role,
     name: user.name,
     ...(user.deviceId && { deviceId: user.deviceId }),
-    ...(user.seller && { seller: toSellerProfileView(user.seller) }),
+    ...(user.seller && { seller: toSellerProfileView(user.seller, cashOn) }),
     ...(user.buyer && {
       buyer: {
         buyerType: user.buyer.buyerType,
@@ -33,7 +33,7 @@ export function toAccountView(user: UserDocument): AccountView {
   };
 }
 
-export function toSellerProfileView(seller: SellerData): SellerProfileView {
+export function toSellerProfileView(seller: SellerData, cashOn: boolean): SellerProfileView {
   return {
     status: seller.status,
     kind: seller.kind ?? 'producer',
@@ -44,14 +44,21 @@ export function toSellerProfileView(seller: SellerData): SellerProfileView {
     ...(seller.upiId && { upiId: seller.upiId }),
     ...(seller.pickup && { pickup: toPlace(seller.pickup) }),
     ...(seller.rejectReason && { rejectReason: seller.rejectReason }),
-    profileComplete: isSellerProfileComplete(seller),
+    profileComplete: isSellerProfileComplete(seller, cashOn),
+    upiNeeded: isUpiNeeded(seller, cashOn),
     rating: sellerRating(seller),
   };
 }
 
-export function isSellerProfileComplete(seller: SellerData | null | undefined): boolean {
+/** Ready to list. A UPI ID is optional (cash at delivery) unless cash payment is switched off. */
+export function isSellerProfileComplete(seller: SellerData | null | undefined, cashOn: boolean): boolean {
   const licenceOk = seller?.kind !== 'input_dealer' || Boolean(seller.licenceNumber);
-  return Boolean(seller?.village && seller.upiId && seller.pickup && licenceOk);
+  return Boolean(seller?.village && seller.pickup && licenceOk && !isUpiNeeded(seller, cashOn));
+}
+
+/** Cash payment is off and the seller has no UPI ID: buyers could not pay them. */
+export function isUpiNeeded(seller: SellerData | null | undefined, cashOn: boolean): boolean {
+  return !cashOn && !seller?.upiId;
 }
 
 /** An input dealer whose licence a coordinator checked (and who is still verified). */

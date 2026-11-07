@@ -34,6 +34,8 @@ export interface AdminFlag {
   description: string;
   state: FlagState;
   default: FlagState;
+  /** Only off/all (a rule for everyone, e.g. cashPayment). */
+  onOff?: boolean;
 }
 
 export interface AuditEntry {

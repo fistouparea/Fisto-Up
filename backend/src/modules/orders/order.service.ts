@@ -20,6 +20,7 @@ import {
   type OrderStatus,
   type TransitionRule,
 } from './orderStateMachine.js';
+import { paymentMethodsFor } from './paymentOptions.js';
 import { upiPayLink } from './upi.js';
 import { track } from '../metrics/events.js';
 import { deliveryTimeline } from '../delivery/delivery.service.js';
@@ -28,6 +29,8 @@ export interface OrderServiceDeps {
   notifier: MarketNotifier;
   /** Commission rate in basis points (from config / env). */
   commissionBps: number;
+  /** The cashPayment flag (read per order, so a coordinator's switch applies at once). */
+  cashPaymentOn: () => Promise<boolean>;
   now?: () => Date;
 }
 
@@ -66,6 +69,9 @@ export class OrderService {
     if (body.referral && listing.category !== 'input') throw new AppError('INVALID_INPUT', 'Referral only for farm inputs');
     const seller = await UserModel.findById(listing.sellerId).exec();
     if (!seller) throw new AppError('NOT_FOUND');
+    if (!paymentMethodsFor(seller.seller?.upiId, await this.deps.cashPaymentOn()).includes(body.paymentMethod)) {
+      throw new AppError('PAYMENT_METHOD_UNAVAILABLE');
+    }
 
     const pricePerUnitPaise = offer ?? listing.pricePerUnitPaise;
     let pending: PendingPush[] = [];
@@ -256,7 +262,8 @@ export async function toOrderView(order: OrderDocument, viewer: AuthUser): Promi
     contactVisible ? UserModel.findById(order.buyerId).exec() : null,
   ]);
 
-  const showPayment = viewerRole === 'buyer' && PAYMENT_VISIBLE_STATUSES.includes(order.status) && seller?.seller?.upiId;
+  const showPayment = viewerRole === 'buyer' && PAYMENT_VISIBLE_STATUSES.includes(order.status) && seller;
+  const sellerUpiId = seller?.seller?.upiId;
   return {
     id: order._id.toString(),
     ref: order.ref,
@@ -301,15 +308,16 @@ export async function toOrderView(order: OrderDocument, viewer: AuthUser): Promi
         ...(order.fulfilment === 'pickup' && seller?.seller?.pickup && { pickup: toPlace(seller.seller.pickup) }),
       },
     }),
-    ...(showPayment &&
-      seller?.seller?.upiId && {
-        payment: {
-          upiId: seller.seller.upiId,
-          payeeName: seller.name,
-          amountPaise: order.totalPaise,
-          upiLink: upiPayLink({ upiId: seller.seller.upiId, payeeName: seller.name, amountPaise: order.totalPaise, orderRef: order.ref }),
-        },
-      }),
+    ...(showPayment && {
+      payment: {
+        payeeName: seller.name,
+        amountPaise: order.totalPaise,
+        ...(sellerUpiId && {
+          upiId: sellerUpiId,
+          upiLink: upiPayLink({ upiId: sellerUpiId, payeeName: seller.name, amountPaise: order.totalPaise, orderRef: order.ref }),
+        }),
+      },
+    }),
     canRate: viewerRole === 'buyer' && order.status === 'completed' && !order.rating,
   };
 }

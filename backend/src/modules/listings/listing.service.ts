@@ -123,12 +123,12 @@ function fallbackTitle(product: keyof typeof PRODUCTS, quantity: number | null, 
 export async function createListing(
   sellerId: string,
   body: CreateListingBody,
-  options: { uploaderId: string; assisted?: AssistedConsent },
+  options: { uploaderId: string; assisted?: AssistedConsent; cashOn: boolean },
 ): Promise<ListingDocument> {
   const seller = isValidObjectId(sellerId) ? await UserModel.findById(sellerId).exec() : null;
   if (!seller || seller.role !== 'seller' || !seller.seller) throw new AppError('NOT_FOUND', 'Seller not found');
   const pickup = seller.seller.pickup;
-  if (!isSellerProfileComplete(seller.seller) || !pickup) throw new AppError('SELLER_PROFILE_MISSING');
+  if (!isSellerProfileComplete(seller.seller, options.cashOn) || !pickup) throw new AppError('SELLER_PROFILE_MISSING');
 
   const product = productInfo(body.product);
   if (product.category !== body.category || !product.units.includes(body.unit)) {
@@ -270,7 +270,9 @@ export function photoUrl(photoId: Types.ObjectId | string): string {
 }
 
 export function isPubliclyVisible(listing: ListingDocument): boolean {
-  return listing.status === 'active' && !listing.hidden && listing.sellerVerified && listing.quantityAvailable > 0 && !isBlockedListing(listing);
+  return (
+    listing.status === 'active' && !listing.hidden && listing.sellerVerified && listing.paymentBlocked !== true && listing.quantityAvailable > 0 && !isBlockedListing(listing)
+  );
 }
 
 /** A listing that names a blocked input (e.g. the blocklist grew after it was listed) is never shown. */

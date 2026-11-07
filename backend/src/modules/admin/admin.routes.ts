@@ -13,8 +13,8 @@ import {
 import { z } from 'zod';
 import { parseOrThrow } from '../../utils/validation.js';
 import { audit, auditQuerySchema, listAudit, type AuditEntryView } from '../audit/audit.service.js';
-import { FLAG_KEYS, FLAG_STATES } from '../../config/featureFlags.js';
-import type { FeatureFlags, FlagView } from '../flags/flag.service.js';
+import { FLAG_KEYS, FLAG_STATES, isOnOffFlag } from '../../config/featureFlags.js';
+import { cashPaymentOn, type FeatureFlags, type FlagView } from '../flags/flag.service.js';
 import { listHelpRequests, resolveHelpRequest, type HelpRequestView } from '../help/help.service.js';
 import { createInvite, createInviteBodySchema, listInvites, revokeInvite, toInviteView, type InviteView } from '../invites/invite.service.js';
 import { currentUser, requireRole } from '../auth/auth.middleware.js';
@@ -26,7 +26,8 @@ import type { SellerListingView } from '../listings/listing.types.js';
 import { OrderModel } from '../orders/order.model.js';
 import { toOrderView, type OrderService } from '../orders/order.service.js';
 import { deliveryPersonBodySchema, type OrderView } from '../orders/order.types.js';
-import { setSellerStatus } from '../sellers/seller.service.js';
+import { setCashPayment } from '../sellers/cashPayment.service.js';
+import { setSellerStatus, setSellerUpi } from '../sellers/seller.service.js';
 import {
   adminOrderQuerySchema,
   assistedListingBodySchema,
@@ -41,6 +42,7 @@ import {
   resolveBodySchema,
   resolveReport,
   setListingHidden,
+  setUpiBodySchema,
   toAdminSeller,
   verifyBodySchema,
   type AdminReportView,
@@ -80,23 +82,31 @@ export function createAdminRouter({ auth, orders, commissionBps, flags, mandi }:
 
   // --- Sellers ---
   router.get('/admin/sellers', async (req, res: Response<{ items: AdminSellerView[] }>) => {
-    res.json({ items: await listSellers(parseOrThrow(sellerListQuerySchema, req.query)) });
+    res.json({ items: await listSellers(parseOrThrow(sellerListQuerySchema, req.query), await cashPaymentOn(flags)) });
   });
   router.post('/admin/sellers', json, async (req, res: Response<{ seller: AdminSellerView }>) => {
     const body = parseOrThrow(createSellerBodySchema, req.body);
-    const seller = await createSellerForSomeone(auth, body, currentUser(req).id);
-    await audit(req, 'seller.create', { type: 'user', id: seller.id }, { status: seller.status });
+    const seller = await createSellerForSomeone(auth, body, currentUser(req).id, await cashPaymentOn(flags));
+    await audit(req, 'seller.create', { type: 'user', id: seller.id }, { status: seller.status, hasUpi: Boolean(seller.upiId) });
     res.status(201).json({ seller });
+  });
+  /** The coordinator adds a seller's UPI ID. The audit log notes that it changed, never the ID itself. */
+  router.put('/admin/sellers/:id/upi', json, async (req, res: Response<{ seller: AdminSellerView }>) => {
+    const { upiId } = parseOrThrow(setUpiBodySchema, req.body);
+    const { user, hadUpi } = await setSellerUpi(id(req.params.id), upiId);
+    const seller = toAdminSeller(user, await cashPaymentOn(flags));
+    await audit(req, 'seller.setUpi', { type: 'user', id: seller.id }, { hadUpi });
+    res.json({ seller });
   });
   router.post('/admin/sellers/:id/verify', json, async (req, res: Response<{ seller: AdminSellerView }>) => {
     const { licenceChecked } = parseOrThrow(verifyBodySchema, req.body ?? {});
-    const seller = toAdminSeller(await setSellerStatus(id(req.params.id), { status: 'verified', licenceChecked }, currentUser(req).id));
+    const seller = toAdminSeller(await setSellerStatus(id(req.params.id), { status: 'verified', licenceChecked }, currentUser(req).id), await cashPaymentOn(flags));
     await audit(req, 'seller.verify', { type: 'user', id: seller.id }, { kind: seller.kind, ...(seller.kind === 'input_dealer' && { licenceChecked: true }) });
     res.json({ seller });
   });
   router.post('/admin/sellers/:id/reject', json, async (req, res: Response<{ seller: AdminSellerView }>) => {
     const { reason } = parseOrThrow(rejectBodySchema, req.body);
-    const seller = toAdminSeller(await setSellerStatus(id(req.params.id), { status: 'rejected', reason }, currentUser(req).id));
+    const seller = toAdminSeller(await setSellerStatus(id(req.params.id), { status: 'rejected', reason }, currentUser(req).id), await cashPaymentOn(flags));
     await audit(req, 'seller.reject', { type: 'user', id: seller.id }, { reason });
     res.json({ seller });
   });
@@ -131,7 +141,7 @@ export function createAdminRouter({ auth, orders, commissionBps, flags, mandi }:
   router.post('/admin/listings', json, async (req, res: Response<{ listing: SellerListingView }>) => {
     const { sellerId, consent, ...listing } = parseOrThrow(assistedListingBodySchema, req.body);
     const coordinatorId = currentUser(req).id;
-    const created = await createListing(sellerId, listing, { uploaderId: coordinatorId, assisted: { coordinatorId, ...consent } });
+    const created = await createListing(sellerId, listing, { uploaderId: coordinatorId, assisted: { coordinatorId, ...consent }, cashOn: await cashPaymentOn(flags) });
     await audit(req, 'listing.createAssisted', { type: 'listing', id: created._id.toString() }, { sellerId, consentMethod: consent.method });
     res.status(201).json({ listing: toSellerListingView(created) });
   });
@@ -196,8 +206,14 @@ export function createAdminRouter({ auth, orders, commissionBps, flags, mandi }:
   });
   router.put('/admin/flags/:key', json, async (req, res: Response<{ items: FlagView[] }>) => {
     const { key, state } = parseOrThrow(setFlagSchema, { key: req.params.key, state: (req.body as { state?: unknown } | undefined)?.state });
-    await flags.set(key, state, currentUser(req).id);
-    await audit(req, 'flag.set', { type: 'flag', id: key }, { state });
+    if (state === 'pilot' && isOnOffFlag(key)) throw new AppError('INVALID_INPUT', 'This flag is only off or all');
+    if (key === 'cashPayment') {
+      const { listingsChanged } = await setCashPayment(flags, state, currentUser(req).id);
+      await audit(req, 'flag.set', { type: 'flag', id: key }, { state, listingsChanged });
+    } else {
+      await flags.set(key, state, currentUser(req).id);
+      await audit(req, 'flag.set', { type: 'flag', id: key }, { state });
+    }
     res.json({ items: await flags.list() });
   });
 

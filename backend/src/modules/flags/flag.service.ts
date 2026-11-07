@@ -1,5 +1,5 @@
-import mongoose from 'mongoose';
-import { FEATURE_FLAGS, FLAG_KEYS, type FlagKey, type FlagState } from '../../config/featureFlags.js';
+import mongoose, { type ClientSession } from 'mongoose';
+import { FEATURE_FLAGS, FLAG_KEYS, isOnOffFlag, type FlagKey, type FlagState } from '../../config/featureFlags.js';
 import { logger } from '../../observability/logger.js';
 import type { AuthUser } from '../auth/auth.types.js';
 import { FeatureFlagModel } from './flag.model.js';
@@ -11,6 +11,8 @@ export interface FlagView {
   description: string;
   state: FlagState;
   default: FlagState;
+  /** Only off/all (a rule for everyone, e.g. cashPayment). */
+  onOff: boolean;
 }
 
 /** Who is asking: pilot accounts and coordinators see "pilot" features. */
@@ -57,11 +59,21 @@ export class FeatureFlags {
 
   async list(): Promise<FlagView[]> {
     const states = await this.states();
-    return FLAG_KEYS.map((key) => ({ key, description: FEATURE_FLAGS[key].description, state: states[key], default: this.defaults[key] }));
+    return FLAG_KEYS.map((key) => ({ key, description: FEATURE_FLAGS[key].description, state: states[key], default: this.defaults[key], onOff: isOnOffFlag(key) }));
   }
 
-  async set(key: FlagKey, state: FlagState, coordinatorId: string): Promise<void> {
-    await FeatureFlagModel.updateOne({ key }, { $set: { state, updatedBy: coordinatorId } }, { upsert: true }).exec();
+  /** `session`: save the flag in the caller's transaction (e.g. together with the listings it hides). */
+  async set(key: FlagKey, state: FlagState, coordinatorId: string, session?: ClientSession): Promise<void> {
+    await FeatureFlagModel.updateOne({ key }, { $set: { state, updatedBy: coordinatorId } }, { upsert: true, ...(session && { session }) }).exec();
     this.cache = null;
   }
+
+  clearCache(): void {
+    this.cache = null;
+  }
+}
+
+/** Cash at delivery allowed (flag cashPayment; only off/all, so the same for every viewer). */
+export function cashPaymentOn(flags: FeatureFlags): Promise<boolean> {
+  return flags.isOn('cashPayment', undefined);
 }

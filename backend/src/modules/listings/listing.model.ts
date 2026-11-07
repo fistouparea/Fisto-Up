@@ -11,6 +11,12 @@ const listingSchema = new Schema(
     sellerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     /** Copy of the seller's status, so the public search needs no join. Updated when a coordinator decides. */
     sellerVerified: { type: Boolean, required: true, default: false },
+    /**
+     * Hidden because the seller has no UPI ID while cash payment is switched off (flag cashPayment): buyers could
+     * not pay. Set for all such listings when the flag goes off, cleared when it goes on or the seller gets a UPI ID.
+     * Older listings without the field are not blocked.
+     */
+    paymentBlocked: { type: Boolean, default: false },
     category: { type: String, enum: CATEGORIES, required: true },
     product: { type: String, enum: PRODUCT_IDS, required: true },
     /** खाद-बीज-दवाई: the generic (technical) name, used to match a diagnosis's medicines. Never a brand. */
@@ -62,6 +68,15 @@ listingSchema.index({ product: 1, unit: 1, createdAt: -1 });
 listingSchema.index({ genericId: 1, status: 1, hidden: 1, sellerVerified: 1 }, { partialFilterExpression: { genericId: { $exists: true } } });
 
 export const ListingModel = model('Listing', listingSchema, 'listings');
+
+/** What buyers may see: active, not hidden, verified seller who can be paid, stock left. The one copy of this rule. */
+export const VISIBLE_LISTING_FILTER = {
+  status: 'active',
+  hidden: false,
+  sellerVerified: true,
+  paymentBlocked: { $ne: true },
+  quantityAvailable: { $gt: 0 },
+} as const;
 export type ListingDocument = InstanceType<typeof ListingModel>;
 
 /**

@@ -6,6 +6,7 @@ export const AUDIT_ACTIONS = [
   'seller.create',
   'seller.verify',
   'seller.reject',
+  'seller.setUpi',
   'listing.createAssisted',
   'listing.update',
   'listing.hide',

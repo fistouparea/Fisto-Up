@@ -119,6 +119,8 @@ export interface PublicSeller {
   village: string;
   shgName?: string;
   verified: boolean;
+  /** The seller has no UPI ID: buyers pay in cash at delivery. (The ID itself is never in a public view.) */
+  cashOnly: boolean;
   rating: { average: number | null; count: number };
 }
 

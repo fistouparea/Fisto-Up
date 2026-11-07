@@ -33,7 +33,7 @@ import { complaintDeviceData } from './complaints/complaint.privacy.js';
 import { helpDeviceData } from './help/help.service.js';
 import { feedbackDeviceData } from './feedback/feedback.service.js';
 import { eventDeviceData } from './metrics/events.js';
-import type { FeatureFlags } from './flags/flag.service.js';
+import { cashPaymentOn, type FeatureFlags } from './flags/flag.service.js';
 import type { PushSender } from '../services/push/pushSender.js';
 import { DatabasePhotoStorage, type PhotoStorage } from '../services/storage/photoStorage.js';
 
@@ -72,8 +72,8 @@ export function createMarketRouter(
   router.use(MARKET_PATHS, cookieParser(), requireAppHeader, createSessionMiddleware(auth, tokens));
   router.use(createAuthRouter({ auth, tokens, cookieSecure: config.cookieSecure, flags }));
   router.use(createFlagRouter(flags));
-  router.use(createAccountRouter());
-  router.use(createListingRouter({ ai, aiRateLimit, photos: photoStorage }));
+  router.use(createAccountRouter(flags));
+  router.use(createListingRouter({ ai, aiRateLimit, photos: photoStorage, flags }));
   router.use(createPricingRouter({ ai, mandi }, aiRateLimit));
   router.use(createInputKitRouter(flags));
   router.use(createVoiceRouter({ ai, aiRateLimit, flags }));
@@ -83,7 +83,7 @@ export function createMarketRouter(
   router.use(createDeliveryRouter({ flags, photos: photoStorage, now }));
   router.use(createComplaintRouter({ flags, photos: photoStorage, now }));
 
-  const orders = new OrderService({ notifier: new MarketNotifier(pushSender), commissionBps: config.commissionBps, now });
+  const orders = new OrderService({ notifier: new MarketNotifier(pushSender), commissionBps: config.commissionBps, cashPaymentOn: () => cashPaymentOn(flags), now });
   router.use(createOrderRouter(orders));
   router.use(createReportRouter());
   router.use(createNotificationRouter(pushSender !== null));

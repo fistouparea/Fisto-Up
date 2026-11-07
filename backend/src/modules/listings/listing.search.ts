@@ -5,7 +5,7 @@ import { LISTING_RULES } from '../../config/marketRules.js';
 import { sellerRating } from '../auth/accountView.js';
 import type { AuthUser } from '../auth/auth.types.js';
 import { UserModel } from '../auth/user.model.js';
-import { ListingModel, type ListingDocument } from './listing.model.js';
+import { ListingModel, VISIBLE_LISTING_FILTER, type ListingDocument } from './listing.model.js';
 import { isBlockedListing, isPubliclyVisible, photoUrl } from './listing.service.js';
 import type { PublicListingView, PublicSeller } from './listing.types.js';
 
@@ -40,8 +40,6 @@ export interface SearchPage {
   hasMore: boolean;
 }
 
-/** What buyers may see: active, not hidden, verified seller, stock left. */
-const VISIBLE = { status: 'active', hidden: false, sellerVerified: true, quantityAvailable: { $gt: 0 } } as const;
 
 const SORTS = {
   newest: { createdAt: -1, _id: -1 },
@@ -50,7 +48,7 @@ const SORTS = {
 } as const;
 
 export async function searchListings(query: SearchQuery): Promise<SearchPage> {
-  const filter: QueryFilter<ListingDocument> = { ...VISIBLE };
+  const filter: QueryFilter<ListingDocument> = { ...VISIBLE_LISTING_FILTER };
   if (query.category) filter.category = query.category;
   if (query.product) filter.product = query.product;
   if (query.minPrice !== undefined || query.maxPrice !== undefined) {
@@ -121,6 +119,7 @@ export async function toPublicViews(listings: ListingSource[], origin?: { lat: n
         village: user.seller?.village ?? '',
         ...(user.seller?.shgName && { shgName: user.seller.shgName }),
         verified: user.seller?.status === 'verified',
+        cashOnly: !user.seller?.upiId,
         rating: sellerRating(user.seller ?? { ratingSum: 0, ratingCount: 0 }),
       },
     ]),

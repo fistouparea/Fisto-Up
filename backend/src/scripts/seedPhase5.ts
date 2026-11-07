@@ -133,12 +133,12 @@ async function seedInputDealer({ auth, pin, coordinator, family }: SeedContext):
     const created = await createListing(
       dealer._id.toString(),
       { description: { hi: '', en: '' }, qualityNotes: '', minOrderQty: 1, photoIds: [], ...listing },
-      { uploaderId: dealer._id.toString() },
+      { uploaderId: dealer._id.toString(), cashOn: true },
     );
     ids.push(created._id.toString());
   }
 
-  const orders = new OrderService({ notifier: new MarketNotifier(null), commissionBps: percentToBps(COMMISSION_RULES.defaultPercent) });
+  const orders = new OrderService({ notifier: new MarketNotifier(null), commissionBps: percentToBps(COMMISSION_RULES.defaultPercent), cashPaymentOn: async () => true });
   const dealerUser: AuthUser = { id: dealer._id.toString(), role: 'seller', name: dealer.name };
   const order = await orders.placeOrder(family, { listingId: ids[0] ?? '', quantity: 2, fulfilment: 'pickup', paymentMethod: 'cash', referral: 'ai_kit' });
   for (const to of ['accepted', 'ready', 'ready_for_pickup'] as const) await orders.transition(dealerUser, order._id.toString(), to);

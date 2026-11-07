@@ -26,10 +26,21 @@ export const FEATURE_FLAGS = {
   deliveryTracking: { default: 'pilot', description: 'डिलीवरी ट्रैकिंग: डिलीवरी वाले का लिंक, खरीदार-विक्रेता को टाइमलाइन' },
   complaints: { default: 'pilot', description: 'शिकायत और विवाद: ऑर्डर, बुकिंग, लिस्टिंग पर एक शिकायत, संयोजक की कतार' },
   aiKit: { default: 'pilot', description: 'जाँच के बाद "ज़रूरी सामान" और खाद-बीज-दवाई की साझेदार दुकानें' },
-} as const satisfies Record<string, { default: FlagState; description: string }>;
+  /**
+   * A market-wide rule, not a feature per person: only off/all (`onOff`). On: sellers may sign up without a UPI ID
+   * and buyers may choose cash at delivery. Off: new sellers need a UPI ID, buyers pay only by UPI, and listings of
+   * sellers without a UPI ID are hidden until they (or their coordinator) add one.
+   */
+  cashPayment: { default: 'all', description: 'डिलीवरी पर नकद भुगतान (बिना UPI वाले विक्रेता भी)', onOff: true },
+} as const satisfies Record<string, { default: FlagState; description: string; onOff?: true }>;
 
 export type FlagKey = keyof typeof FEATURE_FLAGS;
 export const FLAG_KEYS = Object.keys(FEATURE_FLAGS) as FlagKey[];
+
+/** Flags that are a rule for everyone: "pilot" makes no sense for them. */
+export function isOnOffFlag(key: FlagKey): boolean {
+  return 'onOff' in FEATURE_FLAGS[key];
+}
 
 /** Defaults with the env override: INVITE_ONLY=true turns invite-only sign-up on from the start. */
 export function flagDefaults(inviteOnly: boolean | undefined): Record<FlagKey, FlagState> {

@@ -10,10 +10,11 @@ import { PageHeader } from '../../components/ui/PageHeader';
 import { StickyActions } from '../../components/ui/StickyActions';
 import { TextField } from '../../components/ui/TextField';
 import { notifySuccess } from '../../components/ui/notify';
+import { useFlags } from '../../hooks/useFlags';
 import { useSubmit } from '../../hooks/useSubmit';
 import { hi, marketErrorMessage } from '../../strings/hi';
+import { UPI_PATTERN } from '../../utils/paymentMethods';
 
-const UPI_PATTERN = /^[a-zA-Z0-9._-]{2,256}@[a-zA-Z][a-zA-Z0-9]{1,63}$/;
 /** Mirrors LICENCE_NUMBER_PATTERN in backend/src/config/inputRules.ts. */
 const LICENCE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9/\- ]{3,39}$/;
 
@@ -22,9 +23,13 @@ interface SellerProfilePageProps {
   onSaved: (user: Account) => void;
 }
 
-/** Name, village, SHG, UPI ID and pickup place. Needed before the first listing. */
+/**
+ * Name, village, SHG, UPI ID and pickup place. Needed before the first listing. The UPI ID is optional (paid in
+ * cash at delivery) unless a coordinator switched cash payment off.
+ */
 export function SellerProfilePage({ user, onSaved }: SellerProfilePageProps) {
   const seller = user.seller;
+  const { cashPayment } = useFlags();
   const [name, setName] = useState(user.name);
   const [village, setVillage] = useState(seller?.village ?? '');
   const [shgName, setShgName] = useState(seller?.shgName ?? '');
@@ -38,7 +43,7 @@ export function SellerProfilePage({ user, onSaved }: SellerProfilePageProps) {
   const errors = {
     name: name.trim().length < 2 ? hi.auth.nameInvalid : undefined,
     village: village.trim() ? undefined : hi.sellerProfile.required,
-    upiId: UPI_PATTERN.test(upiId.trim()) ? undefined : hi.sellerProfile.upiInvalid,
+    upiId: (cashPayment && !upiId.trim()) || UPI_PATTERN.test(upiId.trim()) ? undefined : hi.sellerProfile.upiInvalid,
     pickup: pickup ? undefined : hi.sellerProfile.required,
     licence: kind === 'input_dealer' && !LICENCE_PATTERN.test(licenceNumber.trim()) ? hi.sellerProfile.licenceInvalid : undefined,
   };
@@ -52,7 +57,7 @@ export function SellerProfilePage({ user, onSaved }: SellerProfilePageProps) {
       saveSellerProfile({
         name: name.trim(),
         village: village.trim(),
-        upiId: upiId.trim(),
+        ...(upiId.trim() && { upiId: upiId.trim() }),
         ...(shgName.trim() && { shgName: shgName.trim() }),
         pickup: { ...pickup, address: address || undefined },
         kind,
@@ -98,8 +103,14 @@ export function SellerProfilePage({ user, onSaved }: SellerProfilePageProps) {
       />
       <TextField label={hi.sellerProfile.shgName} value={shgName} onChange={(e) => setShgName(e.target.value)} />
       <TextField
-        label={hi.sellerProfile.upiId}
-        hint={seller?.status === 'verified' ? `${hi.sellerProfile.upiHint} ${hi.sellerProfile.upiChangedNote}` : hi.sellerProfile.upiHint}
+        label={cashPayment ? hi.sellerProfile.upiIdOptional : hi.sellerProfile.upiId}
+        hint={[
+          hi.sellerProfile.upiHint,
+          seller?.status === 'verified' && hi.sellerProfile.upiChangedNote,
+          cashPayment ? hi.sellerProfile.noUpiNote : hi.sellerProfile.upiRequiredNote,
+        ]
+          .filter(Boolean)
+          .join(' ')}
         autoCapitalize="none"
         autoCorrect="off"
         spellCheck={false}

@@ -1,8 +1,8 @@
 import { clearReviewFlag } from '../../api/complaints';
 import { useState, type FormEvent } from 'react';
-import { LuBadgeCheck, LuCircleX, LuPhone, LuSearch, LuUserPlus, LuX } from 'react-icons/lu';
+import { LuBadgeCheck, LuCircleX, LuPhone, LuQrCode, LuSave, LuSearch, LuUserPlus, LuX } from 'react-icons/lu';
 import { ApiError } from '../../api/client';
-import { createSeller, fetchSellers, rejectSeller, verifySeller, type AdminSeller } from '../../api/admin';
+import { createSeller, fetchSellers, rejectSeller, setSellerUpi, verifySeller, type AdminSeller } from '../../api/admin';
 import type { Place, SellerStatus } from '../../api/marketTypes';
 import { LoadState } from '../../components/admin/LoadState';
 import { TehsilPicker } from '../../components/market/TehsilPicker';
@@ -12,11 +12,13 @@ import { Chip } from '../../components/ui/Chip';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { PhoneField, PinField, TextField } from '../../components/ui/TextField';
 import { notifyError, notifySuccess } from '../../components/ui/notify';
+import { useFlags } from '../../hooks/useFlags';
 import { useLoad } from '../../hooks/useLoad';
 import { hi, marketErrorMessage, sellerStatusLabels } from '../../strings/hi';
 import { hiF } from '../../strings/hiFeatures';
 import { hiAdmin } from '../../strings/hiAdmin';
 import { formatDate } from '../../utils/formatDate';
+import { UPI_PATTERN } from '../../utils/paymentMethods';
 
 const FILTERS: (SellerStatus | undefined)[] = ['pending', undefined, 'verified', 'rejected'];
 
@@ -25,7 +27,8 @@ export function AdminSellers() {
   const [query, setQuery] = useState('');
   const [search, setSearch] = useState('');
   const [adding, setAdding] = useState(false);
-  const { data, errorCode, reload } = useLoad(() => fetchSellers(status, search), [status, search]);
+  const [upiMissing, setUpiMissing] = useState(false);
+  const { data, errorCode, reload } = useLoad(() => fetchSellers(status, search, upiMissing), [status, search, upiMissing]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -33,6 +36,7 @@ export function AdminSellers() {
         {FILTERS.map((filter) => (
           <Chip key={filter ?? 'all'} label={filter ? sellerStatusLabels[filter] : hiAdmin.all} selected={status === filter} onClick={() => setStatus(filter)} />
         ))}
+        <Chip label={hiAdmin.noUpiFilter} selected={upiMissing} onClick={() => setUpiMissing(!upiMissing)} />
       </div>
       <form
         role="search"
@@ -105,6 +109,9 @@ function SellerRow({ seller, onChanged }: { seller: AdminSeller; onChanged: () =
   };
 
   const [licenceChecked, setLicenceChecked] = useState(false);
+  const [editingUpi, setEditingUpi] = useState(false);
+  const [upiInput, setUpiInput] = useState(seller.upiId ?? '');
+  const upiValid = UPI_PATTERN.test(upiInput.trim());
   const tone = seller.status === 'verified' ? 'success' : seller.status === 'rejected' ? 'danger' : 'warning';
   const place = [seller.pickup?.address, seller.pickup?.tehsil, seller.pickup?.district].filter(Boolean).join(', ');
 
@@ -116,6 +123,7 @@ function SellerRow({ seller, onChanged }: { seller: AdminSeller; onChanged: () =
         {seller.assisted && <Badge tone="neutral" label={hiAdmin.assisted} />}
         {seller.flaggedForReview && <Badge tone="danger" label={`${hiF.complaints.admin.flagBadge} (${seller.flaggedForReview.complaints})`} />}
         {seller.kind === 'input_dealer' && <Badge tone="neutral" label={hi.sellerKinds.input_dealer} />}
+        {!seller.upiId && <Badge tone={seller.upiNeeded ? 'danger' : 'neutral'} label={hiAdmin.noUpi} />}
       </div>
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 text-base">
         <dt className="text-ink-500">{hi.account.phone}</dt>
@@ -142,7 +150,7 @@ function SellerRow({ seller, onChanged }: { seller: AdminSeller; onChanged: () =
           </>
         )}
         <dt className="text-ink-500">UPI</dt>
-        <dd className="break-all">{seller.upiId ?? '—'}</dd>
+        <dd className="break-all">{seller.upiId ?? hiAdmin.noUpi}</dd>
         <dt className="text-ink-500">{hi.sellerProfile.pickup}</dt>
         <dd>{place || '—'}</dd>
         <dt className="text-ink-500">{hiAdmin.listingsCount}</dt>
@@ -150,7 +158,48 @@ function SellerRow({ seller, onChanged }: { seller: AdminSeller; onChanged: () =
         <dt className="text-ink-500">{hiAdmin.joined}</dt>
         <dd>{formatDate(seller.createdAt)}</dd>
       </dl>
-      {!seller.profileComplete && <p className="font-bold text-warning-800">{hiAdmin.profileIncomplete}</p>}
+      {seller.upiNeeded ? (
+        <p className="font-bold text-danger-800">{hiAdmin.upiNeeded}</p>
+      ) : (
+        !seller.profileComplete && <p className="font-bold text-warning-800">{hiAdmin.profileIncomplete}</p>
+      )}
+      {editingUpi ? (
+        <div className="flex flex-col gap-2">
+          <TextField
+            label={hi.sellerProfile.upiId}
+            hint={`${hi.sellerProfile.upiHint} ${hiAdmin.upiAskSeller}`}
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            value={upiInput}
+            onChange={(event) => setUpiInput(event.target.value)}
+            error={upiInput.trim() && !upiValid ? hi.sellerProfile.upiInvalid : undefined}
+          />
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              variant="accent"
+              size="md"
+              icon={LuSave}
+              disabled={busy || !upiValid}
+              onClick={() =>
+                void act(async () => {
+                  await setSellerUpi(seller.id, upiInput.trim());
+                  setEditingUpi(false);
+                }, hiAdmin.upiSaved)
+              }
+            >
+              {hi.save}
+            </Button>
+            <Button variant="secondary" size="md" icon={LuX} onClick={() => setEditingUpi(false)}>
+              {hi.sell.actions.cancel}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <Button variant={seller.upiNeeded ? 'accent' : 'secondary'} size="md" icon={LuQrCode} disabled={busy} onClick={() => setEditingUpi(true)}>
+          {seller.upiId ? hiAdmin.changeUpi : hiAdmin.addUpi}
+        </Button>
+      )}
       {seller.flaggedForReview && (
         <Button variant="secondary" size="md" disabled={busy} onClick={() => void act(() => clearReviewFlag(seller.id), hiF.complaints.admin.clearFlag)}>
           {hiF.complaints.admin.clearFlag}
@@ -206,6 +255,7 @@ function SellerRow({ seller, onChanged }: { seller: AdminSeller; onChanged: () =
 }
 
 function AddSellerForm({ onClose, onAdded }: { onClose: () => void; onAdded: () => void }) {
+  const { cashPayment } = useFlags();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [pin, setPin] = useState('');
@@ -218,13 +268,25 @@ function AddSellerForm({ onClose, onAdded }: { onClose: () => void; onAdded: () 
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!pickup || name.trim().length < 2 || !village.trim() || !upiId.trim() || !/^[6-9]\d{9}$/.test(phone) || !/^\d{4}$/.test(pin)) {
+    if (!pickup || name.trim().length < 2 || !village.trim() || (!cashPayment && !upiId.trim()) || !/^[6-9]\d{9}$/.test(phone) || !/^\d{4}$/.test(pin)) {
       setError(hi.sellerProfile.required);
+      return;
+    }
+    if (upiId.trim() && !UPI_PATTERN.test(upiId.trim())) {
+      setError(hi.sellerProfile.upiInvalid);
       return;
     }
     setBusy(true);
     try {
-      await createSeller({ name: name.trim(), phone, pin, village: village.trim(), upiId: upiId.trim(), pickup, ...(shgName.trim() && { shgName: shgName.trim() }) });
+      await createSeller({
+        name: name.trim(),
+        phone,
+        pin,
+        village: village.trim(),
+        pickup,
+        ...(upiId.trim() && { upiId: upiId.trim() }),
+        ...(shgName.trim() && { shgName: shgName.trim() }),
+      });
       notifySuccess(hiAdmin.sellerAdded);
       onAdded();
     } catch (failure) {
@@ -248,7 +310,13 @@ function AddSellerForm({ onClose, onAdded }: { onClose: () => void; onAdded: () 
         <PinField label={hi.auth.newPin} hint={hi.auth.pinHint} autoComplete="off" value={pin} onChange={(e) => setPin(e.target.value)} />
         <TextField label={hi.sellerProfile.village} value={village} onChange={(e) => setVillage(e.target.value)} />
         <TextField label={hi.sellerProfile.shgName} value={shgName} onChange={(e) => setShgName(e.target.value)} />
-        <TextField label={hi.sellerProfile.upiId} hint={hi.sellerProfile.upiHint} autoCapitalize="none" value={upiId} onChange={(e) => setUpiId(e.target.value)} />
+        <TextField
+          label={cashPayment ? hi.sellerProfile.upiIdOptional : hi.sellerProfile.upiId}
+          hint={`${hi.sellerProfile.upiHint} ${cashPayment ? hi.sellerProfile.noUpiNote : hi.sellerProfile.upiRequiredNote}`}
+          autoCapitalize="none"
+          value={upiId}
+          onChange={(e) => setUpiId(e.target.value)}
+        />
       </div>
       <h4 className="text-lg font-bold">{hi.sellerProfile.pickup}</h4>
       <TehsilPicker value={pickup} onChange={setPickup} />

@@ -7,6 +7,8 @@ import { hiAdmin } from '../../strings/hiAdmin';
 import { runAdminAction } from './adminAction';
 
 const STATES: FlagState[] = ['off', 'pilot', 'all'];
+/** A rule for everyone (e.g. cashPayment): "only pilot" makes no sense. */
+const ON_OFF_STATES: FlagState[] = ['off', 'all'];
 
 /** Feature flags: off / only pilot users / everyone. Every change is audited on the server. */
 export function AdminFlags() {
@@ -40,7 +42,7 @@ function FlagRow({ flag, onChanged }: { flag: AdminFlag; onChanged: () => void }
         </div>
       </div>
       <div className="flex flex-wrap gap-2" role="group" aria-label={flag.description}>
-        {STATES.map((state) => (
+        {(flag.onOff ? ON_OFF_STATES : STATES).map((state) => (
           <Chip
             key={state}
             label={hiAdmin.flags.states[state]}
@@ -49,6 +51,7 @@ function FlagRow({ flag, onChanged }: { flag: AdminFlag; onChanged: () => void }
           />
         ))}
       </div>
+      {flag.key === 'cashPayment' && <p className="text-base text-warning-800">{hiAdmin.flags.cashPaymentOffWarning}</p>}
     </li>
   );
 }

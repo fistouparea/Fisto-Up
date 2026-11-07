@@ -1,6 +1,6 @@
 import { LuFlag } from 'react-icons/lu';
 import { useFlags } from '../../hooks/useFlags';
-import { LuClipboardList, LuShieldCheck, LuLogIn, LuLogOut, LuPencil, LuPhone, LuUserPlus, LuUserRound } from 'react-icons/lu';
+import { LuClipboardList, LuShieldCheck, LuLogIn, LuLogOut, LuPencil, LuPhone, LuQrCode, LuUserPlus, LuUserRound } from 'react-icons/lu';
 import { MyDataLink } from '../../components/MyDataLink';
 import { SellerStatusCallout } from '../../components/market/SellerStatusCallout';
 import { Badge } from '../../components/ui/Badge';
@@ -68,6 +68,7 @@ export function AccountPage() {
         </p>
         {seller?.village && <p>{hi.sellerProfile.village}: {seller.village}</p>}
         {seller?.upiId && <p>{hi.sellerProfile.upiId}: {seller.upiId}</p>}
+        {seller && !seller.upiId && seller.profileComplete && <p className="text-base text-ink-700">{hi.account.noUpiCash}</p>}
         {user.buyer?.businessName && <p>{user.buyer.businessName}</p>}
         <p className="mt-2 text-base text-ink-500">{hi.account.phonePrivate}</p>
       </Card>
@@ -85,6 +86,11 @@ export function AccountPage() {
       {complaints && user.role !== 'coordinator' && (
         <Button variant="secondary" icon={LuFlag} onClick={() => navigateTo(routes.complaints)}>
           {hiF.complaints.title}
+        </Button>
+      )}
+      {seller && !seller.upiId && (
+        <Button variant={seller.upiNeeded ? 'accent' : 'secondary'} icon={LuQrCode} onClick={() => navigateTo(routes.sellerProfile)}>
+          {hi.account.addUpi}
         </Button>
       )}
       {editRoute && (

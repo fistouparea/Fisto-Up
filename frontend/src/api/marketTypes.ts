@@ -27,6 +27,8 @@ export interface SellerProfile {
   pickup?: Place;
   rejectReason?: string;
   profileComplete: boolean;
+  /** Cash payment is switched off and there is no UPI ID: listings are hidden until one is added. */
+  upiNeeded?: boolean;
   rating: { average: number | null; count: number };
 }
 
@@ -52,7 +54,8 @@ export interface SellerProfileInput {
   name: string;
   village: string;
   shgName?: string;
-  upiId: string;
+  /** Left out: no UPI ID, paid in cash at delivery. */
+  upiId?: string;
   pickup: Place;
   kind: SellerKind;
   licenceNumber?: string;
@@ -190,6 +193,8 @@ export interface PublicSeller {
   village: string;
   shgName?: string;
   verified: boolean;
+  /** No UPI ID: buyers pay in cash at delivery. */
+  cashOnly?: boolean;
   rating: { average: number | null; count: number };
 }
 
@@ -293,7 +298,8 @@ export interface Order {
   viewerRole: 'buyer' | 'seller' | 'coordinator';
   allowedNext: OrderStatus[];
   contact?: { sellerPhone?: string; buyerPhone?: string; pickup?: Place };
-  payment?: { upiLink: string; upiId: string; payeeName: string; amountPaise: number };
+  /** UPI fields only when the seller has a UPI ID. */
+  payment?: { upiLink?: string; upiId?: string; payeeName: string; amountPaise: number };
   canRate: boolean;
 }
 

@@ -3,6 +3,7 @@ import { LuBanknote, LuCircleCheckBig, LuCircleX, LuQrCode } from 'react-icons/l
 import { ApiError } from '../../../api/client';
 import type { Order, OrderStatus, PaymentMethod } from '../../../api/marketTypes';
 import { moveOrder } from '../../../api/orders';
+import { useAuth } from '../../../hooks/useAuth';
 import type { OrdersText } from '../../../strings/en';
 import { Button } from '../../ui/Button';
 import { notifyError, notifySuccess } from '../../ui/notify';
@@ -22,6 +23,9 @@ export function OrderActions({ order, text, onChanged, size = 'lg' }: OrderActio
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState<OrderStatus | null>(null);
   const [askingPayment, setAskingPayment] = useState(false);
+  const { user } = useAuth();
+  // A seller without a UPI ID is paid only in cash: no "UPI" choice for them.
+  const cashOnlySeller = order.viewerRole === 'seller' && user?.seller !== undefined && !user.seller.upiId;
 
   const run = async (to: OrderStatus, paidVia?: PaymentMethod) => {
     setBusy(true);
@@ -61,10 +65,12 @@ export function OrderActions({ order, text, onChanged, size = 'lg' }: OrderActio
     return (
       <div className="flex flex-col gap-3 rounded-3xl border-2 border-success-600/40 bg-success-50 p-4">
         <p className="text-xl font-bold">{text.paidHow}</p>
-        <div className="grid grid-cols-2 gap-3">
-          <Button icon={LuQrCode} disabled={busy} onClick={() => void run('paid', 'upi')}>
-            {text.upi}
-          </Button>
+        <div className={cashOnlySeller ? 'grid grid-cols-1 gap-3' : 'grid grid-cols-2 gap-3'}>
+          {!cashOnlySeller && (
+            <Button icon={LuQrCode} disabled={busy} onClick={() => void run('paid', 'upi')}>
+              {text.upi}
+            </Button>
+          )}
           <Button icon={LuBanknote} disabled={busy} onClick={() => void run('paid', 'cash')}>
             {text.cash}
           </Button>

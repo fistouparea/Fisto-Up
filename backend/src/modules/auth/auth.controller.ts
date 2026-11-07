@@ -10,7 +10,7 @@ import { UserModel } from './user.model.js';
 import { PushSubscriptionModel } from '../../models/PushSubscription.js';
 import { z } from 'zod';
 import { AppError } from '../../errors/AppError.js';
-import type { FeatureFlags } from '../flags/flag.service.js';
+import { cashPaymentOn, type FeatureFlags } from '../flags/flag.service.js';
 import { inviteCodeSchema, redeemInvite, releaseInvite } from '../invites/invite.service.js';
 
 function parseInviteCode(code: string): string {
@@ -33,7 +33,7 @@ type AccountResponse = Response<{ user: AccountView | null }>;
 export function createAuthController({ auth, tokens, cookieSecure, flags }: AuthControllerDeps) {
   const startSession = async (res: AccountResponse, user: UserDocument) => {
     setSessionCookie(res, await tokens.sign({ userId: user._id.toString(), version: user.tokenVersion }), cookieSecure);
-    res.json({ user: toAccountView(user) });
+    res.json({ user: toAccountView(user, await cashPaymentOn(flags)) });
   };
 
   /** While the pilot is invite-only, a valid invite code is needed; any valid code makes it a pilot account. */
@@ -70,7 +70,7 @@ export function createAuthController({ auth, tokens, cookieSecure, flags }: Auth
   /** 200 with `user: null` when not logged in, so the app can check without an error. */
   const me: RequestHandler = async (req, res: AccountResponse) => {
     const user = req.user ? await UserModel.findById(currentUser(req).id).exec() : null;
-    res.json({ user: user ? toAccountView(user) : null });
+    res.json({ user: user ? toAccountView(user, await cashPaymentOn(flags)) : null });
   };
 
   return { register, login, logout, me };

@@ -2,7 +2,7 @@ import type { QueryFilter } from 'mongoose';
 import { z } from 'zod';
 import { isBlockedInput, KIT_RULES } from '../../config/inputRules.js';
 import { INPUT_GENERICS, matchInputGeneric, type InputGenericId } from '../../data/inputGenerics.js';
-import { ListingModel, type ListingDocument } from '../listings/listing.model.js';
+import { ListingModel, VISIBLE_LISTING_FILTER, type ListingDocument } from '../listings/listing.model.js';
 import { toPublicViews } from '../listings/listing.search.js';
 import type { PublicListingView } from '../listings/listing.types.js';
 
@@ -66,11 +66,8 @@ async function nearbyProducts(genericId: InputGenericId, origin: { lat: number; 
   const filter: QueryFilter<ListingDocument> = {
     category: 'input',
     genericId,
-    status: 'active',
-    hidden: false,
     // Input dealers are verified only together with their licence check.
-    sellerVerified: true,
-    quantityAvailable: { $gt: 0 },
+    ...VISIBLE_LISTING_FILTER,
     ...(origin && { location: { $geoWithin: { $centerSphere: [[origin.lon, origin.lat], KIT_RULES.radiusKm / EARTH_RADIUS_KM] } } }),
   };
   // A few extra rows: blocked titles are dropped by toPublicViews.

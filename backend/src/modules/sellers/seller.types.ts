@@ -10,6 +10,12 @@ export const upiIdSchema = z
   .trim()
   .regex(/^[a-zA-Z0-9._-]{2,256}@[a-zA-Z][a-zA-Z0-9]{1,63}$/, 'UPI ID like name@bank');
 
+/**
+ * Many farmers and SHG members have no UPI ID: they get paid in cash at delivery. Left out or empty = no UPI ID;
+ * anything typed must still be a valid UPI ID. (While cash payment is switched off, the services require it.)
+ */
+export const optionalUpiIdSchema = z.preprocess((value) => (typeof value === 'string' && value.trim() === '' ? undefined : value), upiIdSchema.optional());
+
 /** Rajasthan and around: rejects obviously wrong coordinates. */
 export const placeSchema = z.object({
   district: shortText(60).optional(),
@@ -26,7 +32,7 @@ export const sellerProfileBodySchema = z
     name: shortText(60).pipe(z.string().min(2)),
     village: shortText(60),
     shgName: shortText(80).optional(),
-    upiId: upiIdSchema,
+    upiId: optionalUpiIdSchema,
     pickup: placeSchema,
     /** Left out by older app versions: the seller keeps their kind. */
     kind: z.enum(SELLER_KINDS).optional(),

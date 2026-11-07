@@ -73,3 +73,44 @@ test('Snap & List → order → accept → delivery tracking → paid → comple
   await action(buyer.page, hi.orders.rateSubmit).click();
   await expect(buyer.page.getByText(hi.orders.thanksRating)).toBeVisible();
 });
+
+test('seller without UPI: buyer sees "डिलीवरी पर नकद" before ordering, no UPI link or QR, seller confirms cash', async ({ browser }) => {
+  // Kamla (seed) has no UPI ID.
+  const buyer = await loggedIn(browser, PHONES.household);
+  await buyer.page.goto('/#/market');
+  await buyer.page.getByPlaceholder(hi.market.searchPlaceholder).fill('पिसी लाल मिर्च');
+  await buyer.page.getByPlaceholder(hi.market.searchPlaceholder).press('Enter');
+  await buyer.page.getByRole('link', { name: /पिसी लाल मिर्च/ }).first().click();
+  await expect(buyer.page.getByRole('main').getByText(hi.orders.cashOnly)).toBeVisible();
+
+  await action(buyer.page, hi.orders.placeTitle).click();
+  await expect(buyer.page.getByRole('main').getByText(hi.orders.cashOnly)).toBeVisible();
+  await expect(action(buyer.page, hi.orders.upi)).toHaveCount(0);
+  await buyer.page.getByRole('button', { name: hi.orders.delivery }).click();
+  await buyer.page.getByLabel(hi.orders.address).fill('वार्ड 7, रतनगढ़');
+  await action(buyer.page, hi.orders.send).click();
+  await expect(buyer.page).toHaveURL(/#\/orders\//);
+  const orderId = orderIdFrom(buyer.page);
+
+  const seller = await loggedIn(browser, PHONES.kamla);
+  await openFresh(seller.page, `#/orders/${orderId}`);
+  await action(seller.page, hi.orders.actions.accepted).click();
+  await action(seller.page, hi.orders.actions.ready).click();
+  await action(seller.page, hi.orders.actions.out_for_delivery).click();
+
+  // The buyer is told to pay cash; there is no UPI button, link or QR.
+  await openFresh(buyer.page, `#/orders/${orderId}`);
+  await expect(buyer.page.getByText(hi.orders.cashNote)).toBeVisible();
+  await expect(buyer.page.getByRole('link', { name: hi.orders.payWithUpi })).toHaveCount(0);
+  await expect(buyer.page.getByRole('img', { name: /UPI QR/ })).toHaveCount(0);
+  await action(buyer.page, hi.orders.actions.deliveredByBuyer).click();
+
+  // "पैसे मिल गए": only cash for a seller without UPI.
+  await openFresh(seller.page, `#/orders/${orderId}`);
+  await action(seller.page, hi.orders.actions.paid).click();
+  await expect(action(seller.page, hi.orders.upi)).toHaveCount(0);
+  await action(seller.page, hi.orders.cash).click();
+  await buyer.page.reload();
+  await action(buyer.page, hi.orders.actions.completed).click();
+  await expect(buyer.page.getByRole('radiogroup', { name: hi.orders.rateTitle })).toBeVisible();
+});

@@ -132,6 +132,7 @@ export const enOrders: OrdersText = {
   scanQr: 'Or scan this QR from another phone',
   payNote: 'Money goes directly to the seller. You can pay on delivery or before.',
   cashNote: 'Pay the seller in cash when you get the goods.',
+  cashOnly: 'Payment: cash on delivery',
   rateTitle: 'Rate the seller',
   stars: 'stars',
   rateComment: 'Anything to add? (optional)',

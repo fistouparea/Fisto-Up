@@ -3,24 +3,29 @@ import { z } from 'zod';
 import { AppError } from '../../errors/AppError.js';
 import type { ComplaintStatus } from '../../config/complaintRules.js';
 import { escapeRegex } from '../listings/listing.search.js';
-import { isLicenceVerified, isSellerProfileComplete, sellerRating, toPlace } from '../auth/accountView.js';
+import { isLicenceVerified, isSellerProfileComplete, isUpiNeeded, sellerRating, toPlace } from '../auth/accountView.js';
 import type { AuthService } from '../auth/auth.service.js';
 import { personNameSchema, phoneSchema, pinSchema, SELLER_KINDS, SELLER_STATUSES, type Place, type SellerKind, type SellerStatus } from '../auth/auth.types.js';
 import { UserModel, type UserDocument } from '../auth/user.model.js';
 import { CommissionEntryModel } from '../commission/commission.model.js';
-import { ListingModel } from '../listings/listing.model.js';
+import { ListingModel, VISIBLE_LISTING_FILTER } from '../listings/listing.model.js';
 import { createListingBodySchema, objectIdSchema } from '../listings/listing.types.js';
 import { OrderModel } from '../orders/order.model.js';
 import { ORDER_STATUSES, TERMINAL_STATUSES, type OrderStatus } from '../orders/orderStateMachine.js';
 import { ReportModel, type ReportReason } from '../reports/report.model.js';
-import { placeSchema, upiIdSchema } from '../sellers/seller.types.js';
+import { optionalUpiIdSchema, placeSchema, upiIdSchema } from '../sellers/seller.types.js';
 import { saveSellerProfile } from '../sellers/seller.service.js';
 
 export const sellerListQuerySchema = z.object({
   status: z.enum(SELLER_STATUSES).optional(),
   kind: z.enum(SELLER_KINDS).optional(),
   q: z.string().trim().max(50).optional(),
+  /** "missing": sellers without a UPI ID (paid in cash), e.g. to add one when cash payment is switched off. */
+  upi: z.enum(['missing']).optional(),
 });
+
+/** The coordinator adds a seller's UPI ID (checked with the seller). */
+export const setUpiBodySchema = z.object({ upiId: upiIdSchema });
 
 export const rejectBodySchema = z.object({ reason: z.string().trim().min(2).max(300) });
 /** Input dealers: the coordinator confirms they checked the licence number (e.g. on the licence paper). */
@@ -35,7 +40,7 @@ export const createSellerBodySchema = z.object({
   pin: pinSchema,
   village: z.string().trim().min(1).max(60),
   shgName: z.string().trim().min(1).max(80).optional(),
-  upiId: upiIdSchema,
+  upiId: optionalUpiIdSchema,
   pickup: placeSchema,
 });
 
@@ -65,6 +70,8 @@ export interface AdminSellerView {
   pickup?: Place;
   rejectReason?: string;
   profileComplete: boolean;
+  /** Cash payment is off and there is no UPI ID: the seller's listings are hidden until one is added. */
+  upiNeeded: boolean;
   listings: number;
   rating: { average: number | null; count: number };
   createdAt: Date;
@@ -73,7 +80,7 @@ export interface AdminSellerView {
   flaggedForReview?: { at: Date; complaints: number };
 }
 
-export async function listSellers(query: z.infer<typeof sellerListQuerySchema>): Promise<AdminSellerView[]> {
+export async function listSellers(query: z.infer<typeof sellerListQuerySchema>, cashOn: boolean): Promise<AdminSellerView[]> {
   const pattern = query.q ? new RegExp(escapeRegex(query.q), 'i') : null;
   const users = await UserModel.find({
     role: 'seller',
@@ -82,6 +89,7 @@ export async function listSellers(query: z.infer<typeof sellerListQuerySchema>):
     // Sellers saved before Phase 5 have no kind: they are producers.
     ...(query.kind === 'input_dealer' && { 'seller.kind': 'input_dealer' }),
     ...(query.kind === 'producer' && { 'seller.kind': { $ne: 'input_dealer' } }),
+    ...(query.upi === 'missing' && { 'seller.upiId': { $in: [null, ''] } }),
     ...(pattern && { $or: [{ name: pattern }, { phone: pattern }, { 'seller.village': pattern }] }),
   })
     .sort({ createdAt: -1 })
@@ -92,10 +100,10 @@ export async function listSellers(query: z.infer<typeof sellerListQuerySchema>):
     { $group: { _id: '$sellerId', count: { $sum: 1 } } },
   ]).exec();
   const countById = new Map(counts.map((row) => [String(row._id), row.count]));
-  return users.map((user) => toAdminSeller(user, countById.get(user._id.toString()) ?? 0));
+  return users.map((user) => toAdminSeller(user, cashOn, countById.get(user._id.toString()) ?? 0));
 }
 
-export function toAdminSeller(user: UserDocument, listings = 0): AdminSellerView {
+export function toAdminSeller(user: UserDocument, cashOn: boolean, listings = 0): AdminSellerView {
   const seller = user.seller;
   return {
     id: user._id.toString(),
@@ -110,7 +118,8 @@ export function toAdminSeller(user: UserDocument, listings = 0): AdminSellerView
     ...(seller?.upiId && { upiId: seller.upiId }),
     ...(seller?.pickup && { pickup: toPlace(seller.pickup) }),
     ...(seller?.rejectReason && { rejectReason: seller.rejectReason }),
-    profileComplete: isSellerProfileComplete(seller),
+    profileComplete: isSellerProfileComplete(seller, cashOn),
+    upiNeeded: isUpiNeeded(seller, cashOn),
     listings,
     rating: sellerRating(seller ?? { ratingSum: 0, ratingCount: 0 }),
     createdAt: user.createdAt,
@@ -123,7 +132,10 @@ export async function createSellerForSomeone(
   auth: AuthService,
   body: z.infer<typeof createSellerBodySchema>,
   coordinatorId: string,
+  cashOn: boolean,
 ): Promise<AdminSellerView> {
+  // Checked before the account exists, so a refused seller leaves no half-made account behind.
+  if (!cashOn && !body.upiId) throw new AppError('UPI_REQUIRED');
   const user = await auth.createAccount({
     phone: body.phone,
     pin: body.pin,
@@ -139,8 +151,8 @@ export async function createSellerForSomeone(
     shgName: body.shgName,
     upiId: body.upiId,
     pickup: body.pickup,
-  });
-  return toAdminSeller(saved);
+  }, { cashOn, upiCheckedByCoordinator: true });
+  return toAdminSeller(saved, cashOn);
 }
 
 export interface AdminReportView {
@@ -223,7 +235,7 @@ export async function marketStats(): Promise<MarketStats> {
     UserModel.aggregate<{ _id: SellerStatus; count: number }>([{ $match: { role: 'seller', deletedAt: { $exists: false } } }, { $group: { _id: '$seller.status', count: { $sum: 1 } } }]).exec(),
     UserModel.countDocuments({ role: 'buyer', deletedAt: { $exists: false } }).exec(),
     ListingModel.countDocuments().exec(),
-    ListingModel.countDocuments({ status: 'active', hidden: false, sellerVerified: true, quantityAvailable: { $gt: 0 } }).exec(),
+    ListingModel.countDocuments(VISIBLE_LISTING_FILTER).exec(),
     OrderModel.aggregate<{ _id: OrderStatus; count: number }>([{ $group: { _id: '$status', count: { $sum: 1 } } }]).exec(),
     OrderModel.aggregate<{ total: number }>([{ $match: { status: 'completed' } }, { $group: { _id: null, total: { $sum: '$totalPaise' } } }]).exec(),
     CommissionEntryModel.aggregate<{ total: number; collected: number }>([

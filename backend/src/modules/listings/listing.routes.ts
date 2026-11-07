@@ -8,6 +8,7 @@ import { MAX_IMAGE_BYTES } from '../../types/diagnosis.js';
 import { parseOrThrow } from '../../utils/validation.js';
 import { audit } from '../audit/audit.service.js';
 import { currentUser, requireRole } from '../auth/auth.middleware.js';
+import { cashPaymentOn, type FeatureFlags } from '../flags/flag.service.js';
 import {
   createListing,
   draftListing,
@@ -46,9 +47,10 @@ export interface ListingRouterDeps {
   ai: AiProvider;
   aiRateLimit: RequestHandler;
   photos: PhotoStorage;
+  flags: FeatureFlags;
 }
 
-export function createListingRouter({ ai, aiRateLimit, photos }: ListingRouterDeps): Router {
+export function createListingRouter({ ai, aiRateLimit, photos, flags }: ListingRouterDeps): Router {
   const router = Router();
   const json = express.json({ limit: '16kb' });
   const canList = requireRole('seller', 'coordinator');
@@ -89,7 +91,7 @@ export function createListingRouter({ ai, aiRateLimit, photos }: ListingRouterDe
   router.post('/market/listings', requireRole('seller'), json, async (req, res: Response<{ listing: SellerListingView }>) => {
     const body = parseOrThrow(createListingBodySchema, req.body);
     const user = currentUser(req);
-    const listing = await createListing(user.id, body, { uploaderId: user.id });
+    const listing = await createListing(user.id, body, { uploaderId: user.id, cashOn: await cashPaymentOn(flags) });
     res.status(201).json({ listing: toSellerListingView(listing) });
   });
 

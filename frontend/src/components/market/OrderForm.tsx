@@ -5,12 +5,14 @@ import type { Fulfilment, PaymentMethod, PublicListing } from '../../api/marketT
 import { placeOrder } from '../../api/orders';
 import { isKitReferral } from '../../utils/kitReferral';
 import { useAuth } from '../../hooks/useAuth';
+import { useFlags } from '../../hooks/useFlags';
 import { routes } from '../../hooks/useHashRoute';
 import { useLang } from '../../hooks/useLang';
 import { marketErrorMessage, unitLabels } from '../../strings/hi';
 import { goToLogin } from '../../utils/loginRedirect';
 import { formatRupees, rupeesToPaise, totalPaise } from '../../utils/money';
 import { navigateTo } from '../../utils/navigate';
+import { paymentMethodsFor } from '../../utils/paymentMethods';
 import { Button } from '../ui/Button';
 import { Callout } from '../ui/Callout';
 import { NumberStepper } from '../ui/NumberStepper';
@@ -22,6 +24,7 @@ import { notifySuccess } from '../ui/notify';
 export function OrderForm({ listing }: { listing: PublicListing }) {
   const { user } = useAuth();
   const { lang, tOrders: text } = useLang();
+  const { cashPayment } = useFlags();
   const [open, setOpen] = useState(false);
 
   if (user && user.role !== 'buyer') {
@@ -30,6 +33,12 @@ export function OrderForm({ listing }: { listing: PublicListing }) {
   if (!open) {
     return (
       <div className="flex flex-col gap-2">
+        {listing.seller.cashOnly && cashPayment && (
+          <p className="flex items-center gap-2 text-lg font-bold text-ink-900">
+            <LuBanknote aria-hidden="true" className="size-6 text-primary-700" />
+            {text.cashOnly}
+          </p>
+        )}
         <Button variant="accent" size="lg" icon={LuShoppingCart} onClick={() => (user ? setOpen(true) : goToLogin())}>
           {user ? text.placeTitle : text.loginToOrder}
         </Button>
@@ -47,10 +56,14 @@ export function OrderForm({ listing }: { listing: PublicListing }) {
 
 function OpenOrderForm({ listing, defaultAddress, lang }: { listing: PublicListing; defaultAddress?: string; lang: 'hi' | 'en' }) {
   const { tOrders: text } = useLang();
+  const { cashPayment } = useFlags();
+  const methods = paymentMethodsFor(listing, cashPayment);
   const [quantity, setQuantity] = useState<number | null>(listing.minOrderQty);
   const [fulfilment, setFulfilment] = useState<Fulfilment>('pickup');
   const [address, setAddress] = useState(defaultAddress ?? '');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('upi');
+  const [chosenMethod, setPaymentMethod] = useState<PaymentMethod>('upi');
+  // A choice that is not (or no longer) allowed falls back to the first allowed one.
+  const paymentMethod = methods.includes(chosenMethod) ? chosenMethod : (methods[0] ?? 'upi');
   const [asking, setAsking] = useState(false);
   const [offerInput, setOfferInput] = useState('');
   const [note, setNote] = useState('');
@@ -109,10 +122,17 @@ function OpenOrderForm({ listing, defaultAddress, lang }: { listing: PublicListi
       {fulfilment === 'delivery' && <TextField label={text.address} value={address} onChange={(e) => setAddress(e.target.value)} />}
 
       <h3 className="text-xl font-bold">{text.howPay}</h3>
-      <div className="grid grid-cols-2 gap-3">
-        <SelectCard label={text.upi} icon={LuQrCode} selected={paymentMethod === 'upi'} onClick={() => setPaymentMethod('upi')} />
-        <SelectCard label={text.cash} icon={LuBanknote} selected={paymentMethod === 'cash'} onClick={() => setPaymentMethod('cash')} />
-      </div>
+      {methods.length > 1 ? (
+        <div className="grid grid-cols-2 gap-3">
+          <SelectCard label={text.upi} icon={LuQrCode} selected={paymentMethod === 'upi'} onClick={() => setPaymentMethod('upi')} />
+          <SelectCard label={text.cash} icon={LuBanknote} selected={paymentMethod === 'cash'} onClick={() => setPaymentMethod('cash')} />
+        </div>
+      ) : (
+        <p className="flex items-center gap-2 rounded-2xl border-2 border-line bg-surface-cream p-3 text-lg font-bold">
+          {paymentMethod === 'cash' ? <LuBanknote aria-hidden="true" className="size-6" /> : <LuQrCode aria-hidden="true" className="size-6" />}
+          {paymentMethod === 'cash' ? text.cashOnly : `${text.payment}: ${text.upi}`}
+        </p>
+      )}
 
       {canAskPrice && (
         <>

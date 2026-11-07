@@ -5,16 +5,25 @@ import { UserModel, type UserDocument } from '../auth/user.model.js';
 import { ListingModel } from '../listings/listing.model.js';
 import type { BuyerProfileBody, SellerProfileBody } from './seller.types.js';
 
+export interface SaveSellerOptions {
+  /** The cashPayment flag: while it is off, a UPI ID is required. */
+  cashOn: boolean;
+  /** A coordinator entered the UPI ID (they met the seller), so it needs no second check. */
+  upiCheckedByCoordinator?: boolean;
+}
+
 /**
- * Saves the seller's profile. Changing the UPI ID of a verified seller sends them back to "pending":
- * buyers pay to that ID, so a coordinator must check it again. The same for becoming (or leaving) an input
- * dealer and for a new licence number: the coordinator checks the licence before the dealer can list.
+ * Saves the seller's profile. A new UPI ID (also the first one, added later from "मेरा खाता") sends a verified
+ * seller back to "pending": buyers pay to that ID, so a coordinator must check it. Removing the UPI ID needs no
+ * check (the seller is then paid in cash). The same for becoming (or leaving) an input dealer and for a new licence
+ * number: the coordinator checks the licence before the dealer can list.
  */
-export async function saveSellerProfile(userId: string, body: SellerProfileBody): Promise<UserDocument> {
+export async function saveSellerProfile(userId: string, body: SellerProfileBody, options: SaveSellerOptions): Promise<UserDocument> {
   const user = await findUser(userId);
   if (user.role !== 'seller' || !user.seller) throw new AppError('FORBIDDEN');
+  if (!options.cashOn && !body.upiId) throw new AppError('UPI_REQUIRED');
 
-  const upiChanged = user.seller.upiId !== undefined && user.seller.upiId !== body.upiId;
+  const upiChanged = body.upiId !== undefined && user.seller.upiId !== body.upiId && !options.upiCheckedByCoordinator;
   const kind = body.kind ?? user.seller.kind ?? 'producer';
   const licenceNumber = kind === 'input_dealer' ? (body.licenceNumber ?? user.seller.licenceNumber) : undefined;
   if (kind === 'input_dealer' && !licenceNumber) throw new AppError('INVALID_INPUT', 'Licence number needed');
@@ -44,12 +53,27 @@ export async function saveSellerProfile(userId: string, body: SellerProfileBody)
     {
       $set: {
         sellerVerified: status === 'verified',
+        paymentBlocked: !options.cashOn && !body.upiId,
         location: { type: 'Point', coordinates: [body.pickup.lon, body.pickup.lat] },
         place: { district: body.pickup.district, tehsil: body.pickup.tehsil },
       },
     },
   ).exec();
   return user;
+}
+
+/**
+ * A coordinator adds (or corrects) a seller's UPI ID from the admin panel, e.g. for a seller who cannot use the
+ * app. The coordinator checked it with the seller, so the seller's status stays. Their listings can be paid again.
+ */
+export async function setSellerUpi(sellerId: string, upiId: string): Promise<{ user: UserDocument; hadUpi: boolean }> {
+  const user = await findUser(sellerId);
+  if (user.role !== 'seller' || !user.seller) throw new AppError('NOT_FOUND');
+  const hadUpi = Boolean(user.seller.upiId);
+  user.seller.upiId = upiId;
+  await user.save();
+  await ListingModel.updateMany({ sellerId: user._id, paymentBlocked: true }, { $set: { paymentBlocked: false } }).exec();
+  return { user, hadUpi };
 }
 
 export async function saveBuyerProfile(userId: string, body: BuyerProfileBody): Promise<UserDocument> {

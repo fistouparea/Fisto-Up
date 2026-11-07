@@ -36,3 +36,7 @@ never weaken tests, and run `npm test`, `npm run lint` and `npm run typecheck` i
   (`DeviceDataSource` in `modules/privacy/privacy.service.ts`). New thresholds/limits go in `config/`.
 - If the rolldown binding is still missing after a clean reinstall:
   `npm install --no-save @rolldown/binding-linux-x64-gnu@<rolldown version>`.
+- Payments: UPI ID is optional (cash at delivery), behind flag `cashPayment` (only off/all). Who may pay how lives in
+  `orders/paymentOptions.ts` (mirrored in `frontend/src/utils/paymentMethods.ts`); what buyers may see is
+  `VISIBLE_LISTING_FILTER` in `listing.model.ts` (use it, never copy it). Switching the flag goes through
+  `setCashPayment()`, which hides/shows listings of sellers without UPI (`paymentBlocked`) in the same transaction.

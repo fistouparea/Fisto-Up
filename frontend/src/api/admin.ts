@@ -19,6 +19,8 @@ export interface AdminSeller {
   pickup?: Place;
   rejectReason?: string;
   profileComplete: boolean;
+  /** Cash payment is off and there is no UPI ID: listings hidden until one is added. */
+  upiNeeded?: boolean;
   listings: number;
   rating: { average: number | null; count: number };
   createdAt: string;
@@ -76,7 +78,8 @@ export interface NewSellerInput {
   pin: string;
   village: string;
   shgName?: string;
-  upiId: string;
+  /** Left out: paid in cash at delivery. */
+  upiId?: string;
   pickup: Place;
 }
 
@@ -92,9 +95,10 @@ const isOk = (body: unknown): body is Record<string, unknown> => isRecord(body);
 
 export const fetchStats = () => getJson('/api/admin/stats', (body): body is MarketStats => isRecord(body) && isRecord(body.sellers));
 
-export async function fetchSellers(status?: SellerStatus, q?: string): Promise<AdminSeller[]> {
+export async function fetchSellers(status?: SellerStatus, q?: string, upiMissing = false): Promise<AdminSeller[]> {
   const params = new URLSearchParams();
   if (status) params.set('status', status);
+  if (upiMissing) params.set('upi', 'missing');
   if (q?.trim()) params.set('q', q.trim());
   return (await getJson(`/api/admin/sellers?${params}`, isItems(isAdminSeller))).items;
 }
@@ -105,6 +109,8 @@ export const verifySeller = (id: string, licenceChecked = false) =>
 export const rejectSeller = (id: string, reason: string) =>
   sendJson('POST', `/api/admin/sellers/${encodeURIComponent(id)}/reject`, { reason }, isOk);
 export const createSeller = (input: NewSellerInput) => sendJson('POST', '/api/admin/sellers', input, isOk);
+/** The coordinator adds a seller's UPI ID (audited on the server). */
+export const setSellerUpi = (id: string, upiId: string) => sendJson('PUT', `/api/admin/sellers/${encodeURIComponent(id)}/upi`, { upiId }, isOk);
 
 export async function fetchReports(status: 'open' | 'resolved' = 'open'): Promise<AdminReport[]> {
   return (await getJson(`/api/admin/reports?status=${status}`, isItems(isReport))).items;

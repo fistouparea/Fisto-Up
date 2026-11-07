@@ -5,7 +5,7 @@ import { PushSubscriptionModel } from '../models/PushSubscription.js';
 import { AuditLogModel } from '../modules/audit/audit.model.js';
 import { UserModel } from '../modules/auth/user.model.js';
 import { CommissionEntryModel } from '../modules/commission/commission.model.js';
-import { ListingModel } from '../modules/listings/listing.model.js';
+import { ListingModel, VISIBLE_LISTING_FILTER } from '../modules/listings/listing.model.js';
 import { MarketNotificationModel } from '../modules/notifications/notification.model.js';
 import { OrderModel } from '../modules/orders/order.model.js';
 import { ReportModel } from '../modules/reports/report.model.js';
@@ -20,7 +20,7 @@ interface Explainable {
 
 const anyId = new Types.ObjectId();
 const deviceId = '00000000-0000-4000-8000-000000000000';
-const VISIBLE = { status: 'active', hidden: false, sellerVerified: true, quantityAvailable: { $gt: 0 } } as const;
+const VISIBLE = VISIBLE_LISTING_FILTER;
 
 /**
  * The queries the app runs most often (every screen open, every 30 s poll), with the same filter and sort as

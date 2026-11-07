@@ -76,8 +76,10 @@ export interface SellerProfileView {
   upiId?: string;
   pickup?: Place;
   rejectReason?: string;
-  /** Name, village, UPI ID and pickup place (and a licence number for input dealers) are filled. */
+  /** Name, village and pickup place (and a licence number for input dealers) are filled; a UPI ID too while cash payment is off. */
   profileComplete: boolean;
+  /** Cash payment is switched off and this seller has no UPI ID: their listings are hidden until one is added. */
+  upiNeeded: boolean;
   rating: { average: number | null; count: number };
 }
 

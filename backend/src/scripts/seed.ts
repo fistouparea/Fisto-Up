@@ -46,7 +46,8 @@ interface DemoSeller {
   name: string;
   village: string;
   shgName?: string;
-  upiId: string;
+  /** Left out: no UPI ID, paid in cash at delivery (many SHG members). */
+  upiId?: string;
   place: keyof typeof TEHSILS;
   verified: boolean;
 }
@@ -55,7 +56,8 @@ const SELLERS: DemoSeller[] = [
   { key: 'ramesh', phone: '9000000101', name: 'रमेश जाट', village: 'घांघू', upiId: 'ramesh.demo@ybl', place: 'churu', verified: true },
   { key: 'sunita', phone: '9000000102', name: 'सुनीता देवी', village: 'बीनासर', shgName: 'जय माँ स्वयं सहायता समूह', upiId: 'sunita.demo@okaxis', place: 'sardarshahar', verified: true },
   { key: 'mohan', phone: '9000000103', name: 'मोहन लाल', village: 'लोहा', upiId: 'mohan.demo@oksbi', place: 'ratangarh', verified: true },
-  { key: 'kamla', phone: '9000000104', name: 'कमला मेघवाल', village: 'छापर', shgName: 'उजाला महिला समूह', upiId: 'kamla.demo@paytm', place: 'sujangarh', verified: true },
+  // No UPI ID: buyers see "भुगतान: डिलीवरी पर नकद". All her demo orders are cash at delivery.
+  { key: 'kamla', phone: '9000000104', name: 'कमला मेघवाल', village: 'छापर', shgName: 'उजाला महिला समूह', place: 'sujangarh', verified: true },
   { key: 'geeta', phone: '9000000105', name: 'गीता कंवर', village: 'साहवा', shgName: 'रंगीली दरी समूह', upiId: 'geeta.demo@ybl', place: 'taranagar', verified: false },
 ];
 
@@ -125,13 +127,13 @@ async function createDemoData(): Promise<void> {
       const created = await createListing(
         sellerId.toString(),
         { description: { hi: '', en: '' }, qualityNotes: '', minOrderQty: 1, ...body, photoIds: [photoId._id.toString()] },
-        { uploaderId: sellerId.toString() },
+        { uploaderId: sellerId.toString(), cashOn: true },
       );
       listings.set(listing.photo, created._id.toString());
     }
 
     // Orders through the real service, so stock, commission and notifications follow the same rules as in the app.
-    const orders = new OrderService({ notifier: new MarketNotifier(null), commissionBps: percentToBps(COMMISSION_RULES.defaultPercent) });
+    const orders = new OrderService({ notifier: new MarketNotifier(null), commissionBps: percentToBps(COMMISSION_RULES.defaultPercent), cashPaymentOn: async () => true });
     const asUser = (id: Types.ObjectId, role: AuthUser['role'], name: string): AuthUser => ({ id: id.toString(), role, name });
     const hotelUser = asUser(hotel._id, 'buyer', hotel.name);
     const familyUser = asUser(family._id, 'buyer', family.name);

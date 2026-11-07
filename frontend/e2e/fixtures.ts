@@ -9,6 +9,8 @@ export { hi };
 export const PHONES = {
   coordinator: '9000000001',
   ramesh: '9000000101',
+  /** No UPI ID: paid in cash at delivery. */
+  kamla: '9000000104',
   dealer: '9000000106',
   hotel: '9000000201',
   household: '9000000202',
