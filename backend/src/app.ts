@@ -1,3 +1,4 @@
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { type Express, type RequestHandler } from 'express';
 import helmet from 'helmet';
@@ -17,7 +18,8 @@ import { FeatureFlags } from './modules/flags/flag.service.js';
 import { createFeedbackRouter } from './modules/feedback/feedback.routes.js';
 import { createEventsRouter } from './modules/metrics/events.routes.js';
 import { flagDefaults } from './config/featureFlags.js';
-import { createMarketRouter, createMarketUnavailableRouter, type MarketDependencies } from './modules/marketRouter.js';
+import { dropForeignDeviceId, protectDeviceIds } from './modules/auth/deviceGuard.js';
+import { createMarketDeviceGuard, createMarketRouter, createMarketUnavailableRouter, type MarketDependencies } from './modules/marketRouter.js';
 import type { AiProvider } from './services/ai/aiProvider.js';
 import type { FarmProfileRepository } from './services/farm/farmProfileRepository.js';
 import type { HistoryRepository } from './services/history/historyRepository.js';
@@ -85,9 +87,17 @@ export function createApp({
   });
 
   app.use('/api', createApiRateLimits());
+  // Answers differ per person at the same address: no browser or proxy may keep them (public photos opt out).
+  app.use('/api', (_req, res, next) => {
+    res.set('Cache-Control', 'no-store');
+    next();
+  });
+  // With accounts, an account's farm data id works only with that account's login.
+  const deviceGuard = market ? createMarketDeviceGuard(market) : null;
+  if (deviceGuard) app.use('/api', cookieParser(), ...protectDeviceIds(deviceGuard));
 
   const aiRateLimit = createAiRateLimit();
-  app.use('/api', createDiagnoseRouter(aiProvider, historyRepository, aiRateLimit));
+  app.use('/api', createDiagnoseRouter(aiProvider, historyRepository, aiRateLimit, deviceGuard ? [dropForeignDeviceId(deviceGuard)] : []));
   app.use('/api', createChatRouter(aiProvider, aiRateLimit));
   app.use('/api', createHistoryRouter(historyRepository));
   app.use('/api', createFeedbackRouter(historyRepository, flags));

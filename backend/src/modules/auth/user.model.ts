@@ -55,6 +55,8 @@ const userSchema = new Schema(
     name: { type: String, required: true },
     /** The anonymous advisor device id (farm profile + history) linked on first login. */
     deviceId: String,
+    /** A data id this account once shared with another account: retired, never used again (deviceLink.ts). */
+    sharedDeviceId: String,
     failedLogins: { type: Number, default: 0 },
     lockedUntil: Date,
     /** Bumped on logout, which ends every session of this account. */
@@ -77,6 +79,9 @@ const userSchema = new Schema(
 );
 
 userSchema.index({ role: 1, 'seller.status': 1 });
+// Looked up on every request that carries a data id (deviceGuard.ts).
+userSchema.index({ deviceId: 1 }, { sparse: true });
+userSchema.index({ sharedDeviceId: 1 }, { sparse: true });
 
 export const UserModel = model('User', userSchema, 'users');
 

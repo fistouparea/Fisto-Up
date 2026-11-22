@@ -19,16 +19,23 @@ export function getDeviceId(): string {
 }
 
 /**
- * After login on another phone, this phone uses the account's device id, so the farm profile and
- * "मेरी जाँच" of the account show up here too.
+ * After login this phone uses the account's id, so the account's farm profile and "मेरी जाँच" show up here;
+ * after logout a new one. False: storage is blocked, so the id lasts only until the page reloads.
  */
-export function adoptDeviceId(id: string): void {
-  if (!UUID_PATTERN.test(id)) return;
+export function adoptDeviceId(id: string): boolean {
+  if (!UUID_PATTERN.test(id)) return false;
   try {
     localStorage.setItem(STORAGE_KEY, id);
+    return true;
   } catch {
     fallbackId = id;
+    return false;
   }
+}
+
+/** True for the storage event another tab causes when it switches to another person's data. */
+export function isDeviceIdChange(event: StorageEvent): boolean {
+  return event.key === STORAGE_KEY && event.newValue !== event.oldValue;
 }
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;

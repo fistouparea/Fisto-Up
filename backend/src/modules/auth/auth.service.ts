@@ -1,8 +1,10 @@
+import { randomUUID } from 'node:crypto';
 import { isValidObjectId, mongo } from 'mongoose';
 import { AUTH_RULES } from '../../config/marketRules.js';
 import { AppError } from '../../errors/AppError.js';
 import type { BuyerType, LoginBody, Role } from './auth.types.js';
 import type { CredentialMethod } from './credentials.js';
+import { isLinkedToAccount, withOwnDeviceId } from './deviceLink.js';
 import type { SessionClaims } from './sessionToken.js';
 import { UserModel, type UserDocument } from './user.model.js';
 
@@ -33,13 +35,15 @@ export class AuthService {
     if (this.credentials.isWeak(account.pin)) throw new AppError('WEAK_PIN');
     if (await UserModel.exists({ phone: account.phone })) throw new AppError('PHONE_TAKEN');
 
+    // The phone's id joins the new account only if no other account has it (shared phones, test accounts).
+    const deviceId = account.deviceId && (await isLinkedToAccount(account.deviceId)) ? randomUUID() : account.deviceId;
     try {
       return await UserModel.create({
         phone: account.phone,
         pinHash: await this.credentials.hash(account.pin),
         role: account.role,
         name: account.name,
-        deviceId: account.deviceId,
+        deviceId,
         createdBy: account.createdBy,
         pilot: account.pilot ?? false,
         inviteId: account.inviteId,
@@ -73,10 +77,9 @@ export class AuthService {
 
     user.failedLogins = 0;
     user.lockedUntil = undefined;
-    // First login on a phone that used the advisor: its farm profile and history now belong to the account.
-    if (!user.deviceId && deviceId) user.deviceId = deviceId;
     await user.save();
-    return user;
+    // First login on a guest's phone: its farm profile and history join the account. Never another account's.
+    return withOwnDeviceId(user, deviceId);
   }
 
   /** Ends every session of this account. */

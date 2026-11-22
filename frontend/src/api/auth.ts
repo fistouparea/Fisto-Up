@@ -4,10 +4,12 @@ import type { Account, BuyerProfileInput, BuyerType, SellerProfileInput } from '
 
 interface AccountResponse {
   user: Account | null;
+  /** The phone holds an account's data id without its login: take a new one. */
+  resetDevice?: boolean;
 }
 
-export async function fetchMe(): Promise<Account | null> {
-  return (await getJson('/api/auth/me', isAccountResponse)).user;
+export async function fetchMe(): Promise<AccountResponse> {
+  return getJson(`/api/auth/me?${new URLSearchParams({ deviceId: getDeviceId() })}`, isAccountResponse);
 }
 
 /** The phone's advisor device id goes along, so its farm profile and history join the account. */

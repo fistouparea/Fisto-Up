@@ -3,6 +3,7 @@ import { Router, type RequestHandler } from 'express';
 import type { MarketConfig } from '../config/env.js';
 import { AppError } from '../errors/AppError.js';
 import { createSessionMiddleware, requireAppHeader } from './auth/auth.middleware.js';
+import { createDeviceGuard, type DeviceGuard } from './auth/deviceGuard.js';
 import { createAuthRouter } from './auth/auth.routes.js';
 import { AuthService } from './auth/auth.service.js';
 import { PinCredentials, type CredentialMethod } from './auth/credentials.js';
@@ -59,6 +60,11 @@ export interface MarketSharedDeps {
   flags: FeatureFlags;
   /** Phase 2 mandi prices (optional) for the fair price suggestion. */
   mandi: MandiProvider | null;
+}
+
+/** Who may use which farm data id. Needed by the advisor routes too, so it is built next to the market router. */
+export function createMarketDeviceGuard({ config, credentials = new PinCredentials(), now }: MarketDependencies): DeviceGuard {
+  return createDeviceGuard(new AuthService(credentials, now), new SessionTokens(config.jwtSecret));
 }
 
 export function createMarketRouter(

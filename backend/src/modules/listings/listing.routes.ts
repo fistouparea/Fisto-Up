@@ -69,7 +69,9 @@ export function createListingRouter({ ai, aiRateLimit, photos, flags }: ListingR
     const content = photo ? await photoContent(photo, photos, req.query.size === 'thumb' ? 'thumb' : 'full') : null;
     if (!photo || !content) throw new AppError('NOT_FOUND');
     // A saved photo never changes, so phones can keep it (saves data on slow networks).
-    res.set('Cache-Control', photo.attached ? 'public, max-age=604800, immutable' : 'private, no-store');
+    // Complaint and delivery photos are only for the people of that case: never left in a shared phone's cache.
+    const forEveryone = photo.attached && !photo.complaintId && !photo.orderId;
+    res.set('Cache-Control', forEveryone ? 'public, max-age=604800, immutable' : 'private, no-store');
     if (content.kind === 'redirect') {
       res.redirect(302, content.url);
       return;

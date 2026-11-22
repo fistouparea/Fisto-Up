@@ -8,8 +8,10 @@ export function createDiagnoseRouter(
   provider: AiProvider,
   history: HistoryRepository | null,
   aiRateLimit: RequestHandler,
+  /** Runs after the upload (the fields are known then), e.g. the data id check. */
+  afterUpload: RequestHandler[] = [],
 ): Router {
   const router = Router();
-  router.post('/diagnose', aiRateLimit, uploadImage, createDiagnoseController(provider, history));
+  router.post('/diagnose', aiRateLimit, uploadImage, ...afterUpload, createDiagnoseController(provider, history));
   return router;
 }

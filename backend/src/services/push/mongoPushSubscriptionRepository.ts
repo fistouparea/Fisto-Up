@@ -8,7 +8,8 @@ export class MongoPushSubscriptionRepository implements PushSubscriptionReposito
     await withStorageErrors(() =>
       PushSubscriptionModel.updateOne(
         { endpoint: subscription.endpoint },
-        { $set: { deviceId, keys: subscription.keys }, $setOnInsert: { sentIds: [] } },
+        // This phone's farm alerts now belong to `deviceId`. A login links order alerts again (market/push/subscribe).
+        { $set: { deviceId, keys: subscription.keys }, $unset: { userId: 1 }, $setOnInsert: { sentIds: [] } },
         { upsert: true },
       ).exec(),
     );

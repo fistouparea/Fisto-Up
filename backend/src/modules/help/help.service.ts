@@ -5,7 +5,7 @@ import { deviceIdSchema } from '../../types/history.js';
 import type { AuthUser } from '../auth/auth.types.js';
 import { phoneSchema } from '../auth/auth.types.js';
 import { UserModel } from '../auth/user.model.js';
-import type { DeviceDataSource } from '../privacy/privacy.service.js';
+import type { DataScope, DeviceDataSource } from '../privacy/privacy.service.js';
 import { HELP_CATEGORIES, HelpRequestModel, type HelpCategory } from './help.model.js';
 import { track } from '../metrics/events.js';
 
@@ -69,10 +69,14 @@ export async function resolveHelpRequest(id: string, coordinatorId: string, reso
 
 export const helpDeviceData: DeviceDataSource = {
   name: 'helpRequests',
-  export: ({ deviceIds, userId }) =>
-    HelpRequestModel.find({ $or: [{ deviceId: { $in: deviceIds } }, ...(userId ? [{ userId }] : [])] }, { _id: 0, category: 1, message: 1, status: 1, resolution: 1, createdAt: 1 })
+  export: (scope) =>
+    HelpRequestModel.find(ownRequests(scope), { _id: 0, category: 1, message: 1, status: 1, resolution: 1, createdAt: 1 })
       .lean()
       .exec(),
-  erase: async ({ deviceIds, userId }) =>
-    (await HelpRequestModel.deleteMany({ $or: [{ deviceId: { $in: deviceIds } }, ...(userId ? [{ userId }] : [])] }).exec()).deletedCount,
+  erase: async (scope) => (await HelpRequestModel.deleteMany(ownRequests(scope)).exec()).deletedCount,
 };
+
+/** The account's requests, plus this phone's requests sent without login (on a shared phone others sent some too). */
+function ownRequests({ deviceIds, userId }: DataScope) {
+  return { $or: [{ deviceId: { $in: deviceIds }, userId: null }, ...(userId ? [{ userId }] : [])] };
+}

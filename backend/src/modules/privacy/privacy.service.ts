@@ -8,6 +8,7 @@ import { PushSubscriptionModel } from '../../models/PushSubscription.js';
 import { logger } from '../../observability/logger.js';
 import type { PhotoStorage } from '../../services/storage/photoStorage.js';
 import type { AuthUser } from '../auth/auth.types.js';
+import { isLinkedToAccount, withOwnDeviceId } from '../auth/deviceLink.js';
 import { UserModel } from '../auth/user.model.js';
 import { ListingModel, ListingPhotoModel } from '../listings/listing.model.js';
 import { MarketNotificationModel } from '../notifications/notification.model.js';
@@ -150,10 +151,16 @@ export async function deletePersonalData(
   return { device, account };
 }
 
-/** This phone's id plus the one linked to the account (another phone may have created the farm profile). */
+/**
+ * This phone's id plus the account's own (another phone may have created the farm profile). Never an id of
+ * another account, and never one that was shared: deleting it would delete someone else's farm.
+ */
 async function deviceIdsOf(deviceId: string, user: AuthUser | undefined): Promise<string[]> {
-  const linked = user ? (await UserModel.findById(user.id, { deviceId: 1 }).lean().exec())?.deviceId : undefined;
-  return [...new Set([deviceId, ...(linked ? [linked] : [])])];
+  const account = user ? await UserModel.findById(user.id).exec() : null;
+  const linked = account?.deviceId ? (await withOwnDeviceId(account)).deviceId : undefined;
+  if (linked === deviceId) return [deviceId];
+  const ids = (await isLinkedToAccount(deviceId)) ? [] : [deviceId];
+  return linked ? [...ids, linked] : ids;
 }
 
 async function deleteAccount(userId: string, storage: PhotoStorage): Promise<Record<string, number>> {
