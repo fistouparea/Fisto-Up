@@ -316,6 +316,8 @@ export const hiStrings = {
     speak: 'बोलकर पूछें',
     listening: 'बोलिए...',
     notHeard: 'आवाज़ नहीं आई, फिर से बोलें',
+    noHindiVoice: 'इस फ़ोन में हिंदी आवाज़ नहीं है। फ़ोन की सेटिंग में Text-to-speech में हिंदी आवाज़ डाउनलोड करें।',
+    speakFailed: 'अभी आवाज़ नहीं चल पाई। फिर से 🔊 दबाएँ।',
   },
   voiceMode: {
     button: 'बोलकर चलाएँ',

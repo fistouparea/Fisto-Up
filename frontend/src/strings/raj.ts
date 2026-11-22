@@ -83,7 +83,7 @@ export const rajApp: PartialText<typeof hiStrings & typeof hiFeatureStrings> = {
   sections: { problem: 'दिक्कत', cause: 'कारण', desiUpay: 'देसी उपाय', dawai: 'दवाई', savdhani: 'सावधानी' },
   newCheck: 'नुवीं जाँच करो',
   chat: { title: 'और पूछो', placeholder: 'या अठै लिखो...', you: 'थे', micHint: 'बटन दबा’र बोलो', send: 'पूछो', waiting: 'जवाब आय रियो है...' },
-  voice: { listen: 'सुणो', listenAll: 'पूरो सुणो', stop: 'रोको', speak: 'बोल’र पूछो', listening: 'बोलो सा...', notHeard: 'आवाज कोनी आई, पाछा बोलो' },
+  voice: { listen: 'सुणो', listenAll: 'पूरो सुणो', stop: 'रोको', speak: 'बोल’र पूछो', listening: 'बोलो सा...', notHeard: 'आवाज कोनी आई, पाछा बोलो', noHindiVoice: 'इण फोन में हिंदी आवाज कोनी। फोन री सेटिंग में Text-to-speech सूं हिंदी आवाज डाउनलोड करो।', speakFailed: 'अबार आवाज कोनी चाली। पाछो 🔊 दबाओ।' },
   voiceMode: {
     button: 'बोल’र चलाओ',
     sayHint: 'बोलो, जियां "मौसम बताओ"',

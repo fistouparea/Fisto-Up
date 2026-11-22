@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { splitIntoSentences } from '../utils/speechText';
+import { notifyWarning } from '../components/ui/notify';
+import { hi } from '../strings/hi';
+import { SpeechPlayer, type SpeechListener } from '../utils/speechPlayer';
 
 const SPEECH_LANG = 'hi-IN';
 
@@ -76,60 +78,37 @@ export function useSpeechInput(onTranscript: (text: string) => void) {
   return { supported: RecognitionCtor !== null, listening, notHeard, start, stop };
 }
 
+let sharedPlayer: SpeechPlayer | null = null;
+
+function getPlayer(): SpeechPlayer | null {
+  if (sharedPlayer || !isSynthesisSupported()) return sharedPlayer;
+  const player = new SpeechPlayer(window.speechSynthesis, (text) => new SpeechSynthesisUtterance(text), () => navigator.onLine);
+  // Chrome keeps talking, or gets stuck, when the page reloads in the middle of speech.
+  window.addEventListener('pagehide', () => player.stop());
+  sharedPlayer = player;
+  return player;
+}
+
 /** Reads text aloud in Hindi. `supported` is false when the browser cannot do it; hide the button then. */
 export function useSpeechOutput() {
-  const [supported] = useState(isSynthesisSupported);
+  const [player] = useState(getPlayer);
   const [speaking, setSpeaking] = useState(false);
-  const speakingRef = useRef(false);
-
-  const stop = useCallback(() => {
-    if (!supported) return;
-    window.speechSynthesis.cancel();
-    speakingRef.current = false;
-    setSpeaking(false);
-  }, [supported]);
+  const [listener] = useState<SpeechListener>(() => ({
+    onEnd: () => setSpeaking(false),
+    onProblem: (problem) => notifyWarning(problem === 'noVoice' ? hi.voice.noHindiVoice : hi.voice.speakFailed),
+  }));
 
   // Stop this component's speech when it unmounts (e.g. leaving the result screen).
-  useEffect(() => () => {
-    if (speakingRef.current) window.speechSynthesis.cancel();
-  }, []);
+  useEffect(() => () => player?.stop(listener), [player, listener]);
+
+  const stop = useCallback(() => player?.stop(listener), [player, listener]);
 
   const speak = useCallback(
     (text: string) => {
-      if (!supported) return;
-      window.speechSynthesis.cancel(); // only one thing speaks at a time
-
-      const voice = findHindiVoice();
-      const sentences = splitIntoSentences(text);
-      sentences.forEach((sentence, index) => {
-        const utterance = new SpeechSynthesisUtterance(sentence);
-        utterance.lang = SPEECH_LANG;
-        utterance.rate = 0.9;
-        if (voice) utterance.voice = voice;
-        if (index === sentences.length - 1) {
-          utterance.onend = () => {
-            speakingRef.current = false;
-            setSpeaking(false);
-          };
-        }
-        utterance.onerror = () => {
-          speakingRef.current = false;
-          setSpeaking(false);
-        };
-        window.speechSynthesis.speak(utterance);
-      });
-
-      speakingRef.current = sentences.length > 0;
-      setSpeaking(sentences.length > 0);
+      if (player?.speak(text, listener)) setSpeaking(true);
     },
-    [supported],
+    [player, listener],
   );
 
-  return { supported, speaking, speak, stop };
-}
-
-function findHindiVoice(): SpeechSynthesisVoice | undefined {
-  return window.speechSynthesis
-    .getVoices()
-    .find((voice) => voice.lang.replace('_', '-').toLowerCase().startsWith('hi'));
+  return { supported: player !== null, speaking, speak, stop };
 }

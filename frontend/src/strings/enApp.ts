@@ -165,7 +165,7 @@ export const enApp: PartialText<typeof hiStrings & typeof hiFeatureStrings> = {
     waiting: 'Answer is coming...',
     suggestions: ['When should I use this medicine?', 'How many days to get better?', 'How to prevent it next time?'],
   },
-  voice: { listen: 'Listen', listenAll: 'Listen to all', stop: 'Stop', speak: 'Ask by voice', listening: 'Speak...', notHeard: 'No voice heard, please speak again' },
+  voice: { listen: 'Listen', listenAll: 'Listen to all', stop: 'Stop', speak: 'Ask by voice', listening: 'Speak...', notHeard: 'No voice heard, please speak again', noHindiVoice: 'This phone has no Hindi voice. Download one in the phone settings under Text-to-speech.', speakFailed: 'Could not play the voice. Tap the speaker again.' },
   voiceMode: {
     button: 'Use by voice',
     sayHint: 'Speak, e.g. "weather"',
