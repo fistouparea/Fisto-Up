@@ -78,6 +78,7 @@ export const rajApp: PartialText<typeof hiStrings & typeof hiFeatureStrings> = {
   checkPhoto: 'जाँच करो',
   retakePhoto: 'दूजी फोटू लो',
   checking: 'जाँच होय री है...',
+  checkingSlow: 'थोड़ी देर और सा। इंटरनेट कै सर्वर धीमो है, स्क्रीन बंद मत करो।',
   checkingHint: 'थोड़ो रुको सा, थोड़ो बगत लाग सकै',
   sections: { problem: 'दिक्कत', cause: 'कारण', desiUpay: 'देसी उपाय', dawai: 'दवाई', savdhani: 'सावधानी' },
   newCheck: 'नुवीं जाँच करो',

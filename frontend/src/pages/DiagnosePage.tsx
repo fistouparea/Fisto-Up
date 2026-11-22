@@ -60,6 +60,8 @@ const RETRYABLE_ERRORS: ReadonlySet<ErrorCode> = new Set([
   'UNKNOWN',
 ]);
 
+const SLOW_CHECK_MS = 12_000;
+
 /** A function: labels follow the chosen language. */
 const diagnoseSteps = (): Step[] => [
   { label: hi.steps.crop, icon: LuSprout },
@@ -157,7 +159,7 @@ export function DiagnosePage() {
           {state.step === 'checking' && (
             <>
               <PhotoPreview photo={state.photo} size="small" dimmed />
-              <Loader title={hi.checking} hint={hi.checkingHint} />
+              <CheckingLoader />
             </>
           )}
 
@@ -231,6 +233,16 @@ function ChooseStep({ crop, preparing, onSelect, onPick }: ChooseStepProps) {
       )}
     </>
   );
+}
+
+/** A slow check (sleeping server, weak network) says so, so nobody thinks the app hangs and starts again. */
+function CheckingLoader() {
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setSlow(true), SLOW_CHECK_MS);
+    return () => window.clearTimeout(timer);
+  }, []);
+  return <Loader title={hi.checking} hint={slow ? hi.checkingSlow : hi.checkingHint} />;
 }
 
 interface ErrorStepProps {

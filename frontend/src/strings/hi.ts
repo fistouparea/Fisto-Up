@@ -283,6 +283,7 @@ export const hiStrings = {
   retakePhoto: 'दूसरी फोटो लें',
   retakeShort: 'फिर से',
   checking: 'जाँच हो रही है...',
+  checkingSlow: 'थोड़ी देर और। इंटरनेट या सर्वर धीमा है, स्क्रीन बंद न करें।',
   checkingHint: 'कृपया रुकें, इसमें थोड़ा समय लग सकता है',
 
   sections: {

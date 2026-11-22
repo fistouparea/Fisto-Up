@@ -168,3 +168,57 @@ describe('GeminiProvider thinking level', () => {
     expect(generate.mock.calls[0]?.[0].config).not.toHaveProperty('thinkingConfig');
   });
 });
+
+describe('GeminiProvider with a slow model', () => {
+  const answer = (problem: string) => textResponse(JSON.stringify({ ...healthyDiagnosis, problem_name: problem }));
+  const never = () => new Promise<never>(() => undefined);
+  const after = <T>(ms: number, value: () => T) => new Promise<T>((resolve) => setTimeout(() => resolve(value()), ms));
+
+  function racing(generateContent: GenerateContent, hedgeAfterMs = 30) {
+    const client = { models: { generateContent } } as unknown as Pick<GoogleGenAI, 'models'>;
+    return new GeminiProvider({ apiKey: 'k', model: 'main', fallbackModels: ['second', 'third'], client, hedgeAfterMs, sleep: async () => undefined });
+  }
+
+  it('does not wait for the timeout: the first valid answer wins and the slow calls are cancelled', async () => {
+    const signals: AbortSignal[] = [];
+    const generate = vi.fn<GenerateContent>(async ({ model, config }) => {
+      if (config?.abortSignal) signals.push(config.abortSignal);
+      return model === 'third' ? answer('तेज़') : never();
+    });
+    await expect(racing(generate).diagnose(input)).resolves.toMatchObject({ problem_name: 'तेज़' });
+    expect(generate.mock.calls.map(([params]) => params.model)).toEqual(['main', 'second', 'third']);
+    expect(signals.slice(0, 2).every((signal) => signal.aborted)).toBe(true);
+  });
+
+  it('a quick main model is the only one called (no extra quota)', async () => {
+    const generate = vi.fn<GenerateContent>(async () => answer('मुख्य'));
+    await expect(racing(generate, 5_000).diagnose(input)).resolves.toMatchObject({ problem_name: 'मुख्य' });
+    expect(generate).toHaveBeenCalledOnce();
+  });
+
+  it('the main model still wins when it answers before the later one', async () => {
+    const generate = vi.fn<GenerateContent>(async ({ model }) => (model === 'main' ? after(45, () => answer('मुख्य')) : never()));
+    await expect(racing(generate).diagnose(input)).resolves.toMatchObject({ problem_name: 'मुख्य' });
+  });
+
+  it('an unusable quick answer never wins over a valid slower one', async () => {
+    const generate = vi.fn<GenerateContent>(async ({ model }) => (model === 'main' ? after(120, () => answer('सही')) : textResponse('not json {')));
+    await expect(racing(generate).diagnose(input)).resolves.toMatchObject({ problem_name: 'सही' });
+  });
+
+  it('a failing model hands over at once', async () => {
+    const generate = vi.fn<GenerateContent>(async ({ model }) => {
+      if (model === 'main') throw new ApiError({ message: 'no such model', status: 404 });
+      return answer('अगला');
+    });
+    await expect(racing(generate, 60_000).diagnose(input)).resolves.toMatchObject({ problem_name: 'अगला' });
+  });
+
+  it('fails only when every model failed', async () => {
+    const generate = vi.fn<GenerateContent>(async () => {
+      throw new ApiError({ message: 'busy', status: 503 });
+    });
+    await expect(racing(generate).diagnose(input)).rejects.toMatchObject({ code: 'RATE_LIMITED' });
+    expect(new Set(generate.mock.calls.map(([params]) => params.model)).size).toBe(3);
+  });
+});

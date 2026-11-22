@@ -149,6 +149,7 @@ export const enApp: PartialText<typeof hiStrings & typeof hiFeatureStrings> = {
   retakePhoto: 'Take another photo',
   retakeShort: 'Again',
   checking: 'Checking...',
+  checkingSlow: 'A little longer. The internet or server is slow, keep the screen open.',
   checkingHint: 'Please wait, this can take a little time',
   sections: { problem: 'Problem', cause: 'Cause', desiUpay: 'Home remedies', dawai: 'Medicine', savdhani: 'Care' },
   noDawaiNeeded: 'No medicine is needed now.',

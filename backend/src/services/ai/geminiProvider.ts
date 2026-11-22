@@ -25,6 +25,7 @@ import {
 import { aiPriceEstimateSchema, type AiPriceEstimate } from '../../modules/pricing/pricing.types.js';
 import { UNIT_NAMES, type Unit } from '../../config/marketCatalog.js';
 import { buildChatSystemPrompt, buildDiagnosisUserPrompt, DIAGNOSIS_SYSTEM_PROMPT } from './prompt.js';
+import { AI_RULES } from '../../config/aiRules.js';
 import { withRetry } from '../../utils/retry.js';
 import { logger } from '../../observability/logger.js';
 
@@ -156,13 +157,15 @@ export interface GeminiProviderOptions {
   apiKey: string;
   model: string;
   /**
-   * Tried in order when the main model is busy, times out or returns unusable JSON (e.g. Google's
+   * Started in order when the model before is slow (hedgeAfterMs), busy or returns unusable JSON (e.g. Google's
    * "model is experiencing high demand"). Empty = only the main model.
    */
   fallbackModels?: string[];
   /** Defaults to "low": fast enough for farmers on slow phones. "off" = don't send the setting. */
   thinkingLevel?: GeminiThinkingLevel;
   attemptTimeoutMs?: number;
+  /** Head start of each model before the next one joins; defaults to AI_RULES.hedgeAfterMs. */
+  hedgeAfterMs?: number;
   maxAttempts?: number;
   baseDelayMs?: number;
   sleep?: (ms: number) => Promise<void>;
@@ -175,6 +178,7 @@ export class GeminiProvider implements AiProvider {
   private readonly models: string[];
   private readonly thinkingLevel: GeminiThinkingLevel;
   private readonly attemptTimeoutMs: number;
+  private readonly hedgeAfterMs: number;
   private readonly maxAttempts: number;
   private readonly baseDelayMs: number;
   private readonly sleep: ((ms: number) => Promise<void>) | undefined;
@@ -185,6 +189,7 @@ export class GeminiProvider implements AiProvider {
     this.thinkingLevel = options.thinkingLevel ?? 'low';
     // Newer models take ~20 s for a photo even with low thinking; the phone waits up to 90 s in total.
     this.attemptTimeoutMs = options.attemptTimeoutMs ?? 45_000;
+    this.hedgeAfterMs = options.hedgeAfterMs ?? AI_RULES.hedgeAfterMs;
     this.maxAttempts = options.maxAttempts ?? 3;
     this.baseDelayMs = options.baseDelayMs ?? 1_000;
     this.sleep = options.sleep;
@@ -243,31 +248,70 @@ export class GeminiProvider implements AiProvider {
   }
 
   /**
-   * Calls Gemini in JSON mode and validates the answer with `schema`. Busy errors are retried with backoff;
-   * if a model stays busy, times out or answers with unusable JSON, the next fallback model is tried.
+   * Calls Gemini in JSON mode and validates the answer with `schema`. The next model starts when the one before
+   * fails or is slow; the first valid answer wins and the others are cancelled. Fails only when all models failed.
    */
-  private async generateValidated<T>(request: GenerateRequest, schema: z.ZodType<T>): Promise<T> {
-    let lastError: AppError | null = null;
-    for (const model of this.models) {
-      try {
-        const rawText = await withRetry(() => this.generateOnce(request, model), {
-          maxAttempts: this.maxAttempts,
-          baseDelayMs: this.baseDelayMs,
-          isRetryable: isBusyError,
-          sleep: this.sleep,
-        });
-        return parseJson(rawText, schema);
-      } catch (error) {
-        lastError = toAppError(error);
-        if (model !== this.models.at(-1)) {
-          logger.warn({ model, code: lastError.code }, 'Gemini model failed, trying the next model');
-        }
-      }
-    }
-    throw lastError ?? new AppError('AI_ERROR', 'No Gemini model configured');
+  private generateValidated<T>(request: GenerateRequest, schema: z.ZodType<T>): Promise<T> {
+    const race = new AbortController();
+    const startedAt = Date.now();
+
+    return new Promise<T>((resolve, reject) => {
+      let started = 0;
+      let running = 0;
+      let settled = false;
+      let timer: NodeJS.Timeout | undefined;
+
+      const settle = () => {
+        settled = true;
+        clearTimeout(timer);
+        race.abort();
+      };
+      const startNext = () => {
+        clearTimeout(timer);
+        const model = this.models[started];
+        if (model === undefined) return;
+        started += 1;
+        running += 1;
+        if (started < this.models.length) timer = setTimeout(startNext, this.hedgeAfterMs);
+
+        this.tryModel(request, schema, model, race.signal).then(
+          (value) => {
+            if (settled) return;
+            settle();
+            logger.info({ model, modelsTried: started, ms: Date.now() - startedAt }, 'Gemini answered');
+            resolve(value);
+          },
+          (error: unknown) => {
+            if (settled) return;
+            running -= 1;
+            const failure = toAppError(error);
+            if (started < this.models.length) {
+              logger.warn({ model, code: failure.code }, 'Gemini model failed, trying the next model');
+              startNext();
+            } else if (running === 0) {
+              settle();
+              reject(failure);
+            }
+          },
+        );
+      };
+      startNext();
+    });
   }
 
-  private async generateOnce({ contents, systemInstruction, responseSchema }: GenerateRequest, model: string): Promise<string> {
+  /** One model: busy errors are retried with backoff, until another model won. */
+  private async tryModel<T>(request: GenerateRequest, schema: z.ZodType<T>, model: string, cancelled: AbortSignal): Promise<T> {
+    const rawText = await withRetry(() => this.generateOnce(request, model, cancelled), {
+      maxAttempts: this.maxAttempts,
+      baseDelayMs: this.baseDelayMs,
+      isRetryable: (error) => !cancelled.aborted && isBusyError(error),
+      sleep: this.sleep,
+    });
+    return parseJson(rawText, schema);
+  }
+
+  private async generateOnce({ contents, systemInstruction, responseSchema }: GenerateRequest, model: string, cancelled: AbortSignal): Promise<string> {
+    cancelled.throwIfAborted();
     const response = await this.client.models.generateContent({
       model,
       contents,
@@ -277,7 +321,7 @@ export class GeminiProvider implements AiProvider {
         responseSchema,
         temperature: 0.2,
         ...(this.thinkingLevel === 'off' ? {} : { thinkingConfig: { thinkingLevel: THINKING_LEVELS[this.thinkingLevel] } }),
-        abortSignal: AbortSignal.timeout(this.attemptTimeoutMs),
+        abortSignal: AbortSignal.any([cancelled, AbortSignal.timeout(this.attemptTimeoutMs)]),
       },
     });
 
