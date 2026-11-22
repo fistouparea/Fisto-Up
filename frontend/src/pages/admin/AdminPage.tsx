@@ -19,6 +19,7 @@ import { AdminFlags } from './AdminFlags';
 import { AdminHelp } from './AdminHelp';
 import { AdminInvites } from './AdminInvites';
 import { AdminLedger } from './AdminLedger';
+import { AdminListings } from './AdminListings';
 import { AdminMandiTrips } from './AdminMandiTrips';
 import { AdminOrders } from './AdminOrders';
 import { AdminOverview } from './AdminOverview';
@@ -107,7 +108,13 @@ export function AdminPage({ tab, user }: { tab: AdminTab; user: Account }) {
 
         <main className="mx-auto max-w-6xl px-4 pb-16 pt-5 sm:px-6">
           <ErrorBoundary key={tab}>
-            {tab === 'overview' ? <AdminOverview attention={attention} /> : <TabContent tab={tab} />}
+            {tab === 'overview' ? (
+              <AdminOverview attention={attention} />
+            ) : tab === 'listings' ? (
+              <AdminListings onChanged={attention.reload} />
+            ) : (
+              <TabContent tab={tab} />
+            )}
           </ErrorBoundary>
         </main>
       </div>
@@ -115,7 +122,7 @@ export function AdminPage({ tab, user }: { tab: AdminTab; user: Account }) {
   );
 }
 
-function TabContent({ tab }: { tab: Exclude<AdminTab, 'overview'> }) {
+function TabContent({ tab }: { tab: Exclude<AdminTab, 'overview' | 'listings'> }) {
   switch (tab) {
     case 'users':
       return <AdminUsers />;

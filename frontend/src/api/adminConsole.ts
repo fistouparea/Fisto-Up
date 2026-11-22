@@ -1,10 +1,11 @@
 import { getJson, isRecord, sendJson } from './client';
-import type { Role, SellerStatus } from './marketTypes';
+import type { Role, SellerKind, SellerListing, SellerStatus } from './marketTypes';
 
 /** Coordinator API of the control centre: waiting work and accounts. */
 
 export interface Attention {
   pendingSellers: number;
+  waitingListings: number;
   newOrders: number;
   complaints: number;
   overdueComplaints: number;
@@ -32,6 +33,20 @@ export interface UserPage {
   items: AdminUser[];
   total: number;
   hasMore: boolean;
+}
+
+export interface AdminListing extends SellerListing {
+  seller: { id: string; name: string; phone: string; village?: string; status: SellerStatus; kind: SellerKind };
+}
+
+export interface AdminListingPage {
+  items: AdminListing[];
+  hasMore: boolean;
+}
+
+export function fetchAdminListings(show: 'waiting' | 'all', page: number): Promise<AdminListingPage> {
+  const params = new URLSearchParams({ show, page: String(page) });
+  return getJson(`/api/admin/listings?${params}`, (body): body is AdminListingPage => isRecord(body) && Array.isArray(body.items) && typeof body.hasMore === 'boolean');
 }
 
 export const fetchAttention = () => getJson('/api/admin/attention', (body): body is Attention => isRecord(body) && typeof body.pendingSellers === 'number');

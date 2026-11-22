@@ -91,6 +91,9 @@ export const updateListingBodySchema = z
   .refine((body) => Object.keys(body).length > 0, 'nothing to change');
 export type UpdateListingBody = z.infer<typeof updateListingBodySchema>;
 
+/** Why buyers do not see a listing. seller: not verified (waiting or refused). payment: no UPI ID while cash is off. */
+export type NotVisibleReason = 'hidden' | 'sold_out' | 'paused' | 'blocked' | 'seller' | 'payment';
+
 export interface SellerListingView {
   id: string;
   category: Category;
@@ -110,6 +113,7 @@ export interface SellerListingView {
   hidden: boolean;
   /** Shown to buyers: active, not hidden, seller verified, stock left. */
   visible: boolean;
+  notVisibleReason: NotVisibleReason | null;
   createdAt: Date;
 }
 

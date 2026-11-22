@@ -28,6 +28,8 @@ import { toOrderView, type OrderService } from '../orders/order.service.js';
 import { deliveryPersonBodySchema, type OrderView } from '../orders/order.types.js';
 import { setCashPayment } from '../sellers/cashPayment.service.js';
 import { setSellerStatus, setSellerUpi } from '../sellers/seller.service.js';
+import { adminListingQuerySchema, listAdminListings, type AdminListingView } from './adminListings.service.js';
+import { notifySellerDecision } from '../sellers/reviewNotices.js';
 import { attention, endSessions, listUsers, unlockLogin, userListQuerySchema, type AdminUserView, type AttentionView } from './console.service.js';
 import {
   adminOrderQuerySchema,
@@ -119,13 +121,17 @@ export function createAdminRouter({ auth, orders, commissionBps, flags, mandi }:
   });
   router.post('/admin/sellers/:id/verify', json, async (req, res: Response<{ seller: AdminSellerView }>) => {
     const { licenceChecked } = parseOrThrow(verifyBodySchema, req.body ?? {});
-    const seller = toAdminSeller(await setSellerStatus(id(req.params.id), { status: 'verified', licenceChecked }, currentUser(req).id), await cashPaymentOn(flags));
+    const user = await setSellerStatus(id(req.params.id), { status: 'verified', licenceChecked }, currentUser(req).id);
+    await notifySellerDecision(user);
+    const seller = toAdminSeller(user, await cashPaymentOn(flags));
     await audit(req, 'seller.verify', { type: 'user', id: seller.id }, { kind: seller.kind, ...(seller.kind === 'input_dealer' && { licenceChecked: true }) });
     res.json({ seller });
   });
   router.post('/admin/sellers/:id/reject', json, async (req, res: Response<{ seller: AdminSellerView }>) => {
     const { reason } = parseOrThrow(rejectBodySchema, req.body);
-    const seller = toAdminSeller(await setSellerStatus(id(req.params.id), { status: 'rejected', reason }, currentUser(req).id), await cashPaymentOn(flags));
+    const user = await setSellerStatus(id(req.params.id), { status: 'rejected', reason }, currentUser(req).id);
+    await notifySellerDecision(user);
+    const seller = toAdminSeller(user, await cashPaymentOn(flags));
     await audit(req, 'seller.reject', { type: 'user', id: seller.id }, { reason });
     res.json({ seller });
   });
@@ -150,6 +156,9 @@ export function createAdminRouter({ auth, orders, commissionBps, flags, mandi }:
     await setListingHidden(id(req.params.id), false);
     await audit(req, 'listing.unhide', { type: 'listing', id: id(req.params.id) });
     res.json({ ok: true });
+  });
+  router.get('/admin/listings', async (req, res: Response<{ items: AdminListingView[]; hasMore: boolean }>) => {
+    res.json(await listAdminListings(parseOrThrow(adminListingQuerySchema, req.query)));
   });
   router.get('/admin/listings/hidden', async (_req, res: Response<{ items: SellerListingView[] }>) => {
     const listings = await ListingModel.find({ hidden: true }).sort({ updatedAt: -1 }).limit(200).exec();

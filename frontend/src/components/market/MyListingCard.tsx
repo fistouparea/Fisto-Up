@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { LuCircleCheckBig, LuIndianRupee, LuPause, LuPlay, LuScale, LuX } from 'react-icons/lu';
 import { updateListing } from '../../api/listings';
-import type { ListingChange, SellerListing } from '../../api/marketTypes';
+import type { ListingChange, SellerListing, SellerStatus } from '../../api/marketTypes';
 import { ApiError } from '../../api/client';
 import { hi, listingStatusLabels, unitLabels } from '../../strings/hi';
 import { formatRupees, paiseToRupeesInput, rupeesToPaise } from '../../utils/money';
@@ -16,7 +16,15 @@ import { ListingPhoto } from './ListingPhoto';
 type Editing = null | 'price' | 'quantity';
 
 /** One listing on "मेरी बिक्री" with big buttons: price, quantity, pause/resume, sold out. */
-export function MyListingCard({ listing, onChanged }: { listing: SellerListing; onChanged: (listing: SellerListing) => void }) {
+export function MyListingCard({
+  listing,
+  sellerStatus,
+  onChanged,
+}: {
+  listing: SellerListing;
+  sellerStatus?: SellerStatus;
+  onChanged: (listing: SellerListing) => void;
+}) {
   const [editing, setEditing] = useState<Editing>(null);
   const [priceInput, setPriceInput] = useState(paiseToRupeesInput(listing.pricePerUnitPaise));
   const [quantity, setQuantity] = useState<number | null>(listing.quantityAvailable);
@@ -39,7 +47,10 @@ export function MyListingCard({ listing, onChanged }: { listing: SellerListing; 
 
   const price = rupeesToPaise(priceInput);
   const statusTone = listing.status === 'active' ? (listing.visible ? 'success' : 'warning') : 'neutral';
-  const speakText = `${listing.title.hi}। ${hi.sell.price} ${listing.pricePerUnitPaise / 100} रुपये ${hi.sell.per} ${unit}। ${hi.sell.available} ${listing.quantityAvailable} ${unit}। ${listingStatusLabels[listing.status]}`;
+  // "बिक्री में" only when buyers really see it.
+  const notLive = listing.status === 'active' && !listing.visible;
+  const statusLabel = notLive ? hi.sell.notLive : listingStatusLabels[listing.status];
+  const speakText = `${listing.title.hi}। ${hi.sell.price} ${listing.pricePerUnitPaise / 100} रुपये ${hi.sell.per} ${unit}। ${hi.sell.available} ${listing.quantityAvailable} ${unit}। ${statusLabel}`;
 
   return (
     <article className="overflow-hidden rounded-3xl border border-line bg-surface shadow-card">
@@ -58,15 +69,13 @@ export function MyListingCard({ listing, onChanged }: { listing: SellerListing; 
             {listing.minOrderQty > 1 && ` · ${hi.sell.minOrderShort} ${listing.minOrderQty}`}
           </p>
           <div className="mt-1 flex flex-wrap gap-2">
-            <Badge tone={statusTone} label={listingStatusLabels[listing.status]} />
+            <Badge tone={statusTone} label={statusLabel} />
           </div>
         </div>
       </div>
 
       {listing.hidden && <p className="bg-danger-50 px-4 py-2 font-bold text-danger-800">{hi.sell.hiddenByCoordinator}</p>}
-      {!listing.hidden && listing.status === 'active' && !listing.visible && (
-        <p className="bg-warning-50 px-4 py-2 font-bold text-warning-800">{hi.sell.waitingVerification}</p>
-      )}
+      {!listing.hidden && notLive && <p className="bg-warning-50 px-4 py-2 font-bold text-warning-800">{notLiveText(listing, sellerStatus)}</p>}
 
       {editing === 'price' && (
         <div className="flex flex-col gap-3 border-t border-line p-3">
@@ -139,6 +148,12 @@ export function MyListingCard({ listing, onChanged }: { listing: SellerListing; 
       )}
     </article>
   );
+}
+
+function notLiveText({ notVisibleReason }: SellerListing, sellerStatus: SellerStatus | undefined): string {
+  if (notVisibleReason === 'payment') return hi.sell.needsUpi;
+  if (notVisibleReason === 'blocked') return hi.sell.blockedItem;
+  return sellerStatus === 'rejected' ? hi.sell.sellerRejected : hi.sell.waitingVerification;
 }
 
 function EditActions({ busy, disabled, onSave, onCancel }: { busy: boolean; disabled: boolean; onSave: () => void; onCancel: () => void }) {

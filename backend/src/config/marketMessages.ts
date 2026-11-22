@@ -63,3 +63,13 @@ export function orderMessage(status: OrderStatus, audience: Audience, facts: Ord
     body: `${what} (ऑर्डर ${facts.ref})।${next ? ` ${next}` : ''}`,
   };
 }
+
+/** Notices about the coordinator's check of a seller. */
+export const SELLER_REVIEW_TEXTS = {
+  waitingTitle: 'नई लिस्टिंग: मंज़ूरी बाकी',
+  waitingBody: (seller: string, listing: string) => `${seller}: ${listing}। जब तक आप विक्रेता को मंज़ूर नहीं करते, खरीदारों को नहीं दिखेगी।`,
+  verifiedTitle: 'आप सत्यापित हो गए',
+  verifiedBody: 'अब आपका सामान बाज़ार में खरीदारों को दिखेगा।',
+  rejectedTitle: 'आपकी जानकारी नामंज़ूर हुई',
+  rejectedBody: (reason: string) => `कारण: ${reason}। जानकारी ठीक करके फिर सेव करें।`,
+} as const;

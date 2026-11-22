@@ -57,8 +57,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       else if (!loaded && resetDevice) startOver(createUuid(), null);
       else setUserState(loaded);
     };
-    // Offline or marketplace off: behave as logged out; the advisor keeps working.
-    load().catch(() => !outdated() && setUserState(null));
+    // Offline or marketplace off: behave as logged out; the advisor keeps working. A failed re-check (refresh)
+    // keeps who is already shown.
+    load().catch(() => !outdated() && setUserState((current) => current ?? null));
     return () => {
       cancelled = true;
     };

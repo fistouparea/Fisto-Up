@@ -1,7 +1,7 @@
 import type { IconType } from 'react-icons';
 import {
   LuBadgeCheck, LuChartColumn, LuClipboardList, LuEyeOff, LuFlag, LuHandCoins, LuHandshake, LuHistory, LuLandmark,
-  LuLayoutDashboard, LuLifeBuoy, LuStore, LuTicket, LuToggleRight, LuTruck, LuUsers,
+  LuLayoutDashboard, LuLifeBuoy, LuPackage, LuStore, LuTicket, LuToggleRight, LuTruck, LuUsers,
 } from 'react-icons/lu';
 import type { Attention } from '../../api/adminConsole';
 import type { Flags } from '../../api/flags';
@@ -26,6 +26,7 @@ export const ADMIN_MENU: readonly MenuItem[] = [
   { tab: 'invites', group: 'people', icon: LuTicket },
   { tab: 'users', group: 'people', icon: LuUsers },
   { tab: 'sellers', group: 'people', icon: LuStore, waiting: (work) => work.pendingSellers },
+  { tab: 'listings', group: 'market', icon: LuPackage, waiting: (work) => work.waitingListings },
   { tab: 'orders', group: 'market', icon: LuClipboardList, waiting: (work) => work.newOrders },
   { tab: 'newListing', group: 'market', icon: LuHandshake },
   { tab: 'ledger', group: 'market', icon: LuHandCoins },

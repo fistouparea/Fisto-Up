@@ -15,7 +15,7 @@ import { UserModel, type UserDocument } from '../auth/user.model.js';
 import { ListingModel, ListingPhotoModel, type ListingDocument, type ListingPhotoDocument } from './listing.model.js';
 import { OrderModel } from '../orders/order.model.js';
 import { ReportModel } from '../reports/report.model.js';
-import type {
+import type { NotVisibleReason,
   AiListingDraft,
   CreateListingBody,
   DraftResponse,
@@ -270,9 +270,18 @@ export function photoUrl(photoId: Types.ObjectId | string): string {
 }
 
 export function isPubliclyVisible(listing: ListingDocument): boolean {
-  return (
-    listing.status === 'active' && !listing.hidden && listing.sellerVerified && listing.paymentBlocked !== true && listing.quantityAvailable > 0 && !isBlockedListing(listing)
-  );
+  return notVisibleReason(listing) === null;
+}
+
+/** The first thing that keeps a listing out of the market (null: buyers see it). Same rule as VISIBLE_LISTING_FILTER. */
+export function notVisibleReason(listing: ListingDocument): NotVisibleReason | null {
+  if (listing.hidden) return 'hidden';
+  if (listing.status === 'sold_out' || listing.quantityAvailable <= 0) return 'sold_out';
+  if (listing.status !== 'active') return 'paused';
+  if (isBlockedListing(listing)) return 'blocked';
+  if (!listing.sellerVerified) return 'seller';
+  if (listing.paymentBlocked === true) return 'payment';
+  return null;
 }
 
 /** A listing that names a blocked input (e.g. the blocklist grew after it was listed) is never shown. */
@@ -299,6 +308,7 @@ export function toSellerListingView(listing: ListingDocument): SellerListingView
     status: listing.status,
     hidden: listing.hidden ?? false,
     visible: isPubliclyVisible(listing),
+    notVisibleReason: notVisibleReason(listing),
     createdAt: listing.createdAt,
   };
 }

@@ -8,6 +8,7 @@ import { MAX_IMAGE_BYTES } from '../../types/diagnosis.js';
 import { parseOrThrow } from '../../utils/validation.js';
 import { audit } from '../audit/audit.service.js';
 import { currentUser, requireRole } from '../auth/auth.middleware.js';
+import { notifyListingWaiting } from '../sellers/reviewNotices.js';
 import { cashPaymentOn, type FeatureFlags } from '../flags/flag.service.js';
 import {
   createListing,
@@ -94,6 +95,7 @@ export function createListingRouter({ ai, aiRateLimit, photos, flags }: ListingR
     const body = parseOrThrow(createListingBodySchema, req.body);
     const user = currentUser(req);
     const listing = await createListing(user.id, body, { uploaderId: user.id, cashOn: await cashPaymentOn(flags) });
+    await notifyListingWaiting(listing);
     res.status(201).json({ listing: toSellerListingView(listing) });
   });
 

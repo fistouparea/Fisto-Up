@@ -69,7 +69,7 @@ export function AdminOverview({ attention }: OverviewProps) {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <StatTile icon={LuStore} label={label.sellers} value={String(data.sellers.total)} detail={`${label.verified}: ${data.sellers.verified}`} href={routes.admin('sellers')} />
               <StatTile icon={LuUsers} label={label.buyers} value={String(data.buyers)} href={routes.admin('users')} />
-              <StatTile icon={LuPackage} label={label.listings} value={String(data.listings.total)} detail={`${label.visible}: ${data.listings.visible}`} />
+              <StatTile icon={LuPackage} label={label.listings} value={String(data.listings.total)} detail={`${label.visible}: ${data.listings.visible}`} href={routes.admin('listings')} />
               <StatTile icon={LuClipboardList} label={label.orders} value={String(data.orders.total)} detail={`${label.open}: ${data.orders.open} · ${label.completed}: ${data.orders.completed}`} href={routes.admin('orders')} />
               <StatTile icon={LuIndianRupee} label={label.sales} value={formatRupees(data.salesPaise)} />
               <StatTile
@@ -110,6 +110,7 @@ function WorkList({ work }: { work: Attention }) {
   const tasks: { count: number; tab: AdminTab; icon: IconType; title: string; urgent?: boolean; note?: string }[] = [
     { count: work.overdueComplaints, tab: complaints ? 'complaints' : 'reports', icon: LuShieldAlert, title: text.overdue, urgent: true },
     { count: work.sellersNeedingUpi, tab: 'sellers', icon: LuQrCode, title: text.needUpi, urgent: true },
+    { count: work.waitingListings, tab: 'listings', icon: LuPackage, title: text.listings, urgent: true },
     { count: work.newOrders, tab: 'orders', icon: LuClipboardList, title: text.orders },
     { count: work.pendingSellers, tab: 'sellers', icon: LuStore, title: text.sellers },
     { count: work.complaints, tab: complaints ? 'complaints' : 'reports', icon: LuFlag, title: text.complaints },

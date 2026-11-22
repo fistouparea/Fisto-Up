@@ -148,6 +148,8 @@ export interface ListingChange {
 }
 
 /** A listing as its seller sees it on "मेरी बिक्री". */
+export type NotVisibleReason = 'hidden' | 'sold_out' | 'paused' | 'blocked' | 'seller' | 'payment';
+
 export interface SellerListing {
   id: string;
   category: Category;
@@ -165,6 +167,8 @@ export interface SellerListing {
   status: ListingStatus;
   hidden: boolean;
   visible: boolean;
+  /** Why buyers do not see it (null: they do). */
+  notVisibleReason?: NotVisibleReason | null;
   createdAt: string;
 }
 

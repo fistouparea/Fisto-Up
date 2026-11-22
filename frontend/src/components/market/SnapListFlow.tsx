@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { LuArrowRight, LuCamera, LuCameraOff, LuCircleCheckBig, LuMic, LuPlus, LuRefreshCw, LuStore, LuWifiOff } from 'react-icons/lu';
+import { LuArrowRight, LuCamera, LuCameraOff, LuCircleCheckBig, LuClock, LuMic, LuPlus, LuRefreshCw, LuStore, LuWifiOff } from 'react-icons/lu';
 import { ApiError } from '../../api/client';
 import { draftListing, uploadListingPhoto } from '../../api/listings';
 import type { ListingDraft, NewListing, SellerListing } from '../../api/marketTypes';
@@ -19,7 +19,7 @@ import { PageHeader } from '../ui/PageHeader';
 import { PageTransition } from '../ui/PageTransition';
 import { StepIndicator, type Step } from '../ui/StepIndicator';
 import { StickyActions } from '../ui/StickyActions';
-import { notifySuccess } from '../ui/notify';
+import { notifySuccess, notifyWarning } from '../ui/notify';
 import { ListingConfirmForm } from './ListingConfirmForm';
 import { DEALER_CATEGORIES, PRODUCER_CATEGORIES } from '../../data/marketCatalog';
 
@@ -115,7 +115,8 @@ export function SnapListFlow({ submit, header, onFinished, finishLabel, dealer =
     setState({ step: 'saving', photo, photoId, form });
     try {
       const saved = await submit(listing);
-      notifySuccess(hi.sell.doneTitle);
+      if (saved.visible) notifySuccess(hi.sell.doneTitle);
+      else notifyWarning(hi.sell.savedNotLive);
       setState({ step: 'done', listing: saved });
     } catch (error) {
       const code = error instanceof ApiError ? error.code : 'UNKNOWN';
@@ -199,9 +200,9 @@ export function SnapListFlow({ submit, header, onFinished, finishLabel, dealer =
 
         {state.step === 'done' && (
           <EmptyState
-            icon={LuCircleCheckBig}
-            tone="success"
-            message={`${hi.sell.doneTitle} ${state.listing.visible ? hi.sell.doneVisible : hi.sell.donePending}`}
+            icon={state.listing.visible ? LuCircleCheckBig : LuClock}
+            tone={state.listing.visible ? 'success' : 'warning'}
+            message={state.listing.visible ? `${hi.sell.doneTitle} ${hi.sell.doneVisible}` : `${hi.sell.savedNotLive} ${hi.sell.donePending}`}
           >
             <Button variant="accent" icon={LuPlus} onClick={restart}>
               {hi.sell.sellAnother}

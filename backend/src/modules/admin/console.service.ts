@@ -4,6 +4,7 @@ import { ADMIN_RULES } from '../../config/adminRules.js';
 import { AppError } from '../../errors/AppError.js';
 import { escapeRegex } from '../listings/listing.search.js';
 import { ROLES, type Role, type SellerStatus } from '../auth/auth.types.js';
+import { countWaitingListings } from './adminListings.service.js';
 import { UserModel, type UserDocument } from '../auth/user.model.js';
 import { CommissionEntryModel } from '../commission/commission.model.js';
 import { HelpRequestModel } from '../help/help.model.js';
@@ -15,6 +16,8 @@ import { ServiceListingModel } from '../services/service.model.js';
 /** What waits for a coordinator: the panel's home screen and menu badges. Counts only. */
 export interface AttentionView {
   pendingSellers: number;
+  /** Listings buyers do not see until their seller is verified. */
+  waitingListings: number;
   newOrders: number;
   complaints: number;
   overdueComplaints: number;
@@ -30,8 +33,9 @@ export interface AttentionView {
 export async function attention(cashOn: boolean, now = new Date()): Promise<AttentionView> {
   const live = { deletedAt: { $exists: false } };
   const openComplaint = { status: { $in: ['open', 'in_progress'] as ('open' | 'in_progress')[] } };
-  const [pendingSellers, newOrders, complaints, overdueComplaints, helpRequests, serviceApprovals, dues, sellersNeedingUpi, demoCoordinators] = await Promise.all([
+  const [pendingSellers, waitingListings, newOrders, complaints, overdueComplaints, helpRequests, serviceApprovals, dues, sellersNeedingUpi, demoCoordinators] = await Promise.all([
     UserModel.countDocuments({ ...live, role: 'seller', 'seller.status': 'pending' }).exec(),
+    countWaitingListings(),
     OrderModel.countDocuments({ status: 'requested' }).exec(),
     ReportModel.countDocuments(openComplaint).exec(),
     ReportModel.countDocuments({ ...openComplaint, slaDueAt: { $lt: now } }).exec(),
@@ -41,7 +45,7 @@ export async function attention(cashOn: boolean, now = new Date()): Promise<Atte
     cashOn ? 0 : UserModel.countDocuments({ ...live, ...NO_UPI_FILTER }).exec(),
     UserModel.countDocuments({ ...live, role: 'coordinator', demo: true }).exec(),
   ]);
-  return { pendingSellers, newOrders, complaints, overdueComplaints, helpRequests, serviceApprovals, duePaise: dues[0]?.total ?? 0, sellersNeedingUpi, demoCoordinators };
+  return { pendingSellers, waitingListings, newOrders, complaints, overdueComplaints, helpRequests, serviceApprovals, duePaise: dues[0]?.total ?? 0, sellersNeedingUpi, demoCoordinators };
 }
 
 export const userListQuerySchema = z.object({
