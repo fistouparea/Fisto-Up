@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { LuPencil, LuPhone, LuPlus, LuTruck, LuX } from 'react-icons/lu';
 import { ApiError } from '../../api/client';
 import { createTrip, fetchAdminTrips, setTripStatus, TRIP_NEXT, updateTrip, type MandiTrip } from '../../api/mandiTrips';
+import { ConfirmAction } from '../../components/admin/ConfirmAction';
 import { LoadState } from '../../components/admin/LoadState';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
@@ -10,6 +11,7 @@ import { TextField } from '../../components/ui/TextField';
 import { notifyError, notifySuccess } from '../../components/ui/notify';
 import { useLoad } from '../../hooks/useLoad';
 import { cropLabels, hi } from '../../strings/hi';
+import { hiAdmin } from '../../strings/hiAdmin';
 import { hiF } from '../../strings/hiFeatures';
 import { shortDate } from '../../utils/dayLabel';
 import { paiseToRupeesInput } from '../../utils/money';
@@ -99,11 +101,21 @@ function TripPanel({ trip, onChanged }: { trip: MandiTrip; onChanged: () => void
             {text().edit}
           </Button>
         )}
-        {TRIP_NEXT[trip.status].map((next) => (
-          <Button key={next} variant={next === 'cancelled' ? 'danger' : 'primary'} size="md" disabled={busy} onClick={() => void step(next)}>
-            {text().to[next]}
-          </Button>
-        ))}
+        {TRIP_NEXT[trip.status].map((next) =>
+          next === 'cancelled' ? (
+            <ConfirmAction key={next} question={hiAdmin.console.tripCancelAsk} onConfirm={() => step(next)}>
+              {(ask) => (
+                <Button variant="danger" size="md" disabled={busy} onClick={ask}>
+                  {text().to[next]}
+                </Button>
+              )}
+            </ConfirmAction>
+          ) : (
+            <Button key={next} variant="primary" size="md" disabled={busy} onClick={() => void step(next)}>
+              {text().to[next]}
+            </Button>
+          ),
+        )}
       </div>
     </article>
   );

@@ -44,6 +44,8 @@ export function AdminSellers() {
         onSubmit={(event: FormEvent) => {
           event.preventDefault();
           setSearch(query);
+          // A search looks through everyone, not only the open filter (a verified seller was "not found").
+          if (query.trim()) setStatus(undefined);
         }}
       >
         <input

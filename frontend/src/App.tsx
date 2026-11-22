@@ -124,6 +124,8 @@ function AppShell() {
     setConsented(true);
   };
 
+  // The coordinator panel is a work screen with its own layout, without the farmer app's bars.
+  const inPanel = route.name === 'admin' && user?.role === 'coordinator' && !showConsent;
   const screenKey = showConsent ? 'consent' : showOnboarding ? 'onboarding' : pageKey(route, diagnoseKey);
 
   const finishOnboarding = () => {
@@ -131,6 +133,20 @@ function AppShell() {
     setOnboardingDone(true);
     window.location.hash = routes.home;
   };
+
+  if (inPanel) {
+    return (
+      <>
+        <OfflineBanner />
+        <AppToaster />
+        <ErrorBoundary>
+          <Suspense fallback={<Skeleton className="m-4 h-64" />}>
+            <AdminPage tab={route.tab} user={user} />
+          </Suspense>
+        </ErrorBoundary>
+      </>
+    );
+  }
 
   return (
     <div className="min-h-dvh bg-surface-page">
@@ -245,7 +261,8 @@ function Page({ route, diagnoseKey }: { route: Route; diagnoseKey: number }) {
     case 'order':
       return <RequireRole>{() => <OrderPage id={route.id} />}</RequireRole>;
     case 'admin':
-      return <RequireRole roles={['coordinator']}>{() => <AdminPage tab={route.tab} />}</RequireRole>;
+      // Coordinators get the panel's own layout (AppShell); everyone else sees why it is closed.
+      return <RequireRole roles={['coordinator']}>{() => <Skeleton className="h-64" />}</RequireRole>;
     case 'privacy':
       return <LegalPage doc="privacy" />;
     case 'terms':

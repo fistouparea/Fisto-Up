@@ -28,6 +28,7 @@ import { toOrderView, type OrderService } from '../orders/order.service.js';
 import { deliveryPersonBodySchema, type OrderView } from '../orders/order.types.js';
 import { setCashPayment } from '../sellers/cashPayment.service.js';
 import { setSellerStatus, setSellerUpi } from '../sellers/seller.service.js';
+import { attention, endSessions, listUsers, unlockLogin, userListQuerySchema, type AdminUserView, type AttentionView } from './console.service.js';
 import {
   adminOrderQuerySchema,
   assistedListingBodySchema,
@@ -78,6 +79,24 @@ export function createAdminRouter({ auth, orders, commissionBps, flags, mandi }:
 
   router.get('/admin/stats', async (_req, res: Response<MarketStats & { commissionPercent: number }>) => {
     res.json({ ...(await marketStats()), commissionPercent: commissionBps / 100 });
+  });
+
+  // --- Control centre ---
+  router.get('/admin/attention', async (_req, res: Response<AttentionView>) => {
+    res.json(await attention(await cashPaymentOn(flags)));
+  });
+  router.get('/admin/users', async (req, res: Response<{ items: AdminUserView[]; total: number; hasMore: boolean }>) => {
+    res.json(await listUsers(parseOrThrow(userListQuerySchema, req.query)));
+  });
+  router.post('/admin/users/:id/end-sessions', async (req, res: Response<{ user: AdminUserView }>) => {
+    const user = await endSessions(id(req.params.id));
+    await audit(req, 'user.endSessions', { type: 'user', id: user.id }, { role: user.role });
+    res.json({ user });
+  });
+  router.post('/admin/users/:id/unlock', async (req, res: Response<{ user: AdminUserView }>) => {
+    const user = await unlockLogin(id(req.params.id));
+    await audit(req, 'user.unlock', { type: 'user', id: user.id }, { role: user.role });
+    res.json({ user });
   });
 
   // --- Sellers ---

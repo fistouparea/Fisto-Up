@@ -1,9 +1,11 @@
+import { useContext } from 'react';
 import { LuSquare, LuVolume2 } from 'react-icons/lu';
 import { useSpeechOutput } from '../../hooks/useSpeech';
 import { hi } from '../../strings/hi';
 import { cn } from '../../utils/cn';
 import { Button } from './Button';
 import { IconButton } from './IconButton';
+import { SpeechButtonsContext } from './speechButtons';
 
 interface SpeakButtonProps {
   text: string;
@@ -17,7 +19,8 @@ interface SpeakButtonProps {
 /** Reads `text` aloud in Hindi; tap again to stop. Renders nothing if the browser cannot speak. */
 export function SpeakButton({ text, variant = 'icon', label: idleLabel = hi.voice.listen, className }: SpeakButtonProps) {
   const { supported, speaking, speak, stop } = useSpeechOutput();
-  if (!supported) return null;
+  const shown = useContext(SpeechButtonsContext);
+  if (!supported || !shown) return null;
 
   const toggle = () => (speaking ? stop() : speak(text));
   const label = speaking ? hi.voice.stop : idleLabel;

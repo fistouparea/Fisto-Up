@@ -8,6 +8,9 @@ export type Flags = Record<FlagKey, boolean>;
 /** Used until the server answered (and offline): the everyday features on, pilot-only ones off. */
 export const DEFAULT_FLAGS: Flags = { inviteOnly: false, aiFeedback: true, helpRequests: true, voiceInput: true, pilotDashboard: false, voiceMode: false, languages: false, schemes: false, equipment: false, labour: false, livestock: false, mandiPool: false, deliveryTracking: false, complaints: false, aiKit: false, cashPayment: true };
 
+/** Fired on `window` after a coordinator changed a flag, so the app (and the panel's menu) follows at once. */
+export const FLAGS_CHANGED_EVENT = 'agriai:flags-changed';
+
 export async function fetchFlags(): Promise<Flags> {
   const body = await getJson('/api/account/flags', (value): value is { flags: Record<string, unknown> } => isRecord(value) && isRecord(value.flags));
   return Object.fromEntries(FLAG_KEYS.map((key) => [key, typeof body.flags[key] === 'boolean' ? body.flags[key] : DEFAULT_FLAGS[key]])) as Flags;

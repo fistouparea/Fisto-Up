@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { LuFlag } from 'react-icons/lu';
+import { hideListing } from '../../api/admin';
 import { ApiError } from '../../api/client';
 import { COMPLAINT_STATUSES, fetchComplaintQueue, setComplaintStatus, type Complaint, type ComplaintStatus } from '../../api/complaints';
 import { LoadState } from '../../components/admin/LoadState';
@@ -10,7 +11,10 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { TextField } from '../../components/ui/TextField';
 import { notifyError, notifySuccess } from '../../components/ui/notify';
 import { useLoad } from '../../hooks/useLoad';
+import { hi } from '../../strings/hi';
+import { hiAdmin } from '../../strings/hiAdmin';
 import { hiF } from '../../strings/hiFeatures';
+import { runAdminAction } from './adminAction';
 
 /** Coordinator queue: open and in-progress complaints, most urgent SLA first; message both sides; close with a note. */
 export function AdminComplaints() {
@@ -66,6 +70,7 @@ function QueueItem({ complaint, onChanged }: { complaint: Complaint; onChanged: 
           {hiF.complaints.admin.take}
         </Button>
       )}
+      {closing.length > 0 && complaint.target.kind === 'listing' && <HideListing listingId={complaint.target.id} />}
       {closing.length > 0 && (
         <>
           <TextField label={hiF.complaints.admin.note} value={resolution} maxLength={500} onChange={(event) => setResolution(event.target.value)} />
@@ -79,5 +84,26 @@ function QueueItem({ complaint, onChanged }: { complaint: Complaint; onChanged: 
         </>
       )}
     </article>
+  );
+}
+
+/** Takes the listing that is complained about out of the market (reason needed, audited). */
+function HideListing({ listingId }: { listingId: string }) {
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState('');
+  if (!open) {
+    return (
+      <Button variant="ghost" size="md" onClick={() => setOpen(true)}>
+        {hiAdmin.hideListing}
+      </Button>
+    );
+  }
+  return (
+    <div className="flex flex-col gap-2">
+      <TextField label={hiAdmin.hideReason} value={reason} maxLength={300} onChange={(event) => setReason(event.target.value)} />
+      <Button variant="danger" size="md" disabled={reason.trim().length < 2} onClick={() => void runAdminAction(() => hideListing(listingId, reason.trim()), hi.sell.saved, () => setOpen(false))}>
+        {hiAdmin.hideListing}
+      </Button>
+    </div>
   );
 }

@@ -1,5 +1,7 @@
 import type { Request } from 'express';
+import { isValidObjectId } from 'mongoose';
 import { z } from 'zod';
+import { UserModel } from '../auth/user.model.js';
 import { currentUser } from '../auth/auth.middleware.js';
 import { AUDIT_ACTIONS, AuditLogModel, type AuditAction, type AuditTarget } from './audit.model.js';
 import { logger } from '../../observability/logger.js';
@@ -11,8 +13,10 @@ export interface AuditEntryView {
   at: Date;
   actorId: string;
   actorRole: string;
+  /** Looked up when reading, so the log itself keeps no names. */
+  actorName?: string;
   action: AuditAction;
-  target: { type: AuditTarget; id: string };
+  target: { type: AuditTarget; id: string; name?: string };
   details?: AuditDetails;
 }
 
@@ -44,14 +48,18 @@ export async function listAudit({ action, targetId, page }: z.infer<typeof audit
     .limit(PAGE_SIZE + 1)
     .lean()
     .exec();
+  const userIds = rows.flatMap((row) => [row.actorId.toString(), ...(row.target.type === 'user' ? [row.target.id] : [])]);
+  const users = await UserModel.find({ _id: { $in: [...new Set(userIds)].filter((id) => isValidObjectId(id)) } }, { name: 1 }).lean().exec();
+  const nameById = new Map(users.map((user) => [user._id.toString(), user.name]));
   return {
     items: rows.slice(0, PAGE_SIZE).map((row) => ({
       id: row._id.toString(),
       at: row.at,
       actorId: row.actorId.toString(),
       actorRole: row.actorRole,
+      ...(nameById.has(row.actorId.toString()) && { actorName: nameById.get(row.actorId.toString()) }),
       action: row.action,
-      target: { type: row.target.type, id: row.target.id },
+      target: { type: row.target.type, id: row.target.id, ...(nameById.has(row.target.id) && { name: nameById.get(row.target.id) }) },
       ...(row.details && { details: row.details as AuditDetails }),
     })),
     hasMore: rows.length > PAGE_SIZE,

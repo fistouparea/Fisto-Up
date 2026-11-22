@@ -10,7 +10,7 @@ export type FlagState = (typeof FLAG_STATES)[number];
 
 export const FEATURE_FLAGS = {
   /** Sign-up needs an invite code. Only off/all matter here (a new account is not a pilot account yet). */
-  inviteOnly: { default: 'off', description: 'नया खाता सिर्फ़ इनवाइट कोड से (पायलट)' },
+  inviteOnly: { default: 'off', description: 'नया खाता सिर्फ़ इनवाइट कोड से (पायलट)', onOff: true },
   aiFeedback: { default: 'all', description: 'हर जाँच के बाद "क्या जवाब सही था?" 👍 / 👎' },
   helpRequests: { default: 'all', description: '"मदद/शिकायत" बटन' },
   voiceInput: { default: 'all', description: 'फीडबैक और शिकायत बोलकर लिखना (🎤)' },

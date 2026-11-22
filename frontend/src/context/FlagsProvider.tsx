@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { DEFAULT_FLAGS, fetchFlags, type Flags } from '../api/flags';
+import { DEFAULT_FLAGS, fetchFlags, FLAGS_CHANGED_EVENT, type Flags } from '../api/flags';
 import { useAuth } from '../hooks/useAuth';
 import { readFromCache, saveToCache } from '../utils/offlineCache';
 import { FlagsContext } from './flagsContext';
@@ -21,6 +21,13 @@ export function FlagsProvider({ children }: { children: ReactNode }) {
     if (saved) setFlags({ ...DEFAULT_FLAGS, ...saved });
   }
 
+  const [changes, setChanges] = useState(0);
+  useEffect(() => {
+    const onChange = () => setChanges((count) => count + 1);
+    window.addEventListener(FLAGS_CHANGED_EVENT, onChange);
+    return () => window.removeEventListener(FLAGS_CHANGED_EVENT, onChange);
+  }, []);
+
   useEffect(() => {
     if (userKey === 'checking') return;
     let current = true;
@@ -36,7 +43,7 @@ export function FlagsProvider({ children }: { children: ReactNode }) {
     return () => {
       current = false;
     };
-  }, [userKey]);
+  }, [userKey, changes]);
 
   return <FlagsContext.Provider value={flags}>{children}</FlagsContext.Provider>;
 }

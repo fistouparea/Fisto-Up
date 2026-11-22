@@ -1,4 +1,5 @@
 import { getJson, isRecord, sendJson } from './client';
+import { FLAGS_CHANGED_EVENT } from './flags';
 import type { HelpCategory } from './help';
 
 /** Coordinator API for the pilot: help requests, invite codes, feature flags, audit log. */
@@ -43,8 +44,9 @@ export interface AuditEntry {
   at: string;
   actorId: string;
   actorRole: string;
+  actorName?: string;
   action: string;
-  target: { type: string; id: string };
+  target: { type: string; id: string; name?: string };
   details?: Record<string, string | number | boolean | null>;
 }
 
@@ -73,7 +75,9 @@ export async function fetchAdminFlags(): Promise<AdminFlag[]> {
   return (await getJson('/api/admin/flags', items<AdminFlag>((item) => isRecord(item) && typeof item.key === 'string'))).items;
 }
 export async function setAdminFlag(key: string, state: FlagState): Promise<AdminFlag[]> {
-  return (await sendJson('PUT', `/api/admin/flags/${encodeURIComponent(key)}`, { state }, items<AdminFlag>(isRecord))).items;
+  const saved = (await sendJson('PUT', `/api/admin/flags/${encodeURIComponent(key)}`, { state }, items<AdminFlag>(isRecord))).items;
+  window.dispatchEvent(new Event(FLAGS_CHANGED_EVENT));
+  return saved;
 }
 
 export async function fetchAudit(page: number): Promise<{ items: AuditEntry[]; hasMore: boolean }> {

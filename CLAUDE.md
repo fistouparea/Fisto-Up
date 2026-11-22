@@ -40,3 +40,10 @@ never weaken tests, and run `npm test`, `npm run lint` and `npm run typecheck` i
   `orders/paymentOptions.ts` (mirrored in `frontend/src/utils/paymentMethods.ts`); what buyers may see is
   `VISIBLE_LISTING_FILTER` in `listing.model.ts` (use it, never copy it). Switching the flag goes through
   `setCashPayment()`, which hides/shows listings of sellers without UPI (`paymentBlocked`) in the same transaction.
+- Accounts on shared phones: a data id (`deviceId`) belongs to at most one account (`auth/deviceLink.ts`) and works
+  only with that account's session (`auth/deviceGuard.ts`). A new route that takes a deviceId in a JSON body must be
+  added to `BODY_ID_PATHS` and to `accountIsolation.api.test.ts`. Change the phone's id only via `utils/phoneData.ts`.
+- Coordinator panel: own layout outside the farmer shell; its menu is `components/admin/adminMenu.ts`. Actions that
+  are hard to undo use `ConfirmAction`.
+- AI calls race: a slow model gets company after `config/aiRules.ts` hedgeAfterMs; the first valid answer wins.
+- Reading aloud goes only through the one `utils/speechPlayer.ts` (via `useSpeechOutput`).

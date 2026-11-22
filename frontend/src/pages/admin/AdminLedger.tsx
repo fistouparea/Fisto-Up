@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { LuFileDown, LuHandCoins, LuPhone } from 'react-icons/lu';
 import { ApiError } from '../../api/client';
 import { downloadLedgerCsv, fetchMonthTotals, fetchReferralTotals, fetchSellerDues, markCollected, type SellerDues } from '../../api/admin';
+import { ConfirmAction } from '../../components/admin/ConfirmAction';
 import { LoadState } from '../../components/admin/LoadState';
 import { Button } from '../../components/ui/Button';
 import { Chip } from '../../components/ui/Chip';
@@ -58,7 +59,7 @@ export function AdminLedger() {
           ) : (
             <section className="flex flex-col gap-3">
               <h3 className="text-xl font-bold">{hiAdmin.monthly}</h3>
-              <div className="overflow-x-auto rounded-3xl border border-line bg-surface">
+              <div tabIndex={0} role="region" aria-label={hiAdmin.monthly} className="overflow-x-auto rounded-3xl border border-line bg-surface">
                 <table className="w-full min-w-[34rem] text-base">
                   <thead className="bg-surface-green text-left">
                     <tr>
@@ -156,9 +157,13 @@ function DuesCard({ row, month, onCollected }: { row: SellerDues; month: string 
         <dt className="font-bold">{hiAdmin.due}</dt>
         <dd className={`text-xl font-bold ${num}`}>{formatRupees(row.duePaise)}</dd>
       </dl>
-      <Button variant={row.duePaise > 0 ? 'accent' : 'secondary'} size="md" icon={LuHandCoins} disabled={busy || row.duePaise === 0} onClick={() => void collect()}>
-        {row.duePaise > 0 ? `${hiAdmin.markCollected} (${formatRupees(row.duePaise)})` : hiAdmin.nothingDue}
-      </Button>
+      <ConfirmAction question={`${row.name}: ${formatRupees(row.duePaise)} ${hiAdmin.console.collectAsk}`} onConfirm={collect}>
+        {(ask) => (
+          <Button variant={row.duePaise > 0 ? 'accent' : 'secondary'} size="md" icon={LuHandCoins} disabled={busy || row.duePaise === 0} onClick={ask}>
+            {row.duePaise > 0 ? `${hiAdmin.markCollected} (${formatRupees(row.duePaise)})` : hiAdmin.nothingDue}
+          </Button>
+        )}
+      </ConfirmAction>
     </article>
   );
 }

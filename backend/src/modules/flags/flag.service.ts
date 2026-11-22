@@ -59,7 +59,12 @@ export class FeatureFlags {
 
   async list(): Promise<FlagView[]> {
     const states = await this.states();
-    return FLAG_KEYS.map((key) => ({ key, description: FEATURE_FLAGS[key].description, state: states[key], default: this.defaults[key], onOff: isOnOffFlag(key) }));
+    return FLAG_KEYS.map((key) => {
+      const onOff = isOnOffFlag(key);
+      // "pilot" saved for an on/off flag before it was one works as off: show it as off, not as switched on.
+      const state = onOff && states[key] === 'pilot' ? 'off' : states[key];
+      return { key, description: FEATURE_FLAGS[key].description, state, default: this.defaults[key], onOff };
+    });
   }
 
   /** `session`: save the flag in the caller's transaction (e.g. together with the listings it hides). */

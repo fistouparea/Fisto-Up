@@ -33,6 +33,8 @@ export const AUDIT_ACTIONS = [
   'complaint.message',
   'complaint.flagSeller',
   'user.clearFlag',
+  'user.endSessions',
+  'user.unlock',
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
 

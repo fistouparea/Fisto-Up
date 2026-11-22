@@ -8,6 +8,7 @@ import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { TextField } from '../../components/ui/TextField';
 import { routes } from '../../hooks/useHashRoute';
+import { useFlags } from '../../hooks/useFlags';
 import { useLoad } from '../../hooks/useLoad';
 import { runAdminAction } from './adminAction';
 import { hi, roleLabels } from '../../strings/hi';
@@ -17,7 +18,9 @@ import { formatDate } from '../../utils/formatDate';
 
 /** Open reports (flagged listings and order problems) and listings hidden by coordinators. */
 export function AdminReports() {
-  const reports = useLoad(() => fetchReports('open'), []);
+  // With the complaint queue on, the same reports are worked there: here only the hidden listings.
+  const { complaints } = useFlags();
+  const reports = useLoad(() => (complaints ? Promise.resolve([]) : fetchReports('open')), [complaints]);
   const hidden = useLoad(fetchHiddenListings, []);
   const reloadAll = () => {
     reports.reload();
@@ -28,7 +31,7 @@ export function AdminReports() {
     <div className="flex flex-col gap-6">
       <LoadState data={reports.data} errorCode={reports.errorCode} reload={reports.reload}>
         {(items) =>
-          items.length === 0 ? (
+          complaints ? null : items.length === 0 ? (
             <EmptyState icon={LuFlag} tone="success" message={hiAdmin.noReports} />
           ) : (
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
@@ -41,11 +44,11 @@ export function AdminReports() {
       </LoadState>
 
       <section className="flex flex-col gap-3">
-        <h3 className="text-xl font-bold">{hiAdmin.hiddenListings}</h3>
+        {!complaints && <h2 className="text-xl font-bold">{hiAdmin.hiddenListings}</h2>}
         <LoadState data={hidden.data} errorCode={hidden.errorCode} reload={hidden.reload}>
           {(listings) =>
             listings.length === 0 ? (
-              <p className="text-ink-500">—</p>
+              <EmptyState icon={LuEye} tone="success" message={hiAdmin.noHiddenListings} />
             ) : (
               <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
                 {listings.map((listing) => (
